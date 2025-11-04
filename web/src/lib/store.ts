@@ -115,7 +115,11 @@ export const useCalendarStore = create<CalendarState>((set) => ({
   events: [],
   viewMode: 'both',
 
-  setViewMode: (mode: ViewMode) => set({ viewMode: mode }),
+  setViewMode: (mode: ViewMode) => {
+    console.log('Store: setViewMode called with:', mode);
+    set({ viewMode: mode });
+    console.log('Store: viewMode updated to:', mode);
+  },
 
   selectDate: (date: Date) => set({ selectedDate: date }),
 

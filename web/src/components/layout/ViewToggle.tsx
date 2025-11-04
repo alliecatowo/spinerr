@@ -38,6 +38,11 @@ export function ViewToggle({
   onChangeView,
   className,
 }: ViewToggleProps) {
+  const handleViewChange = (view: ViewMode) => {
+    console.log('ViewToggle: Changing view from', currentView, 'to', view);
+    onChangeView(view);
+  };
+
   return (
     <>
       {/* Desktop: Top right corner */}
@@ -70,7 +75,7 @@ export function ViewToggle({
                 <Button
                   variant={isActive ? 'default' : 'ghost'}
                   size="default"
-                  onClick={() => onChangeView(option.value)}
+                  onClick={() => handleViewChange(option.value)}
                   className={cn(
                     'relative px-4 py-2 h-9',
                     'transition-all duration-200',
@@ -142,7 +147,7 @@ export function ViewToggle({
                 <Button
                   variant={isActive ? 'default' : 'ghost'}
                   size="default"
-                  onClick={() => onChangeView(option.value)}
+                  onClick={() => handleViewChange(option.value)}
                   className={cn(
                     'relative w-full flex-col h-auto py-3 px-2',
                     'transition-all duration-200',

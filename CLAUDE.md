@@ -1,0 +1,2 @@
+- prefer pnpm
+- use mise to resolve enviroment errors and install new tools

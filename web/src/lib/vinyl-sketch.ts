@@ -29,6 +29,15 @@ export function createVinylSketch(
   progress: number,
   onSeek?: (progress: number) => void
 ): () => void {
+  console.log("[vinyl-sketch] createVinylSketch called with:", {
+    containerRef,
+    albumColor,
+    isPlaying,
+    progress,
+    containerWidth: containerRef.offsetWidth,
+    containerHeight: containerRef.offsetHeight
+  });
+
   let p5Instance: p5 | null = null;
 
   // Generate seed from album color for consistency
@@ -42,6 +51,8 @@ export function createVinylSketch(
   };
 
   const sketch = (p: p5) => {
+    console.log("[vinyl-sketch] Sketch function called, p5 instance:", p);
+
     let params: VinylSketchParams = {
       albumColor,
       isPlaying,
@@ -59,7 +70,7 @@ export function createVinylSketch(
     let hoverAngle = 0;
     let needsRedraw = true;
     let lastFrameTime = 0;
-    const frameInterval = 1000 / 60; // Target 60fps
+    const frameInterval = 1000 / 30; // Target 30fps for better performance
 
     // Color utilities
     const hexToRgb = (hex: string): [number, number, number] => {
@@ -90,8 +101,26 @@ export function createVinylSketch(
     };
 
     p.setup = () => {
-      const canvas = p.createCanvas(containerRef.offsetWidth, containerRef.offsetHeight);
+      const width = containerRef.offsetWidth || 400;
+      const height = containerRef.offsetHeight || 400;
+
+      console.log("[vinyl-sketch] p.setup called, creating canvas:", { width, height });
+
+      const canvas = p.createCanvas(width, height);
       canvas.parent(containerRef);
+
+      console.log("[vinyl-sketch] Canvas created:", {
+        canvasElement: canvas.elt,
+        canvasParent: canvas.elt.parentElement,
+        canvasWidth: canvas.width,
+        canvasHeight: canvas.height,
+        canvasStyle: canvas.elt.style.cssText
+      });
+
+      // Ensure canvas is visible with explicit styles
+      canvas.elt.style.display = 'block';
+      canvas.elt.style.position = 'relative';
+      canvas.elt.style.zIndex = '2';
 
       initializeVinyl();
 
@@ -105,6 +134,8 @@ export function createVinylSketch(
           needsRedraw = true;
         }
       });
+
+      console.log("[vinyl-sketch] Setup complete, vinylRadius:", vinylRadius);
     };
 
     // Touch event handler (p5 global, not canvas method)
@@ -122,9 +153,16 @@ export function createVinylSketch(
       vinylRadius = Math.min(p.width, p.height) * 0.45;
       centerRadius = vinylRadius * 0.3; // Album art area
 
-      // Generate grooves with organic variation
+      console.log("[vinyl-sketch] initializeVinyl:", {
+        seed,
+        vinylRadius,
+        centerRadius,
+        canvasSize: { width: p.width, height: p.height }
+      });
+
+      // Generate grooves with organic variation - HEAVILY REDUCED for performance
       grooves = [];
-      const grooveCount = p.floor(p.random(80, 120)); // Seeded random count
+      const grooveCount = p.floor(p.random(25, 35)); // Heavily reduced for performance
       const grooveSpacing = (vinylRadius - centerRadius) / grooveCount;
 
       for (let i = 0; i < grooveCount; i++) {
@@ -141,6 +179,7 @@ export function createVinylSketch(
         });
       }
 
+      console.log("[vinyl-sketch] Generated", grooves.length, "grooves");
       needsRedraw = true;
     };
 
@@ -163,31 +202,37 @@ export function createVinylSketch(
     };
 
     p.draw = () => {
+      // PERFORMANCE: Only draw when playing, otherwise use noLoop()
+      if (!params.isPlaying && !needsRedraw) {
+        p.noLoop();
+        return;
+      }
+
+      if (params.isPlaying) {
+        p.loop();
+      }
+
       const currentTime = Date.now();
-      if (currentTime - lastFrameTime < frameInterval && !needsRedraw) {
-        return; // Skip frame for performance
+      if (currentTime - lastFrameTime < frameInterval) {
+        return; // Skip frame for 30fps max
       }
       lastFrameTime = currentTime;
 
-      // Update rotation
+      // Update rotation only when playing
       if (params.isPlaying) {
         targetRotation += 0.02; // Vinyl RPM simulation
-        needsRedraw = true;
       }
 
       // Smooth rotation interpolation
       const rotationDiff = targetRotation - rotation;
       if (Math.abs(rotationDiff) > 0.001) {
         rotation += rotationDiff * 0.1;
-        needsRedraw = true;
+      } else if (!params.isPlaying && !needsRedraw) {
+        return; // Nothing to draw
       }
 
-      if (!needsRedraw) {
-        return;
-      }
-
-      // Clear background
-      p.background(250, 249, 245);
+      // Clear background with high-contrast color for debugging
+      p.background(30, 30, 40); // Dark background for contrast
 
       // Center canvas
       p.push();
@@ -207,6 +252,8 @@ export function createVinylSketch(
       drawReflections();
 
       p.pop();
+
+      needsRedraw = false; // Reset after drawing
 
       // Draw hover indicator
       if (isHovering) {
@@ -245,9 +292,13 @@ export function createVinylSketch(
       p.noFill();
       p.strokeWeight(1);
 
+      // PERFORMANCE: Minimal layers for smoothness
+      const shimmerLayers = 1; // Single layer only
+      // PERFORMANCE: Very low resolution for performance
+      const resolution = 60; // Heavily reduced from 360
+
       for (const groove of grooves) {
         // Layered shimmer effect with transparency
-        const shimmerLayers = 3;
         for (let layer = 0; layer < shimmerLayers; layer++) {
           const layerOffset = layer * 0.1;
           const shimmerIntensity = p.sin(groove.shimmerPhase + p.frameCount * 0.05 + layerOffset) * 0.5 + 0.5;
@@ -265,7 +316,6 @@ export function createVinylSketch(
 
           // Draw groove with Perlin noise displacement
           p.beginShape();
-          const resolution = 360; // Points around circle
           for (let angle = 0; angle <= 360; angle += 360 / resolution) {
             const rad = p.radians(angle);
 
@@ -377,11 +427,19 @@ export function createVinylSketch(
   // Note: Assumes p5 is available globally or imported
   if (typeof window !== 'undefined' && (window as any).p5) {
     const P5 = (window as any).p5;
+    console.log("[vinyl-sketch] Creating p5 instance with P5 constructor:", P5);
     p5Instance = new P5(sketch);
+    console.log("[vinyl-sketch] p5 instance created:", p5Instance);
+  } else {
+    console.error("[vinyl-sketch] p5 is not available on window!", {
+      hasWindow: typeof window !== 'undefined',
+      windowP5: (window as any)?.p5
+    });
   }
 
   // Cleanup function
   return () => {
+    console.log("[vinyl-sketch] Cleanup function called");
     if (p5Instance) {
       p5Instance.remove();
       p5Instance = null;
