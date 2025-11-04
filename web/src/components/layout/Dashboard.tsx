@@ -19,10 +19,8 @@ export function Dashboard({
   const viewMode = useCalendarStore((state) => state.viewMode);
   const setViewMode = useCalendarStore((state) => state.setViewMode);
 
-  console.log('Dashboard: Current viewMode:', viewMode);
 
   const handleViewModeChange = (mode: ViewMode) => {
-    console.log('Dashboard: Setting viewMode to:', mode);
     setViewMode(mode);
   };
 

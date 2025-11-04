@@ -24,34 +24,17 @@ export function VinylDisc({
 
   // Initialize sketch on mount
   useEffect(() => {
-    console.log("[VinylDisc] Component mounted, containerRef:", containerRef.current);
-
     if (!containerRef.current) {
-      console.warn("[VinylDisc] No container ref on mount");
       return;
     }
-
-    const container = containerRef.current;
-    console.log("[VinylDisc] Container dimensions:", {
-      offsetWidth: container.offsetWidth,
-      offsetHeight: container.offsetHeight,
-      clientWidth: container.clientWidth,
-      clientHeight: container.clientHeight,
-      boundingRect: container.getBoundingClientRect()
-    });
 
     // Load p5.js dynamically
     const loadP5 = async () => {
       try {
-        console.log("[VinylDisc] Loading p5.js...");
-
         // Check if p5 is already loaded
         if (!(window as any).p5) {
           const p5Module = await import("p5");
           (window as any).p5 = p5Module.default;
-          console.log("[VinylDisc] p5.js loaded successfully");
-        } else {
-          console.log("[VinylDisc] p5.js already loaded");
         }
 
         // Wait a frame to ensure container has dimensions
@@ -59,25 +42,18 @@ export function VinylDisc({
 
         // Create the sketch
         if (containerRef.current) {
-          const finalContainer = containerRef.current;
-          console.log("[VinylDisc] Creating sketch with dimensions:", {
-            width: finalContainer.offsetWidth,
-            height: finalContainer.offsetHeight
-          });
-
           cleanupRef.current = createVinylSketch(
-            finalContainer,
+            containerRef.current,
             track.coverColor,
             isPlaying,
             progress,
             onSeek
           );
 
-          console.log("[VinylDisc] Sketch created, cleanup ref:", !!cleanupRef.current);
           setIsLoading(false);
         }
       } catch (error) {
-        console.error("[VinylDisc] Error loading p5.js or creating sketch:", error);
+        console.error("[VinylDisc] Error creating sketch:", error);
         setIsLoading(false);
       }
     };
@@ -86,7 +62,6 @@ export function VinylDisc({
 
     // Cleanup on unmount
     return () => {
-      console.log("[VinylDisc] Cleaning up sketch");
       if (cleanupRef.current) {
         cleanupRef.current();
         cleanupRef.current = null;
@@ -94,31 +69,24 @@ export function VinylDisc({
     };
   }, []); // Only run once on mount
 
-  // Update sketch when props change
+  // Update sketch when IMPORTANT props change (NOT progress - too frequent!)
   useEffect(() => {
     if (containerRef.current && (window as any).p5) {
-      // Find the p5 instance and update its params
       const canvas = containerRef.current.querySelector("canvas");
-      console.log("[VinylDisc] Updating params, canvas found:", !!canvas);
 
       if (canvas && (canvas as any)._pInst) {
         const p5Instance = (canvas as any)._pInst;
         if (p5Instance.updateParams) {
-          console.log("[VinylDisc] Calling updateParams with:", {
-            albumColor: track.coverColor,
-            isPlaying,
-            progress
-          });
           p5Instance.updateParams({
             albumColor: track.coverColor,
             isPlaying,
-            progress,
+            progress, // Pass current value but don't trigger on every change
             onSeek,
           });
         }
       }
     }
-  }, [track.coverColor, isPlaying, progress, onSeek]);
+  }, [track.coverColor, isPlaying]); // REMOVED progress and onSeek from deps!
 
   return (
     <motion.div

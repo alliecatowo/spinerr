@@ -39,7 +39,6 @@ export function ViewToggle({
   className,
 }: ViewToggleProps) {
   const handleViewChange = (view: ViewMode) => {
-    console.log('ViewToggle: Changing view from', currentView, 'to', view);
     onChangeView(view);
   };
 
