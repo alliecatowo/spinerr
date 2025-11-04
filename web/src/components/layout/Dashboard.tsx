@@ -17,8 +17,8 @@ export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
   const showCalendar = viewMode === "calendar" || viewMode === "both";
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* View Toggle - floating */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+      {/* View Toggle */}
       <div className="fixed top-6 right-6 z-50">
         <ViewToggle
           currentView={viewMode}
@@ -26,35 +26,34 @@ export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
         />
       </div>
 
-      {/* Main Content - zen lofi layout */}
-      <div className="h-full flex items-start justify-center px-6 pt-12 pb-6">
-        <div className={`w-full max-w-7xl h-full flex gap-12 ${viewMode === "both" ? "" : "justify-center"}`}>
-          {/* Music Section - floats on left */}
+      {/* Main Content - simple grid */}
+      <div className="container mx-auto px-6 py-12 max-w-7xl">
+        <div className={`grid gap-12 ${viewMode === "both" ? "lg:grid-cols-[1fr_400px]" : "grid-cols-1 place-items-center"}`}>
+          {/* Music Section */}
           <AnimatePresence mode="sync">
             {showMusic && (
               <motion.div
                 key="music"
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="flex-shrink-0 flex items-start pt-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
               >
                 {musicSection}
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Calendar Section - floats on right */}
+          {/* Calendar Section */}
           <AnimatePresence mode="sync">
             {showCalendar && (
               <motion.div
                 key="calendar"
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 30 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="flex-1 max-w-md pt-8 h-full overflow-hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="w-full max-w-md"
               >
                 {calendarSection}
               </motion.div>
