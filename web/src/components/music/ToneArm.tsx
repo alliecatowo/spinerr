@@ -8,16 +8,15 @@ interface ToneArmProps {
 }
 
 export function ToneArm({ isPlaying, progress }: ToneArmProps) {
-  // Playing position: -35 to -20 degrees (on vinyl, moving inward as track plays)
-  // Paused position: 25 degrees (off vinyl, up and to the side)
-  const baseRotation = isPlaying ? -35 : 25;
-  const progressRotation = isPlaying ? progress * 15 : 0; // Move toward center as track plays
+  // Correct: Playing = 25° (on vinyl) | Paused = -35° (off vinyl)
+  const baseRotation = isPlaying ? 25 : -35;
+  const progressRotation = isPlaying ? progress * 15 : 0;
   const totalRotation = baseRotation + progressRotation;
 
   return (
     <motion.div
       className="absolute top-0 right-8 origin-top-right w-48 h-64 pointer-events-none z-20"
-      initial={{ rotate: 25 }}
+      initial={{ rotate: -35 }}
       animate={{ rotate: totalRotation }}
       transition={{
         type: "spring",
