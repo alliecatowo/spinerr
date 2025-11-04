@@ -1,0 +1,6 @@
+[tools]
+node = "latest"
+npm = "latest"
+pnpm = "latest"
+python = "latest"
+uv = "latest"
