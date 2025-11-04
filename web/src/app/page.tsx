@@ -73,7 +73,7 @@ export default function Home() {
       </div>
 
       {/* Now Playing Info */}
-      <NowPlaying track={currentTrack} />
+      <NowPlaying track={currentTrack} isPlaying={isPlaying} />
 
       {/* Player Controls */}
       <PlayerControls
@@ -91,19 +91,26 @@ export default function Home() {
     </div>
   );
 
-  // Calendar section with calendar and upcoming events
+  // Calendar section - minimal zen lofi aesthetic
   const calendarSection = (
-    <div className="space-y-6">
-      <Calendar
-        selectedDate={selectedDate}
-        events={events}
-        onSelectDate={(date) => date && selectDate(date)}
-      />
-      <UpcomingEvents
-        events={events}
-        selectedDate={selectedDate}
-        maxEvents={7}
-      />
+    <div className="space-y-8 h-full flex flex-col">
+      {/* Minimal Calendar */}
+      <div className="flex-shrink-0">
+        <Calendar
+          selectedDate={selectedDate}
+          events={events}
+          onSelectDate={(date) => date && selectDate(date)}
+        />
+      </div>
+
+      {/* Minimal Upcoming Events - just 3-4 items */}
+      <div className="flex-1 overflow-auto">
+        <UpcomingEvents
+          events={events}
+          selectedDate={selectedDate}
+          maxEvents={4}
+        />
+      </div>
     </div>
   );
 
