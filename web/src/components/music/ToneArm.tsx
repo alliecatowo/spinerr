@@ -8,11 +8,10 @@ interface ToneArmProps {
 }
 
 export function ToneArm({ isPlaying, progress }: ToneArmProps) {
-  // Rest position: 45 degrees (off vinyl)
-  // Playing position: -10 degrees (on vinyl edge)
-  // As track plays: subtle movement from -10 to 0 degrees
-  const baseRotation = isPlaying ? -10 : 45;
-  const progressRotation = isPlaying ? progress * 10 : 0;
+  // Rest position: 25 degrees (off vinyl, up)
+  // Playing position: -35 to -20 degrees (on vinyl, moving inward as track plays)
+  const baseRotation = isPlaying ? -35 : 25;
+  const progressRotation = isPlaying ? progress * 15 : 0; // Move toward center as track plays
   const totalRotation = baseRotation + progressRotation;
 
   return (

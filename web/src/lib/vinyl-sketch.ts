@@ -231,8 +231,8 @@ export function createVinylSketch(
         return; // Nothing to draw
       }
 
-      // Clear background with high-contrast color for debugging
-      p.background(30, 30, 40); // Dark background for contrast
+      // Clear background - TRANSPARENT
+      p.clear();
 
       // Center canvas
       p.push();

@@ -60,9 +60,9 @@ export default function Home() {
 
   // Music section with all player components
   const musicSection = (
-    <div className="flex flex-col items-center justify-center space-y-8">
+    <div className="flex flex-col items-center space-y-6 w-full max-w-xl">
       {/* Vinyl Player Area */}
-      <div className="relative w-full max-w-lg aspect-square">
+      <div className="relative w-full aspect-square max-w-md">
         <VinylDisc
           track={currentTrack}
           isPlaying={isPlaying}
@@ -73,25 +73,21 @@ export default function Home() {
       </div>
 
       {/* Now Playing Info */}
-      <div className="w-full">
-        <NowPlaying track={currentTrack} />
-      </div>
+      <NowPlaying track={currentTrack} />
 
       {/* Player Controls */}
-      <div className="w-full flex justify-center">
-        <PlayerControls
-          isPlaying={isPlaying}
-          progress={progress}
-          volume={volume}
-          duration={currentTrack.duration}
-          onPlay={play}
-          onPause={pause}
-          onNext={nextTrack}
-          onPrev={prevTrack}
-          onSeek={handleSeek}
-          onVolumeChange={setVolume}
-        />
-      </div>
+      <PlayerControls
+        isPlaying={isPlaying}
+        progress={progress}
+        volume={volume}
+        duration={currentTrack.duration}
+        onPlay={play}
+        onPause={pause}
+        onNext={nextTrack}
+        onPrev={prevTrack}
+        onSeek={handleSeek}
+        onVolumeChange={setVolume}
+      />
     </div>
   );
 

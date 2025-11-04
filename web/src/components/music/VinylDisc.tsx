@@ -101,7 +101,7 @@ export function VinylDisc({
       {/* P5 Canvas Container - with explicit min size and visible border for debugging */}
       <div
         ref={containerRef}
-        className="w-full h-full min-h-[400px] border-4 border-red-500 bg-slate-100"
+        className="w-full h-full min-h-[400px]"
         style={{
           position: 'relative',
           zIndex: 1
