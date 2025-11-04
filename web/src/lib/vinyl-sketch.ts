@@ -97,7 +97,6 @@ export function createVinylSketch(
 
       // Set up interaction handlers
       canvas.mousePressed(() => handleInteraction());
-      canvas.touchStarted(() => handleInteraction());
       canvas.mouseMoved(() => {
         const d = p.dist(p.mouseX, p.mouseY, p.width / 2, p.height / 2);
         isHovering = d <= vinylRadius;
@@ -106,6 +105,12 @@ export function createVinylSketch(
           needsRedraw = true;
         }
       });
+    };
+
+    // Touch event handler (p5 global, not canvas method)
+    p.touchStarted = () => {
+      handleInteraction();
+      return false; // Prevent default
     };
 
     const initializeVinyl = () => {

@@ -76,6 +76,12 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Vinyl disc color palette */
+  --vinyl-primary: oklch(0.25 0.05 280);
+  --vinyl-secondary: oklch(0.35 0.08 260);
+  --vinyl-accent: oklch(0.65 0.15 290);
+  --vinyl-glow: oklch(0.75 0.2 280);
 }
 
 .dark {
@@ -110,13 +116,61 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Dark mode vinyl colors - enhanced vibrancy */
+  --vinyl-primary: oklch(0.35 0.12 280);
+  --vinyl-secondary: oklch(0.45 0.15 260);
+  --vinyl-accent: oklch(0.75 0.2 290);
+  --vinyl-glow: oklch(0.85 0.25 280);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Vinyl rotation animation */
+  .animate-vinyl-spin {
+    animation: vinyl-spin 3s linear infinite;
+  }
+
+  .animate-vinyl-spin-slow {
+    animation: vinyl-spin 8s linear infinite;
+  }
+
+  @keyframes vinyl-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Smooth glow effect for vinyl */
+  .vinyl-glow {
+    box-shadow: 0 0 20px var(--vinyl-glow),
+                0 0 40px var(--vinyl-accent),
+                0 0 60px var(--vinyl-primary);
+  }
+
+  /* Performance optimizations for animations */
+  .will-change-transform {
+    will-change: transform;
+  }
+
+  .gpu-accelerate {
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 }
