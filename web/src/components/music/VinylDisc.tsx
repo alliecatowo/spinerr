@@ -96,7 +96,7 @@ export function VinylDisc({
         duration: 0.8,
         ease: [0.16, 1, 0.3, 1],
       }}
-      className="relative w-full h-full"
+      className="relative w-full h-full z-10"
     >
       {/* P5 Canvas Container - with explicit min size and visible border for debugging */}
       <div

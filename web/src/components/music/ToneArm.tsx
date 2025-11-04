@@ -17,7 +17,7 @@ export function ToneArm({ isPlaying, progress }: ToneArmProps) {
 
   return (
     <motion.div
-      className="absolute top-0 right-8 origin-top-right w-48 h-64 pointer-events-none"
+      className="absolute top-0 right-8 origin-top-right w-48 h-64 pointer-events-none z-20"
       initial={{ rotate: 45 }}
       animate={{ rotate: totalRotation }}
       transition={{
