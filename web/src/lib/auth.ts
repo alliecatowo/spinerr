@@ -2,6 +2,8 @@ import {
   signInAnonymously,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut as firebaseSignOut,
   linkWithCredential,
   EmailAuthProvider,
@@ -58,6 +60,30 @@ export async function signIn(email: string, password: string): Promise<User> {
   const auth = getFirebaseAuth();
   const result = await signInWithEmailAndPassword(auth, email, password);
   console.log('[Auth] Sign in successful:', result.user.email);
+  return result.user;
+}
+
+/**
+ * Sign in with Google OAuth
+ * If user is currently anonymous, this will link the anonymous account
+ */
+export async function signInWithGoogle(): Promise<User> {
+  const auth = getFirebaseAuth();
+  const currentUser = auth.currentUser;
+  const provider = new GoogleAuthProvider();
+
+  // If user is anonymous, upgrade their account
+  if (currentUser && currentUser.isAnonymous) {
+    console.log('[Auth] Upgrading anonymous account to Google');
+    const credential = GoogleAuthProvider.credential();
+    const result = await linkWithCredential(currentUser, credential);
+    console.log('[Auth] Account upgraded to Google successfully');
+    return result.user;
+  }
+
+  // Otherwise sign in with Google
+  const result = await signInWithPopup(auth, provider);
+  console.log('[Auth] Google sign in successful:', result.user.email);
   return result.user;
 }
 

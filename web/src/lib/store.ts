@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Album, Track as ProviderTrack, PlaylistRecord, UserLibrary } from './providers/types';
-import { getLibraryStorage } from './library-sync';
+import { collection, getDocs, doc, setDoc, getDoc, writeBatch } from 'firebase/firestore';
+import { getFirebaseDb } from './firebase';
 
 // Types
 export type ViewMode = 'music' | 'both' | 'calendar';
@@ -349,27 +350,55 @@ export const useLibraryStore = create<LibraryState>()(
         favorites: []
       }),
 
-      // Sync current library state to Firestore (for authenticated users)
+      // Sync current library state to Firestore
       syncToFirestore: async (userId: string) => {
         const state = get();
-        const storage = getLibraryStorage(userId);
+        const db = getFirebaseDb();
+        if (!db) {
+          console.warn('[LibraryStore] Firestore not available');
+          return;
+        }
 
         try {
-          await storage.saveAlbums(state.albums);
-          await storage.saveRecentlyPlayed(state.recentlyPlayed);
+          const batch = writeBatch(db);
+
+          // Save albums
+          state.albums.forEach((album) => {
+            const albumRef = doc(db, 'users', userId, 'albums', album.id);
+            batch.set(albumRef, album);
+          });
+
+          // Save recently played
+          const recentlyPlayedRef = doc(db, 'users', userId, 'library', 'recentlyPlayed');
+          batch.set(recentlyPlayedRef, { albums: state.recentlyPlayed });
+
+          await batch.commit();
           console.log('[LibraryStore] Synced to Firestore');
         } catch (error) {
           console.error('[LibraryStore] Firestore sync failed:', error);
         }
       },
 
-      // Load library from Firestore (when user signs in)
+      // Load library from Firestore
       loadFromFirestore: async (userId: string) => {
-        const storage = getLibraryStorage(userId);
+        const db = getFirebaseDb();
+        if (!db) {
+          console.warn('[LibraryStore] Firestore not available');
+          return;
+        }
 
         try {
-          const albums = await storage.getAlbums();
-          const recentlyPlayed = await storage.getRecentlyPlayed();
+          // Load albums
+          const albumsRef = collection(db, 'users', userId, 'albums');
+          const albumsSnapshot = await getDocs(albumsRef);
+          const albums = albumsSnapshot.docs.map((doc) => doc.data() as Album);
+
+          // Load recently played
+          const recentlyPlayedRef = doc(db, 'users', userId, 'library', 'recentlyPlayed');
+          const recentlyPlayedSnapshot = await getDoc(recentlyPlayedRef);
+          const recentlyPlayed = recentlyPlayedSnapshot.exists()
+            ? (recentlyPlayedSnapshot.data().albums as Album[])
+            : [];
 
           set({
             albums,

@@ -3,8 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { User } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
-import { signInAnonymous, onAuthChange, createAccount, signIn, signOut } from '@/lib/auth';
-import { migrateLibraryToFirestore } from '@/lib/library-sync';
+import { signInAnonymous, onAuthChange, createAccount, signIn, signInWithGoogle, signOut } from '@/lib/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -13,6 +12,7 @@ interface AuthContextType {
   signInAnon: () => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithGoogleOAuth: () => Promise<void>;
   signOutUser: () => Promise<void>;
 }
 
@@ -79,18 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const wasAnonymous = user?.isAnonymous || false;
-      const previousUserId = user?.uid;
-
-      // Create account (will upgrade if anonymous)
+      // Create account (will upgrade anonymous user via linkWithCredential)
+      // Firebase automatically preserves the user's data when upgrading
       await createAccount(email, password);
-
-      // If upgrading from anonymous, migrate library data
-      if (wasAnonymous && previousUserId) {
-        console.log('[AuthProvider] Migrating library from anonymous account...');
-        await migrateLibraryToFirestore(previousUserId);
-        console.log('[AuthProvider] ✓ Your library has been saved to your account!');
-      }
+      console.log('[AuthProvider] ✓ Account created! Your library is preserved.');
     } catch (error) {
       console.error('[AuthProvider] Sign-up error:', error);
       throw error;
@@ -105,6 +97,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signIn(email, password);
     } catch (error) {
       console.error('[AuthProvider] Sign-in error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithGoogleOAuth = async () => {
+    setLoading(true);
+    try {
+      await signInWithGoogle();
+      console.log('[AuthProvider] ✓ Signed in with Google! Your library is preserved.');
+    } catch (error) {
+      console.error('[AuthProvider] Google sign-in error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -134,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInAnon,
         signUp,
         signInWithEmail,
+        signInWithGoogleOAuth,
         signOutUser,
       }}
     >
