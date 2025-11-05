@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Play, Pause, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,9 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { usePlayerStore } from "@/lib/store";
 import { mockTracks } from "@/lib/mock-data";
 
-export default function TrackPage({ params }: { params: { id: string } }) {
+export default function TrackPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { id } = use(params);
   const [discPulled, setDiscPulled] = useState(false);
   const [track, setTrackData] = useState<typeof mockTracks[0] | null>(null);
 
@@ -21,11 +22,11 @@ export default function TrackPage({ params }: { params: { id: string } }) {
   const pause = usePlayerStore((state) => state.pause);
 
   useEffect(() => {
-    const foundTrack = mockTracks.find((t) => t.id === params.id);
+    const foundTrack = mockTracks.find((t) => t.id === id);
     if (foundTrack) {
       setTrackData(foundTrack);
     }
-  }, [params.id]);
+  }, [id]);
 
   if (!track) {
     return (

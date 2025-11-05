@@ -19,8 +19,6 @@ export interface CalendarEvent {
   description: string;
 }
 
-export type ViewMode = 'music' | 'calendar' | 'both';
-
 // Player Store
 interface PlayerState {
   currentTrack: Track | null;
@@ -100,10 +98,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 interface CalendarState {
   selectedDate: Date;
   events: CalendarEvent[];
-  viewMode: ViewMode;
+  showCalendar: boolean;
 
   // Actions
-  setViewMode: (mode: ViewMode) => void;
+  toggleCalendar: () => void;
+  setShowCalendar: (show: boolean) => void;
   selectDate: (date: Date) => void;
   addEvent: (event: CalendarEvent) => void;
   removeEvent: (eventId: string) => void;
@@ -113,13 +112,11 @@ interface CalendarState {
 export const useCalendarStore = create<CalendarState>((set) => ({
   selectedDate: new Date(),
   events: [],
-  viewMode: 'both',
+  showCalendar: true, // Default to showing calendar
 
-  setViewMode: (mode: ViewMode) => {
-    console.log('Store: setViewMode called with:', mode);
-    set({ viewMode: mode });
-    console.log('Store: viewMode updated to:', mode);
-  },
+  toggleCalendar: () => set((state) => ({ showCalendar: !state.showCalendar })),
+
+  setShowCalendar: (show: boolean) => set({ showCalendar: show }),
 
   selectDate: (date: Date) => set({ selectedDate: date }),
 

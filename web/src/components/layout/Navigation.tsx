@@ -1,11 +1,19 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Library } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Navigation() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Hide Library button when on library page
+  const isLibraryPage = pathname === '/library';
+
+  if (isLibraryPage) {
+    return null;
+  }
 
   return (
     <nav className="flex items-center gap-2">
