@@ -56,7 +56,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     // Trigger audio player
     if (typeof window !== 'undefined') {
       import('./audio-player').then(({ getAudioPlayer }) => {
-        getAudioPlayer().play();
+        getAudioPlayer().play().catch((error) => {
+          console.error('[Store] Play error, reverting state:', error);
+          set({ isPlaying: false });
+        });
       });
     }
   },
@@ -67,6 +70,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     if (typeof window !== 'undefined') {
       import('./audio-player').then(({ getAudioPlayer }) => {
         getAudioPlayer().pause();
+      }).catch((error) => {
+        console.error('[Store] Pause error:', error);
       });
     }
   },

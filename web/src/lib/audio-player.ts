@@ -78,11 +78,14 @@ export class AudioPlayer {
       // Fetch stream URL from API
       const response = await fetch(`/api/soundcloud/stream?trackId=${trackId}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch stream URL');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Stream API error:', response.status, errorData);
+        throw new Error(`Failed to fetch stream URL: ${response.status} - ${errorData.error || 'Unknown error'}`);
       }
 
       const data = await response.json();
       if (!data.streamUrl) {
+        console.error('No stream URL in response:', data);
         throw new Error('No stream URL available');
       }
 
@@ -97,12 +100,18 @@ export class AudioPlayer {
       await this.audio.load();
     } catch (error) {
       console.error('Error loading track:', error);
+      // Reset state gracefully without crashing
+      this.currentTrackId = null;
       usePlayerStore.getState().pause();
+      usePlayerStore.getState().updateProgress(0);
+      // Re-throw so caller knows it failed, but player state is stable
+      throw error;
     }
   }
 
   /**
    * Play current track
+   * NOTE: Does NOT update store - store calls this method
    */
   async play(): Promise<void> {
     if (!this.audio) {
@@ -110,26 +119,37 @@ export class AudioPlayer {
     }
 
     if (!this.audio) {
-      console.error('Audio player not initialized');
+      console.error('[AudioPlayer] Audio player not initialized');
       return;
     }
 
     try {
       await this.audio.play();
-      usePlayerStore.getState().play();
+      console.log('[AudioPlayer] Playing successfully');
     } catch (error) {
-      console.error('Error playing track:', error);
-      usePlayerStore.getState().pause();
+      console.error('[AudioPlayer] Error playing track:', error);
+      // On error, pause the store state
+      usePlayerStore.getState().updateProgress(0);
+      throw error; // Let store handle the state
     }
   }
 
   /**
    * Pause current track
+   * NOTE: Does NOT update store - store calls this method
    */
   pause(): void {
-    if (!this.audio) return;
-    this.audio.pause();
-    usePlayerStore.getState().pause();
+    if (!this.audio) {
+      console.log('[AudioPlayer] Cannot pause - no audio instance');
+      return;
+    }
+
+    try {
+      this.audio.pause();
+      console.log('[AudioPlayer] Paused successfully');
+    } catch (error) {
+      console.error('[AudioPlayer] Error pausing:', error);
+    }
   }
 
   /**
