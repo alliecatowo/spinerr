@@ -42,14 +42,16 @@ export function AtAGlance() {
       className="fixed top-8 right-8 z-30 space-y-8"
     >
       {/* Prominent Clock - Floating */}
-      <div className="text-right space-y-1">
-        <div className="text-7xl font-light text-gray-900 dark:text-white tabular-nums tracking-tight">
-          {format(currentTime, "h:mm")}
+      <div className="text-right space-y-2">
+        <div className="flex items-baseline justify-end gap-1">
+          <span className="text-7xl font-light text-gray-900 dark:text-white tabular-nums tracking-tight">
+            {format(currentTime, "h:mm")}
+          </span>
+          <span className="text-2xl font-light text-gray-500 dark:text-neutral-500 tracking-wide uppercase">
+            {format(currentTime, "a")}
+          </span>
         </div>
-        <div className="text-xl font-light text-gray-500 dark:text-neutral-500 tracking-wide uppercase">
-          {format(currentTime, "a")}
-        </div>
-        <div className="text-sm text-gray-400 dark:text-neutral-600 mt-2">
+        <div className="text-sm text-gray-400 dark:text-neutral-600">
           {format(currentTime, "EEEE, MMMM d")}
         </div>
       </div>

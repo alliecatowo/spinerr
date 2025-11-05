@@ -44,11 +44,19 @@ export default function Home() {
     // Set calendar events
     setEvents(mockEvents);
 
+    console.log('[Home] Checking for album to load:', {
+      recentlyPlayedCount: recentlyPlayed.length,
+      albumsCount: albums.length,
+      currentTrack: currentTrack?.title
+    });
+
     // Always load most recently played album on mount
     const albumToLoad = recentlyPlayed[0] || albums[0];
     if (albumToLoad && albumToLoad.tracks.length > 0) {
       console.log('[Home] Loading most recent album:', albumToLoad.title);
       loadAlbum(albumToLoad);
+    } else {
+      console.warn('[Home] No albums found in library to auto-load');
     }
   }, []); // Only run once on mount
 

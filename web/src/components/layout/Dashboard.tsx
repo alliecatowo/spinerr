@@ -67,8 +67,13 @@ export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
                   {/* Ambient Mode Toggle */}
                   <button
                     onClick={isAmbient ? exitAmbientMode : enterAmbientMode}
-                    className="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-900 transition-colors"
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      isAmbient
+                        ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20'
+                        : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-900'
+                    }`}
                     aria-label={isAmbient ? "Exit ambient mode" : "Enter ambient mode"}
+                    title={isAmbient ? "Exit ambient mode" : "Enter ambient mode"}
                   >
                     {isAmbient ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
                   </button>
