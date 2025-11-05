@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import type { Track } from "@/lib/store";
-import { createVinylSketch } from "@/lib/vinyl-sketch";
+import { vinylRenderer } from "@/lib/vinyl-renderer";
 
 interface VinylDiscProps {
   track: Track;
@@ -19,109 +19,60 @@ export function VinylDisc({
   onPlayPause,
 }: VinylDiscProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const p5InstanceRef = useRef<any>(null);
-  const cleanupRef = useRef<(() => void) | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Store frequently-changing values in refs to avoid stale closures
-  const progressRef = useRef(progress);
-
-  // Update refs when props change (but don't trigger re-renders)
+  // INITIALIZATION: Initialize or reuse existing renderer
   useEffect(() => {
-    progressRef.current = progress;
-  }, [progress]);
+    const initializeRenderer = async () => {
+      if (!containerRef.current) {
+        console.error("[VinylDisc] No container ref available");
+        return;
+      }
 
-  // INITIALIZATION: Create p5 sketch once on mount
-  useEffect(() => {
-    console.log("[VinylDisc] Mount effect - initializing p5 sketch");
+      console.log("[VinylDisc] Initializing vinyl renderer");
 
-    if (!containerRef.current) {
-      console.error("[VinylDisc] No container ref available");
-      return;
-    }
-
-    // Load p5.js dynamically
-    const initializeP5 = async () => {
       try {
-        // Check if p5 is already loaded
-        if (!(window as any).p5) {
-          console.log("[VinylDisc] Loading p5.js module...");
-          const p5Module = await import("p5");
-          (window as any).p5 = p5Module.default;
-          console.log("[VinylDisc] p5.js loaded successfully");
-        }
-
-        // Wait a frame to ensure container has dimensions
-        await new Promise(resolve => requestAnimationFrame(resolve));
-
-        // Create the sketch
-        if (containerRef.current) {
-          console.log("[VinylDisc] Creating vinyl sketch...");
-          const sketchInstance = createVinylSketch(
-            containerRef.current,
-            track.id, // Use track ID for unique art
-            track.coverColor,
-            undefined, // Artwork will be overlaid via React
-            isPlaying,
-            progress,
-            undefined // No onSeek callback
-          );
-
-          // Store references
-          p5InstanceRef.current = sketchInstance.p5Instance;
-          cleanupRef.current = sketchInstance.cleanup;
-
-          console.log("[VinylDisc] Sketch created successfully, p5Instance:", p5InstanceRef.current);
-          setIsLoading(false);
-        }
+        await vinylRenderer.initialize(
+          containerRef.current,
+          track.id,
+          track.coverColor,
+          undefined,
+          isPlaying,
+          progress
+        );
+        setIsLoading(false);
       } catch (error) {
-        console.error("[VinylDisc] Error creating sketch:", error);
+        console.error("[VinylDisc] Error initializing renderer:", error);
         setIsLoading(false);
       }
     };
 
-    initializeP5();
+    initializeRenderer();
 
-    // Cleanup on unmount
-    return () => {
-      console.log("[VinylDisc] Unmounting, cleaning up...");
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
-      p5InstanceRef.current = null;
-    };
+    // Don't cleanup on unmount - keep renderer alive for performance
+    // Container will be reused on next mount
   }, []); // Only run once on mount
 
   // UPDATE: Handle prop changes after initialization
   useEffect(() => {
-    if (!p5InstanceRef.current) {
-      console.log("[VinylDisc] Update effect - p5 instance not ready yet");
+    if (!vinylRenderer.isInitialized()) {
       return;
     }
 
-    console.log("[VinylDisc] Update effect - updating params:", {
+    console.log("[VinylDisc] Updating renderer params:", {
       trackId: track.id,
       albumColor: track.coverColor,
       isPlaying,
-      hasUpdateParams: typeof (p5InstanceRef.current as any).updateParams === 'function'
     });
 
-    // Call updateParams on the p5 instance
-    if (typeof (p5InstanceRef.current as any).updateParams === 'function') {
-      (p5InstanceRef.current as any).updateParams({
-        trackId: track.id,
-        albumColor: track.coverColor,
-        artworkUrl: undefined,
-        isPlaying,
-        progress: progressRef.current,
-        onSeek: undefined, // No seek callback for performance
-      });
-      console.log("[VinylDisc] updateParams called successfully");
-    } else {
-      console.error("[VinylDisc] updateParams method not found on p5 instance!");
-    }
-  }, [track.id, track.coverColor, isPlaying]); // Trigger on track ID, color, or play state change
+    vinylRenderer.updateParams({
+      trackId: track.id,
+      albumColor: track.coverColor,
+      artworkUrl: undefined,
+      isPlaying,
+      progress,
+    });
+  }, [track.id, track.coverColor, isPlaying, progress]); // Update on any prop change
 
   const [showPlayIcon, setShowPlayIcon] = useState(false);
 
