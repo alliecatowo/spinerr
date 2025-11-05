@@ -48,7 +48,6 @@ export function ViewToggle({
       <div
         className={cn(
           'hidden md:block',
-          'fixed top-6 right-6 z-50',
           className
         )}
       >

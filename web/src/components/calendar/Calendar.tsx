@@ -44,7 +44,7 @@ export function Calendar({
   return (
     <div
       className={cn(
-        "relative rounded-lg border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4",
+        "relative rounded-xl border border-gray-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-900 p-5 shadow-lg shadow-gray-200/50 dark:shadow-black/20",
         className
       )}
     >

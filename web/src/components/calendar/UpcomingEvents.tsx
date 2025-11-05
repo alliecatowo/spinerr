@@ -58,7 +58,7 @@ export function UpcomingEvents({
   return (
     <div
       className={cn(
-        "relative flex flex-col rounded-lg border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900",
+        "relative flex flex-col rounded-xl border border-gray-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-900 shadow-lg shadow-gray-200/50 dark:shadow-black/20",
         className
       )}
     >

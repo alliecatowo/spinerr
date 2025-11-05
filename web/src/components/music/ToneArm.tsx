@@ -15,7 +15,7 @@ export function ToneArm({ isPlaying, progress }: ToneArmProps) {
 
   return (
     <motion.div
-      className="absolute top-0 right-8 origin-top-right w-48 h-64 pointer-events-none z-20"
+      className="absolute top-[5%] right-[5%] origin-top-right w-[25%] aspect-[0.75] pointer-events-none z-20"
       initial={{ rotate: -35 }}
       animate={{ rotate: totalRotation }}
       transition={{
@@ -26,19 +26,19 @@ export function ToneArm({ isPlaying, progress }: ToneArmProps) {
       }}
     >
       {/* Tone Arm Base */}
-      <div className="absolute top-0 right-0 w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full shadow-lg border-2 border-gray-600" />
+      <div className="absolute top-0 right-0 w-[15%] aspect-square bg-gradient-to-br from-gray-700 to-gray-900 dark:from-gray-600 dark:to-gray-800 rounded-full shadow-lg border-2 border-gray-600 dark:border-gray-500" />
 
       {/* Arm */}
-      <div className="absolute top-4 right-3 w-2 h-40 bg-gradient-to-b from-gray-600 to-gray-800 rounded-full shadow-md origin-top">
+      <div className="absolute top-[7%] right-[5.5%] w-[4%] h-[85%] bg-gradient-to-b from-gray-600 to-gray-800 dark:from-gray-500 dark:to-gray-700 rounded-full shadow-md origin-top">
         {/* Arm Detail Line */}
-        <div className="absolute left-1/2 -translate-x-1/2 w-0.5 h-full bg-gray-500 opacity-50" />
+        <div className="absolute left-1/2 -translate-x-1/2 w-[25%] h-full bg-gray-500 dark:bg-gray-400 opacity-50" />
       </div>
 
       {/* Headshell (the part that holds the needle) */}
-      <div className="absolute top-[168px] right-0 w-6 h-12 bg-gradient-to-br from-gray-600 to-gray-900 rounded-sm shadow-lg">
+      <div className="absolute top-[87%] right-0 w-[12%] aspect-[0.5] bg-gradient-to-br from-gray-600 to-gray-900 dark:from-gray-500 dark:to-gray-800 rounded-sm shadow-lg">
         {/* Needle */}
         <motion.div
-          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0.5 h-4 bg-gradient-to-b from-gray-400 to-gray-700 origin-top"
+          className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[15%] h-[33%] bg-gradient-to-b from-gray-400 to-gray-700 dark:from-gray-300 dark:to-gray-600 origin-top"
           animate={{
             scaleY: isPlaying ? 1.1 : 1,
           }}
@@ -48,17 +48,17 @@ export function ToneArm({ isPlaying, progress }: ToneArmProps) {
           }}
         >
           {/* Needle Tip */}
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-red-600 rounded-full shadow-glow" />
+          <div className="absolute -bottom-[10%] left-1/2 -translate-x-1/2 w-[200%] aspect-square bg-red-600 dark:bg-red-500 rounded-full shadow-glow" />
         </motion.div>
       </div>
 
       {/* Counterweight */}
-      <div className="absolute top-1 right-2 w-4 h-4 bg-gradient-radial from-gray-500 to-gray-800 rounded-full shadow-md" />
+      <div className="absolute top-[2%] right-[4%] w-[8%] aspect-square bg-gradient-radial from-gray-500 to-gray-800 dark:from-gray-400 dark:to-gray-700 rounded-full shadow-md" />
 
       {/* Subtle glow when playing */}
       {isPlaying && (
         <motion.div
-          className="absolute top-[180px] right-3 w-2 h-2 bg-red-500 rounded-full blur-sm"
+          className="absolute top-[93%] right-[6%] w-[4%] aspect-square bg-red-500 dark:bg-red-400 rounded-full blur-sm"
           animate={{
             opacity: [0.5, 0.8, 0.5],
           }}

@@ -60,9 +60,9 @@ export default function Home() {
 
   // Music section with all player components
   const musicSection = (
-    <div className="flex flex-col items-center justify-center space-y-8 w-full">
-      {/* Vinyl Player Area - much larger */}
-      <div className="relative w-full aspect-square">
+    <div className="flex flex-col items-center justify-center space-y-6 w-full max-w-[600px]">
+      {/* Vinyl Player Area - compact with padding for tonearm */}
+      <div className="relative w-full max-w-[500px] aspect-square">
         <VinylDisc
           track={currentTrack}
           isPlaying={isPlaying}
