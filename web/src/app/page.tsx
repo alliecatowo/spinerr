@@ -39,21 +39,16 @@ export default function Home() {
   useKeyboardShortcuts(); // Enables keyboard controls
   useFirstVisit(); // Auto-start onboarding tour on first visit
 
-  // Initialize calendar events and load first album ONLY if no track is loaded
+  // Initialize calendar events and auto-load most recent album
   useEffect(() => {
     // Set calendar events
     setEvents(mockEvents);
 
-    // Only load first album if no track is currently loaded
-    // This prevents auto-play when navigating back from library
-    if (!currentTrack) {
-      const albumToLoad = recentlyPlayed[0] || albums[0];
-      if (albumToLoad && albumToLoad.tracks.length > 0) {
-        console.log('[Home] No track loaded, auto-loading first album:', albumToLoad.title);
-        loadAlbum(albumToLoad);
-      }
-    } else {
-      console.log('[Home] Track already loaded, skipping auto-load');
+    // Always load most recently played album on mount
+    const albumToLoad = recentlyPlayed[0] || albums[0];
+    if (albumToLoad && albumToLoad.tracks.length > 0) {
+      console.log('[Home] Loading most recent album:', albumToLoad.title);
+      loadAlbum(albumToLoad);
     }
   }, []); // Only run once on mount
 

@@ -165,10 +165,14 @@ export function VinylDisc({
           zIndex: 10
         }}
         initial={{ opacity: 0, scale: 0, rotate: 0 }}
-        animate={{
+        animate={isPlaying ? {
           opacity: 1,
           scale: 1,
-          rotate: isPlaying ? 360 : null // null preserves current rotation when paused
+          rotate: 360
+        } : {
+          opacity: 1,
+          scale: 1
+          // Don't specify rotate when paused - preserves current rotation
         }}
         transition={{
           opacity: { delay: 0.4, duration: 0.5 },

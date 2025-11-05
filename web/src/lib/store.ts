@@ -400,35 +400,70 @@ export const useTourStore = create<TourState>()(
 
       completeTour: (tourId: string) => {
         console.log('[Tour] Completed:', tourId);
-        const completionKey = `hasSeen${tourId.charAt(0).toUpperCase() + tourId.slice(1)}Tour`;
 
-        // Update state and get latest for Firebase sync
-        const newState = {
+        // Map tour IDs to state keys
+        const tourStateKeys: Record<string, keyof TourState> = {
+          'onboarding': 'hasSeenOnboarding',
+          'library': 'hasSeenLibraryTour',
+          'player': 'hasSeenPlayerTour',
+          'settings': 'hasSeenSettingsTour',
+        };
+
+        const completionKey = tourStateKeys[tourId];
+        if (!completionKey) {
+          console.error('[Tour] Unknown tour ID:', tourId);
+          return;
+        }
+
+        // Update state
+        set({
           [completionKey]: true,
           activeTour: null,
           runTour: false,
           tourStepIndex: 0,
-        };
-        set(newState);
+        });
+
+        console.log('[Tour] State updated, new state:', useTourStore.getState());
 
         // Sync to Firebase after state update
-        setTimeout(() => {
+        setTimeout(async () => {
           const currentState = useTourStore.getState();
           const user = getCurrentUser();
+          console.log('[Tour] Syncing to Firebase:', { user: user?.uid, state: currentState });
           if (user) {
-            syncTourStateToFirebase(user, {
-              hasSeenOnboarding: currentState.hasSeenOnboarding,
-              hasSeenLibraryTour: currentState.hasSeenLibraryTour,
-              hasSeenPlayerTour: currentState.hasSeenPlayerTour,
-              hasSeenSettingsTour: currentState.hasSeenSettingsTour,
-            });
+            try {
+              await syncTourStateToFirebase(user, {
+                hasSeenOnboarding: currentState.hasSeenOnboarding,
+                hasSeenLibraryTour: currentState.hasSeenLibraryTour,
+                hasSeenPlayerTour: currentState.hasSeenPlayerTour,
+                hasSeenSettingsTour: currentState.hasSeenSettingsTour,
+              });
+              console.log('[Tour] ✓ Successfully synced to Firebase');
+            } catch (error) {
+              console.error('[Tour] ✗ Failed to sync to Firebase:', error);
+            }
+          } else {
+            console.warn('[Tour] No user found, cannot sync to Firebase');
           }
-        }, 0);
+        }, 100);
       },
 
       skipTour: (tourId: string) => {
         console.log('[Tour] Skipped:', tourId);
-        const completionKey = `hasSeen${tourId.charAt(0).toUpperCase() + tourId.slice(1)}Tour`;
+
+        // Map tour IDs to state keys
+        const tourStateKeys: Record<string, keyof TourState> = {
+          'onboarding': 'hasSeenOnboarding',
+          'library': 'hasSeenLibraryTour',
+          'player': 'hasSeenPlayerTour',
+          'settings': 'hasSeenSettingsTour',
+        };
+
+        const completionKey = tourStateKeys[tourId];
+        if (!completionKey) {
+          console.error('[Tour] Unknown tour ID:', tourId);
+          return;
+        }
 
         // Update state and get latest for Firebase sync
         const newState = {
@@ -491,6 +526,13 @@ export const useTourStore = create<TourState>()(
     {
       name: 'spinerr-tours',
       version: 1,
+      // Only persist completion state, not runtime state (activeTour, runTour, tourStepIndex)
+      partialize: (state) => ({
+        hasSeenOnboarding: state.hasSeenOnboarding,
+        hasSeenLibraryTour: state.hasSeenLibraryTour,
+        hasSeenPlayerTour: state.hasSeenPlayerTour,
+        hasSeenSettingsTour: state.hasSeenSettingsTour,
+      }),
     }
   )
 );

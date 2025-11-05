@@ -28,14 +28,27 @@ export function TourProvider({ children }: { children: ReactNode }) {
     setStepIndex,
   } = useTourStore();
 
-  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
-    const { status, index, type } = data;
+  // Get current tour steps
+  const tourConfig = activeTour ? getTourById(activeTour) : null;
+  const steps: Step[] = tourConfig?.steps || [];
 
-    if (status === 'finished' || status === 'skipped') {
+  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
+    const { status, index, type, action, lifecycle } = data;
+
+    console.log('[TourContext] Joyride callback:', { status, type, action, lifecycle, index, activeTour, totalSteps: steps.length });
+
+    // Check if we're on the last step and user clicked next/close
+    const isLastStep = index === steps.length - 1;
+    const completedLastStep = isLastStep && (action === 'close' || action === 'next') && lifecycle === 'complete';
+
+    if (status === 'finished' || status === 'skipped' || completedLastStep) {
+      console.log('[TourContext] Tour ending:', { status, completedLastStep });
       if (activeTour) {
-        if (status === 'finished') {
+        if (status === 'finished' || completedLastStep) {
+          console.log('[TourContext] Calling completeTour for:', activeTour);
           completeTour(activeTour);
         } else {
+          console.log('[TourContext] Calling skipTour for:', activeTour);
           skipTour(activeTour);
         }
       }
@@ -44,11 +57,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
     if (type === 'step:after') {
       setStepIndex(index + 1);
     }
-  }, [activeTour, completeTour, skipTour, setStepIndex]);
-
-  // Get current tour steps
-  const tourConfig = activeTour ? getTourById(activeTour) : null;
-  const steps: Step[] = tourConfig?.steps || [];
+  }, [activeTour, completeTour, skipTour, setStepIndex, steps.length]);
 
   return (
     <TourContext.Provider value={{ startTour, stopTour }}>
