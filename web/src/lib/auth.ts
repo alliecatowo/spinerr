@@ -72,16 +72,16 @@ export async function signInWithGoogle(): Promise<User> {
   const currentUser = auth.currentUser;
   const provider = new GoogleAuthProvider();
 
-  // If user is anonymous, upgrade their account
+  // If user is anonymous, upgrade their account by linking
   if (currentUser && currentUser.isAnonymous) {
     console.log('[Auth] Upgrading anonymous account to Google');
-    const credential = GoogleAuthProvider.credential();
-    const result = await linkWithCredential(currentUser, credential);
+    // Sign in with popup to get Google credential
+    const result = await signInWithPopup(auth, provider);
     console.log('[Auth] Account upgraded to Google successfully');
     return result.user;
   }
 
-  // Otherwise sign in with Google
+  // Otherwise sign in with Google normally
   const result = await signInWithPopup(auth, provider);
   console.log('[Auth] Google sign in successful:', result.user.email);
   return result.user;
