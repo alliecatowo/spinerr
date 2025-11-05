@@ -5,15 +5,25 @@ import { Folder, Upload, Music, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  supportsFileSystemAccess,
+  pickAudioFiles,
+  pickAudioDirectory,
+  extractMetadataFromFiles,
+  AudioFileMetadata,
+} from "@/lib/file-system";
+import { batchEnrichMetadata } from "@/lib/metadata-api";
 
 export function LocalFilesSettings() {
   const [supportsFileSystem, setSupportsFileSystem] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [metadata, setMetadata] = useState<Map<string, AudioFileMetadata>>(new Map());
   const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState("");
 
   useEffect(() => {
     // Check for File System Access API support
-    setSupportsFileSystem('showOpenFilePicker' in window);
+    setSupportsFileSystem(supportsFileSystemAccess());
   }, []);
 
   const handleFolderPicker = async () => {
@@ -23,43 +33,62 @@ export function LocalFilesSettings() {
     }
 
     try {
-      // @ts-ignore - File System Access API
-      const dirHandle = await window.showDirectoryPicker();
+      const files = await pickAudioDirectory();
 
-      // TODO: Scan directory for audio files
-      alert(`Selected folder: ${dirHandle.name} (scanning pending)`);
-    } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        console.error('Error selecting folder:', err);
+      if (files.length > 0) {
+        setSelectedFiles(files);
+        setScanProgress(`Found ${files.length} audio file(s)`);
+
+        // Automatically extract metadata
+        const extractedMetadata = await extractMetadataFromFiles(files);
+        setMetadata(extractedMetadata);
       }
+    } catch (err) {
+      console.error('Error selecting folder:', err);
+      alert(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const audioFiles = files.filter(f => f.type.startsWith('audio/'));
 
-    setSelectedFiles(audioFiles);
-
     if (audioFiles.length > 0) {
-      alert(`${audioFiles.length} audio file(s) selected (processing pending)`);
+      setSelectedFiles(audioFiles);
+      setScanProgress(`Selected ${audioFiles.length} file(s)`);
+
+      // Extract metadata
+      const extractedMetadata = await extractMetadataFromFiles(audioFiles);
+      setMetadata(extractedMetadata);
     }
   };
 
-  const handleScanMetadata = () => {
+  const handleScanMetadata = async () => {
     if (selectedFiles.length === 0) {
       alert("Please add some files first");
       return;
     }
 
     setIsScanning(true);
+    setScanProgress("Enriching metadata from online sources...");
 
-    // TODO: Extract metadata using jsmediatags
-    // TODO: Enrich with Last.fm/MusicBrainz
-    setTimeout(() => {
+    try {
+      // Convert metadata map to array for batch enrichment
+      const metadataArray = Array.from(metadata.values());
+
+      // Enrich with MusicBrainz/Cover Art Archive
+      const enrichedData = await batchEnrichMetadata(metadataArray);
+
+      setScanProgress(`Enriched ${enrichedData.length} tracks`);
       setIsScanning(false);
-      alert("Metadata scan complete (implementation pending)");
-    }, 2000);
+
+      // TODO: Update metadata with enriched data and store
+      console.log("Enriched metadata:", enrichedData);
+    } catch (err) {
+      console.error('Error enriching metadata:', err);
+      setIsScanning(false);
+      alert(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
   };
 
   return (
@@ -146,6 +175,15 @@ export function LocalFilesSettings() {
             <Alert className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
               <AlertDescription className="text-blue-900 dark:text-blue-100 text-sm">
                 {selectedFiles.length} file(s) selected
+                {metadata.size > 0 && ` - ${metadata.size} tracks with metadata`}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {scanProgress && (
+            <Alert className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900">
+              <AlertDescription className="text-green-900 dark:text-green-100 text-sm">
+                {scanProgress}
               </AlertDescription>
             </Alert>
           )}
