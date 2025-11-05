@@ -352,3 +352,96 @@ export const useLibraryStore = create<LibraryState>()(
     }
   )
 );
+
+// Tour Store - Guided tour state management
+interface TourState {
+  // Completion tracking
+  hasSeenOnboarding: boolean;
+  hasSeenLibraryTour: boolean;
+  hasSeenPlayerTour: boolean;
+  hasSeenSettingsTour: boolean;
+
+  // Active tour management
+  activeTour: string | null;
+  tourStepIndex: number;
+  runTour: boolean;
+
+  // Actions
+  startTour: (tourId: string) => void;
+  completeTour: (tourId: string) => void;
+  skipTour: (tourId: string) => void;
+  resetAllTours: () => void;
+  setStepIndex: (index: number) => void;
+  stopTour: () => void;
+}
+
+export const useTourStore = create<TourState>()(
+  persist(
+    (set) => ({
+      // Initial state
+      hasSeenOnboarding: false,
+      hasSeenLibraryTour: false,
+      hasSeenPlayerTour: false,
+      hasSeenSettingsTour: false,
+      activeTour: null,
+      tourStepIndex: 0,
+      runTour: false,
+
+      startTour: (tourId: string) => {
+        console.log('[Tour] Starting:', tourId);
+        set({
+          activeTour: tourId,
+          tourStepIndex: 0,
+          runTour: true,
+        });
+      },
+
+      completeTour: (tourId: string) => {
+        console.log('[Tour] Completed:', tourId);
+        const completionKey = `hasSeen${tourId.charAt(0).toUpperCase() + tourId.slice(1)}Tour`;
+        set({
+          [completionKey]: true,
+          activeTour: null,
+          runTour: false,
+          tourStepIndex: 0,
+        });
+      },
+
+      skipTour: (tourId: string) => {
+        console.log('[Tour] Skipped:', tourId);
+        const completionKey = `hasSeen${tourId.charAt(0).toUpperCase() + tourId.slice(1)}Tour`;
+        set({
+          [completionKey]: true,
+          activeTour: null,
+          runTour: false,
+          tourStepIndex: 0,
+        });
+      },
+
+      resetAllTours: () => {
+        console.log('[Tour] Resetting all tours');
+        set({
+          hasSeenOnboarding: false,
+          hasSeenLibraryTour: false,
+          hasSeenPlayerTour: false,
+          hasSeenSettingsTour: false,
+          activeTour: null,
+          runTour: false,
+          tourStepIndex: 0,
+        });
+      },
+
+      setStepIndex: (index: number) => set({ tourStepIndex: index }),
+
+      stopTour: () => set({
+        activeTour: null,
+        runTour: false,
+        tourStepIndex: 0,
+      }),
+    }),
+    {
+      name: 'spinerr-tours',
+      version: 1,
+    }
+  )
+);

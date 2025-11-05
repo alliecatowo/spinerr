@@ -6,6 +6,8 @@ import { InfoToggle } from "./InfoToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { Navigation } from "./Navigation";
 import { Sidebar } from "./Sidebar";
+import { AccountButton } from "@/components/auth/AccountButton";
+import { HelpButton } from "@/components/tours/HelpButton";
 
 interface DashboardProps {
   musicSection: React.ReactNode;
@@ -18,22 +20,27 @@ export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950 overflow-x-hidden">
       {/* Minimal Navigation - top left */}
-      <div className="fixed top-6 left-6 z-50">
+      <div className="fixed top-6 left-6 z-50" data-tour="navigation">
         <Navigation />
       </div>
 
       {/* Theme Toggle - top left, below nav with consistent spacing */}
-      <div className="fixed top-[60px] left-6 z-50">
+      <div className="fixed top-[60px] left-6 z-50" data-tour="theme-toggle">
         <ThemeToggle />
       </div>
 
-      {/* Info Toggle - top right, aligned with navigation */}
-      <div className="fixed top-6 right-6 z-50">
-        <InfoToggle />
+      {/* Account & Info - top right, aligned with navigation */}
+      <div className="fixed top-6 right-6 z-50 flex flex-col gap-3">
+        <AccountButton />
+        <div data-tour="info-toggle">
+          <InfoToggle />
+        </div>
       </div>
 
       {/* Sidebar - left side, below theme toggle with consistent spacing */}
-      <Sidebar />
+      <div data-tour="sidebar">
+        <Sidebar />
+      </div>
 
       {/* Main Content - floating, zen layout with flex, no scroll */}
       {/* On large screens: offset left margin to optically center vinyl player, accounting for fixed sidebar */}
@@ -69,6 +76,9 @@ export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Help Button - Floating bottom right */}
+      <HelpButton />
     </div>
   );
 }

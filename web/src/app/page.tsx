@@ -8,7 +8,7 @@ import { NowPlaying } from "@/components/music/NowPlaying";
 import { InfoPanel } from "@/components/layout/InfoPanel";
 import { usePlayerStore, useCalendarStore, useLibraryStore } from "@/lib/store";
 import { mockEvents } from "@/lib/mock-data";
-import { usePlayerProgress, useKeyboardShortcuts } from "@/hooks";
+import { usePlayerProgress, useKeyboardShortcuts, useFirstVisit } from "@/hooks";
 
 export default function Home() {
   // Player store
@@ -37,6 +37,7 @@ export default function Home() {
   // Custom hooks for player functionality
   usePlayerProgress(); // Auto-updates progress and handles track advancement
   useKeyboardShortcuts(); // Enables keyboard controls
+  useFirstVisit(); // Auto-start onboarding tour on first visit
 
   // Initialize with first album from library or recently played on mount
   useEffect(() => {
@@ -87,7 +88,7 @@ export default function Home() {
   const musicSection = (
     <div className="flex flex-col items-center justify-center gap-6 w-full max-w-[700px] mx-auto">
       {/* Vinyl Disc - Optimized size for better visual prominence */}
-      <div className="relative w-full max-w-[500px] aspect-square">
+      <div className="relative w-full max-w-[500px] aspect-square" data-tour="vinyl-disc">
         <VinylDisc
           track={currentTrack}
           isPlaying={isPlaying}

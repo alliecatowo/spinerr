@@ -34,6 +34,7 @@ export function InfoPanel({ onSeek }: InfoPanelProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
           className="rounded-xl border border-gray-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-900 shadow-lg shadow-gray-200/50 dark:shadow-black/20 p-5"
+          data-tour="player-controls"
         >
           <PlayerControls
             isPlaying={isPlaying}
