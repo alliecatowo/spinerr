@@ -5,6 +5,7 @@ import { useCalendarStore } from "@/lib/store";
 import { CalendarToggle } from "./CalendarToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { Navigation } from "./Navigation";
+import { Sidebar } from "./Sidebar";
 
 interface DashboardProps {
   musicSection: React.ReactNode;
@@ -30,6 +31,9 @@ export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
       <div className="fixed top-8 right-8 z-50">
         <CalendarToggle />
       </div>
+
+      {/* Sidebar - left side, below theme toggle */}
+      <Sidebar />
 
       {/* Main Content - floating, zen layout with flex, no scroll */}
       <div className="h-screen flex items-center justify-center px-12 py-8 overflow-hidden">

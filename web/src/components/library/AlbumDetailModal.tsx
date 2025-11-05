@@ -17,9 +17,7 @@ export function AlbumDetailModal({ album, isOpen, onClose }: AlbumDetailModalPro
   const addAlbum = useLibraryStore((state) => state.addAlbum);
   const addToRecentlyPlayed = useLibraryStore((state) => state.addToRecentlyPlayed);
   const albums = useLibraryStore((state) => state.albums);
-  const setPlaylist = usePlayerStore((state) => state.setPlaylist);
-  const setTrack = usePlayerStore((state) => state.setTrack);
-  const play = usePlayerStore((state) => state.play);
+  const loadAlbum = usePlayerStore((state) => state.loadAlbum);
 
   // Keyboard navigation
   useEffect(() => {
@@ -60,22 +58,7 @@ export function AlbumDetailModal({ album, isOpen, onClose }: AlbumDetailModalPro
   };
 
   const handlePlayNow = () => {
-    // Convert Album tracks to player Track format
-    const playerTracks = album.tracks.map((track) => ({
-      id: track.id,
-      title: track.title,
-      artist: track.artist,
-      album: album.title,
-      duration: track.duration,
-      coverColor: "#8b5cf6", // Purple for SoundCloud tracks
-      genre: track.metadata?.genre,
-    }));
-
-    setPlaylist(playerTracks);
-    if (playerTracks.length > 0) {
-      setTrack(playerTracks[0]);
-      play();
-    }
+    loadAlbum(album);
     addToRecentlyPlayed(album);
     onClose();
   };

@@ -41,6 +41,7 @@ interface PlayerState {
   nextTrack: () => void;
   prevTrack: () => void;
   setPlaylist: (playlist: Track[]) => void;
+  loadAlbum: (album: Album) => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -50,9 +51,25 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   volume: 0.7,
   playlist: [],
 
-  play: () => set({ isPlaying: true }),
+  play: () => {
+    set({ isPlaying: true });
+    // Trigger audio player
+    if (typeof window !== 'undefined') {
+      import('./audio-player').then(({ getAudioPlayer }) => {
+        getAudioPlayer().play();
+      });
+    }
+  },
 
-  pause: () => set({ isPlaying: false }),
+  pause: () => {
+    set({ isPlaying: false });
+    // Trigger audio player
+    if (typeof window !== 'undefined') {
+      import('./audio-player').then(({ getAudioPlayer }) => {
+        getAudioPlayer().pause();
+      });
+    }
+  },
 
   setTrack: (track: Track) => set({
     currentTrack: track,
@@ -64,9 +81,16 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     progress: Math.max(0, Math.min(1, progress))
   }),
 
-  setVolume: (volume: number) => set({
-    volume: Math.max(0, Math.min(1, volume))
-  }),
+  setVolume: (volume: number) => {
+    const clampedVolume = Math.max(0, Math.min(1, volume));
+    set({ volume: clampedVolume });
+    // Sync with audio player
+    if (typeof window !== 'undefined') {
+      import('./audio-player').then(({ getAudioPlayer }) => {
+        getAudioPlayer().setVolume(clampedVolume);
+      });
+    }
+  },
 
   nextTrack: () => {
     const { currentTrack, playlist, isPlaying } = get();
@@ -74,12 +98,25 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
     const currentIndex = playlist.findIndex(track => track.id === currentTrack.id);
     const nextIndex = (currentIndex + 1) % playlist.length;
+    const nextTrack = playlist[nextIndex];
 
     set({
-      currentTrack: playlist[nextIndex],
+      currentTrack: nextTrack,
       isPlaying, // Keep current playing state
       progress: 0
     });
+
+    // Load next track in audio player
+    if (typeof window !== 'undefined' && nextTrack) {
+      import('./audio-player').then(({ getAudioPlayer }) => {
+        const audioPlayer = getAudioPlayer();
+        audioPlayer.loadTrack(nextTrack.id).then(() => {
+          if (isPlaying) {
+            audioPlayer.play();
+          }
+        });
+      });
+    }
   },
 
   prevTrack: () => {
@@ -88,15 +125,60 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
     const currentIndex = playlist.findIndex(track => track.id === currentTrack.id);
     const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
+    const prevTrack = playlist[prevIndex];
 
     set({
-      currentTrack: playlist[prevIndex],
+      currentTrack: prevTrack,
       isPlaying, // Keep current playing state
       progress: 0
     });
+
+    // Load previous track in audio player
+    if (typeof window !== 'undefined' && prevTrack) {
+      import('./audio-player').then(({ getAudioPlayer }) => {
+        const audioPlayer = getAudioPlayer();
+        audioPlayer.loadTrack(prevTrack.id).then(() => {
+          if (isPlaying) {
+            audioPlayer.play();
+          }
+        });
+      });
+    }
   },
 
   setPlaylist: (playlist: Track[]) => set({ playlist }),
+
+  loadAlbum: (album: Album) => {
+    // Convert album tracks to player track format
+    const playerTracks: Track[] = album.tracks.map((track) => ({
+      id: track.id,
+      title: track.title,
+      artist: track.artist,
+      album: album.title,
+      duration: track.duration,
+      coverColor: '#8b5cf6', // Purple for albums
+      genre: track.metadata?.genre,
+    }));
+
+    // Update store state
+    set({
+      playlist: playerTracks,
+      currentTrack: playerTracks[0] || null,
+      progress: 0,
+      isPlaying: true,
+    });
+
+    // Load and play first track via audio player (client-side only)
+    if (typeof window !== 'undefined' && playerTracks.length > 0) {
+      import('./audio-player').then(({ getAudioPlayer }) => {
+        const audioPlayer = getAudioPlayer();
+        audioPlayer.initialize();
+        audioPlayer.loadTrack(playerTracks[0].id).then(() => {
+          audioPlayer.play();
+        });
+      });
+    }
+  },
 }));
 
 // Calendar Store

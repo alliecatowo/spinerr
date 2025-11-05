@@ -8,8 +8,8 @@ import { NowPlaying } from "@/components/music/NowPlaying";
 import { PlayerControls } from "@/components/music/PlayerControls";
 import { Calendar } from "@/components/calendar/Calendar";
 import { UpcomingEvents } from "@/components/calendar/UpcomingEvents";
-import { usePlayerStore, useCalendarStore } from "@/lib/store";
-import { mockTracks, mockEvents } from "@/lib/mock-data";
+import { usePlayerStore, useCalendarStore, useLibraryStore } from "@/lib/store";
+import { mockEvents } from "@/lib/mock-data";
 import { usePlayerProgress, useKeyboardShortcuts } from "@/hooks";
 
 export default function Home() {
@@ -24,8 +24,11 @@ export default function Home() {
   const prevTrack = usePlayerStore((state) => state.prevTrack);
   const updateProgress = usePlayerStore((state) => state.updateProgress);
   const setVolume = usePlayerStore((state) => state.setVolume);
-  const setPlaylist = usePlayerStore((state) => state.setPlaylist);
-  const setTrack = usePlayerStore((state) => state.setTrack);
+  const loadAlbum = usePlayerStore((state) => state.loadAlbum);
+
+  // Library store
+  const albums = useLibraryStore((state) => state.albums);
+  const recentlyPlayed = useLibraryStore((state) => state.recentlyPlayed);
 
   // Calendar store
   const selectedDate = useCalendarStore((state) => state.selectedDate);
@@ -37,24 +40,62 @@ export default function Home() {
   usePlayerProgress(); // Auto-updates progress and handles track advancement
   useKeyboardShortcuts(); // Enables keyboard controls
 
-  // Initialize playlist and events on mount
+  // Initialize with first album from library or recently played on mount
   useEffect(() => {
-    setPlaylist(mockTracks);
-    setTrack(mockTracks[0]);
+    // Set calendar events
     setEvents(mockEvents);
-  }, [setPlaylist, setTrack, setEvents]);
+
+    // Load first album if available
+    if (!currentTrack) {
+      const albumToLoad = recentlyPlayed[0] || albums[0];
+      if (albumToLoad && albumToLoad.tracks.length > 0) {
+        loadAlbum(albumToLoad);
+      }
+    }
+  }, [setEvents]); // Only run once on mount
 
   // Seek handler for PlayerControls
   const handleSeek = (newProgress: number) => {
     updateProgress(newProgress);
+    // Also seek the audio player
+    if (typeof window !== 'undefined') {
+      import('@/lib/audio-player').then(({ getAudioPlayer }) => {
+        getAudioPlayer().seek(newProgress);
+      });
+    }
   };
 
-  // If no track loaded yet, show loading state
+  // If no track loaded yet, show empty state
   if (!currentTrack) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-neutral-950">
-        <div className="text-gray-900 dark:text-white text-sm">Loading...</div>
-      </div>
+      <Dashboard
+        musicSection={
+          <div className="flex flex-col items-center justify-center gap-4 w-full max-w-[900px] mx-auto h-[60vh]">
+            <div className="text-center">
+              <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                No music playing
+              </p>
+              <p className="text-sm text-gray-600 dark:text-neutral-400">
+                Add an album to your library to get started
+              </p>
+            </div>
+          </div>
+        }
+        calendarSection={
+          <div className="flex flex-col gap-4 w-full sticky top-6">
+            <Calendar
+              selectedDate={selectedDate}
+              events={events}
+              onSelectDate={(date) => date && selectDate(date)}
+            />
+            <UpcomingEvents
+              events={events}
+              selectedDate={selectedDate}
+              maxEvents={4}
+            />
+          </div>
+        }
+      />
     );
   }
 
