@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { Album, Track as ProviderTrack, PlaylistRecord, UserLibrary } from './providers/types';
 
 // Types
 export type ViewMode = 'music' | 'both' | 'calendar';
@@ -133,3 +135,131 @@ export const useCalendarStore = create<CalendarState>((set) => ({
 
   setEvents: (events: CalendarEvent[]) => set({ events }),
 }));
+
+// Library Store - Album-focused music library management
+interface LibraryState extends UserLibrary {
+  // Actions
+  addAlbum: (album: Album) => void;
+  removeAlbum: (albumId: string) => void;
+  toggleFavoriteTrack: (trackId: string) => void;
+  addToRecentlyPlayed: (album: Album) => void;
+  createPlaylist: (name: string, tracks: ProviderTrack[]) => void;
+  updatePlaylist: (playlistId: string, tracks: ProviderTrack[]) => void;
+  deletePlaylist: (playlistId: string) => void;
+  clearLibrary: () => void;
+}
+
+const MAX_RECENTLY_PLAYED = 10;
+const MIN_PLAYLIST_TRACKS = 4;
+const MAX_PLAYLIST_TRACKS = 100;
+
+export const useLibraryStore = create<LibraryState>()(
+  persist(
+    (set, get) => ({
+      // Initial state
+      albums: [],
+      playlists: [],
+      recentlyPlayed: [],
+      favorites: [],
+
+      // Add album to library
+      addAlbum: (album: Album) => set((state) => {
+        // Check if album already exists
+        if (state.albums.some(a => a.id === album.id && a.provider === album.provider)) {
+          return state;
+        }
+        return {
+          albums: [...state.albums, album]
+        };
+      }),
+
+      // Remove album from library
+      removeAlbum: (albumId: string) => set((state) => ({
+        albums: state.albums.filter(a => a.id !== albumId),
+        // Also remove from recently played
+        recentlyPlayed: state.recentlyPlayed.filter(a => a.id !== albumId),
+      })),
+
+      // Toggle track favorite status
+      toggleFavoriteTrack: (trackId: string) => set((state) => {
+        const isFavorited = state.favorites.includes(trackId);
+        return {
+          favorites: isFavorited
+            ? state.favorites.filter(id => id !== trackId)
+            : [...state.favorites, trackId]
+        };
+      }),
+
+      // Add album to recently played (max 10, most recent first)
+      addToRecentlyPlayed: (album: Album) => set((state) => {
+        // Remove album if it already exists
+        const filtered = state.recentlyPlayed.filter(
+          a => !(a.id === album.id && a.provider === album.provider)
+        );
+        // Add to front and limit to MAX_RECENTLY_PLAYED
+        return {
+          recentlyPlayed: [album, ...filtered].slice(0, MAX_RECENTLY_PLAYED)
+        };
+      }),
+
+      // Create new playlist (enforces 4-100 track limit)
+      createPlaylist: (name: string, tracks: ProviderTrack[]) => set((state) => {
+        if (tracks.length < MIN_PLAYLIST_TRACKS) {
+          console.warn(`Playlist must have at least ${MIN_PLAYLIST_TRACKS} tracks`);
+          return state;
+        }
+        if (tracks.length > MAX_PLAYLIST_TRACKS) {
+          console.warn(`Playlist cannot exceed ${MAX_PLAYLIST_TRACKS} tracks`);
+          return state;
+        }
+
+        const newPlaylist: PlaylistRecord = {
+          id: `playlist-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: 'playlist',
+          title: name,
+          trackCount: tracks.length,
+          tracks: tracks,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        return {
+          playlists: [...state.playlists, newPlaylist]
+        };
+      }),
+
+      // Update existing playlist
+      updatePlaylist: (playlistId: string, tracks: ProviderTrack[]) => set((state) => {
+        if (tracks.length < MIN_PLAYLIST_TRACKS || tracks.length > MAX_PLAYLIST_TRACKS) {
+          console.warn(`Playlist must have ${MIN_PLAYLIST_TRACKS}-${MAX_PLAYLIST_TRACKS} tracks`);
+          return state;
+        }
+
+        return {
+          playlists: state.playlists.map(p =>
+            p.id === playlistId
+              ? { ...p, tracks, trackCount: tracks.length, updatedAt: new Date() }
+              : p
+          )
+        };
+      }),
+
+      // Delete playlist
+      deletePlaylist: (playlistId: string) => set((state) => ({
+        playlists: state.playlists.filter(p => p.id !== playlistId)
+      })),
+
+      // Clear entire library (for debugging/testing)
+      clearLibrary: () => set({
+        albums: [],
+        playlists: [],
+        recentlyPlayed: [],
+        favorites: []
+      }),
+    }),
+    {
+      name: 'spinerr-library',
+      version: 1,
+    }
+  )
+);

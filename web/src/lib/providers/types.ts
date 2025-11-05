@@ -22,7 +22,7 @@ export interface Track {
 }
 
 /**
- * Common album interface
+ * Common album interface - Primary unit of the music library
  */
 export interface Album {
   id: string;
@@ -31,7 +31,9 @@ export interface Album {
   artist: string;
   artworkUrl?: string;
   year?: number;
-  trackCount?: number;
+  trackCount: number;
+  tracks: Track[];  // Full track list
+  duration: number; // total duration in seconds
   externalUrl?: string;
 }
 
@@ -166,4 +168,55 @@ export interface ProviderConfig {
   enabled: boolean;
   priority?: number;
   credentials?: Record<string, string>;
+}
+
+/**
+ * Meta Record Types - Different types of collections in the library
+ */
+export type RecordType = 'album' | 'favorites' | 'artist-discography' | 'playlist';
+
+export interface MetaRecord {
+  id: string;
+  type: RecordType;
+  title: string;
+  artworkUrl?: string;
+  trackCount: number;
+}
+
+/**
+ * Favorites meta record - Collection of individual favorite tracks
+ */
+export interface FavoritesRecord extends MetaRecord {
+  type: 'favorites';
+  favoriteTracks: Track[]; // From any albums user has favorited individual tracks from
+}
+
+/**
+ * Artist discography meta record - All albums from a single artist
+ */
+export interface ArtistDiscographyRecord extends MetaRecord {
+  type: 'artist-discography';
+  artistId: string;
+  artistName: string;
+  albums: Album[];
+}
+
+/**
+ * Playlist meta record - Custom collection of tracks (4-100 songs)
+ */
+export interface PlaylistRecord extends MetaRecord {
+  type: 'playlist';
+  tracks: Track[]; // Min 4, Max 100
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * User Library - Album-focused music collection
+ */
+export interface UserLibrary {
+  albums: Album[];          // User's collection of albums
+  playlists: PlaylistRecord[];  // Custom playlists (4-100 tracks each)
+  recentlyPlayed: Album[];  // Last played albums (max 10)
+  favorites: string[];      // Track IDs marked as favorite
 }

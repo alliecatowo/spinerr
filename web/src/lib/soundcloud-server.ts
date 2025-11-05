@@ -20,6 +20,21 @@ export interface SoundCloudTrack {
   likesCount?: number;
 }
 
+export interface SoundCloudPlaylist {
+  id: number;
+  title: string;
+  description?: string;
+  artworkUrl?: string;
+  user: {
+    username: string;
+  };
+  trackCount: number;
+  tracks?: SoundCloudTrack[];
+  duration: number; // milliseconds
+  permalinkUrl: string;
+  createdAt?: string;
+}
+
 export interface SoundCloudSearchOptions {
   query: string;
   limit?: number;
@@ -128,6 +143,42 @@ class SoundCloudServerClient {
   }
 
   /**
+   * Search for playlists/albums
+   */
+  async searchPlaylists(options: SoundCloudSearchOptions): Promise<SoundCloudPlaylist[]> {
+    try {
+      await this.initialize();
+
+      const searchParams: any = {
+        q: options.query,
+      };
+
+      if (options.limit) searchParams.limit = options.limit;
+
+      const results = await this.client.playlists.search(searchParams);
+
+      return results.collection.map((playlist: any) => this.normalizePlaylist(playlist));
+    } catch (error) {
+      console.error('SoundCloud playlist search error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get playlist by ID
+   */
+  async getPlaylist(id: number): Promise<SoundCloudPlaylist | null> {
+    try {
+      await this.initialize();
+      const playlist = await this.client.playlists.get(id);
+      return this.normalizePlaylist(playlist);
+    } catch (error) {
+      console.error('SoundCloud get playlist error:', error);
+      return null;
+    }
+  }
+
+  /**
    * Normalize track data to our interface
    */
   private normalizeTrack(track: any): SoundCloudTrack {
@@ -143,6 +194,26 @@ class SoundCloudServerClient {
       description: track.description,
       playbackCount: track.playback_count,
       likesCount: track.likes_count,
+    };
+  }
+
+  /**
+   * Normalize playlist data to our interface
+   */
+  private normalizePlaylist(playlist: any): SoundCloudPlaylist {
+    return {
+      id: playlist.id,
+      title: playlist.title || 'Unknown Album',
+      description: playlist.description,
+      artworkUrl: playlist.artwork_url?.replace('-large', '-t500x500'),
+      user: {
+        username: playlist.user?.username || 'Unknown Artist',
+      },
+      trackCount: playlist.track_count || playlist.tracks?.length || 0,
+      tracks: playlist.tracks ? playlist.tracks.map((t: any) => this.normalizeTrack(t)) : undefined,
+      duration: playlist.duration || 0,
+      permalinkUrl: playlist.permalink_url,
+      createdAt: playlist.created_at,
     };
   }
 }
