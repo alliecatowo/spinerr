@@ -58,11 +58,11 @@ export default function Home() {
     );
   }
 
-  // Music section - centered elegant layout
+  // Music section - compact single-screen layout
   const musicSection = (
-    <div className="flex flex-col items-center justify-center gap-16 w-full max-w-[1200px] mx-auto px-8">
-      {/* Vinyl Disc - Large and centered */}
-      <div className="relative w-full max-w-[700px] aspect-square">
+    <div className="flex flex-col items-center justify-center gap-8 w-full max-w-[900px] mx-auto">
+      {/* Vinyl Disc - Large but constrained to fit screen */}
+      <div className="relative w-full max-w-[550px] aspect-square">
         <VinylDisc
           track={currentTrack}
           isPlaying={isPlaying}
@@ -72,15 +72,15 @@ export default function Home() {
         <ToneArm isPlaying={isPlaying} progress={progress} />
       </div>
 
-      {/* Track Info + Controls - Below vinyl */}
-      <div className="w-full max-w-[600px] flex flex-col gap-8">
+      {/* Track Info + Controls - Compact below vinyl */}
+      <div className="w-full max-w-[550px] flex flex-col gap-4">
         {/* Now Playing Info */}
-        <div className="space-y-6">
+        <div>
           <NowPlaying track={currentTrack} isPlaying={isPlaying} />
         </div>
 
         {/* Player Controls */}
-        <div className="space-y-4">
+        <div>
           <PlayerControls
             isPlaying={isPlaying}
             progress={progress}

@@ -31,8 +31,8 @@ export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
         <CalendarToggle />
       </div>
 
-      {/* Main Content - floating, zen layout with flex */}
-      <div className="min-h-screen flex items-center justify-center px-12 py-20">
+      {/* Main Content - floating, zen layout with flex, no scroll */}
+      <div className="h-screen flex items-center justify-center px-12 py-8 overflow-hidden">
         <div className="flex flex-col lg:flex-row items-start justify-center gap-16 w-full max-w-[1800px]">
           {/* Music Section - always visible */}
           <motion.div
