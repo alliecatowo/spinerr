@@ -39,16 +39,21 @@ export default function Home() {
   useKeyboardShortcuts(); // Enables keyboard controls
   useFirstVisit(); // Auto-start onboarding tour on first visit
 
-  // Initialize with first album from library or recently played on mount
+  // Initialize calendar events and load first album ONLY if no track is loaded
   useEffect(() => {
     // Set calendar events
     setEvents(mockEvents);
 
-    // ALWAYS load first album on mount (so p5.js initializes immediately)
-    const albumToLoad = recentlyPlayed[0] || albums[0];
-    if (albumToLoad && albumToLoad.tracks.length > 0) {
-      console.log('[Home] Auto-loading first album on mount:', albumToLoad.title);
-      loadAlbum(albumToLoad);
+    // Only load first album if no track is currently loaded
+    // This prevents auto-play when navigating back from library
+    if (!currentTrack) {
+      const albumToLoad = recentlyPlayed[0] || albums[0];
+      if (albumToLoad && albumToLoad.tracks.length > 0) {
+        console.log('[Home] No track loaded, auto-loading first album:', albumToLoad.title);
+        loadAlbum(albumToLoad);
+      }
+    } else {
+      console.log('[Home] Track already loaded, skipping auto-load');
     }
   }, []); // Only run once on mount
 

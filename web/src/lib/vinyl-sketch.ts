@@ -232,12 +232,9 @@ export function createVinylSketch(
     };
 
     p.draw = () => {
-      // ALWAYS loop when playing for smooth 60fps
-      if (params.isPlaying) {
-        p.loop();
-      } else {
-        p.noLoop();
-      }
+      // Always keep looping for smooth animations
+      // Just don't update rotation when paused
+      p.loop();
 
       // Update rotation (33⅓ RPM = 0.556 rev/sec = ~0.0349 rad/frame at 60fps)
       if (params.isPlaying) {

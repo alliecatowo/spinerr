@@ -168,7 +168,7 @@ export function VinylDisc({
         animate={{
           opacity: 1,
           scale: 1,
-          rotate: isPlaying ? 360 : undefined // When paused, freeze at current rotation
+          rotate: isPlaying ? 360 : null // null preserves current rotation when paused
         }}
         transition={{
           opacity: { delay: 0.4, duration: 0.5 },
@@ -177,9 +177,7 @@ export function VinylDisc({
             duration: 1.8, // 33⅓ RPM = 1.8 seconds per rotation
             repeat: Infinity,
             ease: "linear"
-          } : {
-            duration: 0 // Instant stop when pausing
-          }
+          } : undefined // Let it stay at current rotation
         }}
       >
         {track.artworkUrl ? (
