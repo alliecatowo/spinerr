@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { SpotifySettings } from "@/components/settings/SpotifySettings";
+import { SoundCloudSettings } from "@/components/settings/SoundCloudSettings";
 import { CalendarSettings } from "@/components/settings/CalendarSettings";
 import { LocalFilesSettings } from "@/components/settings/LocalFilesSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
@@ -59,11 +60,20 @@ export default function SettingsPage() {
             <GeneralSettings />
           </motion.div>
 
-          {/* Spotify Integration */}
+          {/* SoundCloud Integration */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <SoundCloudSettings />
+          </motion.div>
+
+          {/* Spotify Integration */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
           >
             <SpotifySettings />
           </motion.div>
@@ -72,7 +82,7 @@ export default function SettingsPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
           >
             <CalendarSettings />
           </motion.div>
@@ -81,7 +91,7 @@ export default function SettingsPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
           >
             <LocalFilesSettings />
           </motion.div>
