@@ -234,7 +234,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    return await this.sdk.currentUser.tracks.savedTracks(limit, offset);
+    return await this.sdk.currentUser.tracks.savedTracks(limit as any, offset);
   }
 
   /**
@@ -244,7 +244,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    return await this.sdk.currentUser.playlists.playlists(limit, offset);
+    return await this.sdk.currentUser.playlists.playlists(limit as any, offset);
   }
 
   /**
@@ -264,7 +264,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    await this.sdk.player.startResumePlayback(undefined, contextUri, uris);
+    await this.sdk.player.startResumePlayback(undefined as any, contextUri, uris);
   }
 
   /**
@@ -274,7 +274,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    await this.sdk.player.pausePlayback();
+    await this.sdk.player.pausePlayback(undefined as any);
   }
 
   /**
@@ -284,7 +284,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    await this.sdk.player.skipToNext();
+    await this.sdk.player.skipToNext(undefined as any);
   }
 
   /**
@@ -294,7 +294,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    await this.sdk.player.skipToPrevious();
+    await this.sdk.player.skipToPrevious(undefined as any);
   }
 
   /**
@@ -304,7 +304,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    return await this.sdk.search(query, types, undefined, limit);
+    return await this.sdk.search(query, types, undefined, limit as any);
   }
 
   /**

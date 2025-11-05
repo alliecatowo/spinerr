@@ -2,7 +2,8 @@
  * File System Access API utilities for local music file handling
  */
 
-import jsmediatags from 'jsmediatags';
+// Use browser-specific build to avoid React Native dependencies
+import jsmediatags from 'jsmediatags/dist/jsmediatags.min';
 import { get, set, del } from 'idb-keyval';
 
 export interface AudioFileMetadata {
@@ -119,7 +120,7 @@ async function scanDirectory(dirHandle: any, audioFiles: File[], depth = 0): Pro
 export async function extractMetadata(file: File): Promise<AudioFileMetadata> {
   return new Promise((resolve, reject) => {
     jsmediatags.read(file, {
-      onSuccess: (tag) => {
+      onSuccess: (tag: any) => {
         const tags = tag.tags;
 
         const metadata: AudioFileMetadata = {
@@ -140,7 +141,7 @@ export async function extractMetadata(file: File): Promise<AudioFileMetadata> {
 
         resolve(metadata);
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error('Error reading metadata:', error);
         // Return basic metadata from filename
         resolve({

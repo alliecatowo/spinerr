@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
 // Types
+export type ViewMode = 'music' | 'both' | 'calendar';
+
 export interface Track {
   id: string;
   title: string;
@@ -8,6 +10,7 @@ export interface Track {
   album: string;
   duration: number; // in seconds
   coverColor: string; // hex color
+  genre?: string; // optional genre field
 }
 
 export interface CalendarEvent {

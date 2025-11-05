@@ -58,24 +58,22 @@ export default function Home() {
     );
   }
 
-  // Music section with vinyl on left (2/3rds) + right sidebar (1/3rd)
+  // Music section - centered elegant layout
   const musicSection = (
-    <div className="flex flex-col lg:flex-row items-start gap-12 w-full max-w-[1600px]">
-      {/* Main Area: Vinyl positioned left, taking ~2/3rds */}
-      <div className="w-full lg:w-2/3 flex items-center justify-center lg:justify-start">
-        <div className="relative w-full max-w-[650px] aspect-square">
-          <VinylDisc
-            track={currentTrack}
-            isPlaying={isPlaying}
-            progress={progress}
-            onPlayPause={isPlaying ? pause : play}
-          />
-          <ToneArm isPlaying={isPlaying} progress={progress} />
-        </div>
+    <div className="flex flex-col items-center justify-center gap-16 w-full max-w-[1200px] mx-auto px-8">
+      {/* Vinyl Disc - Large and centered */}
+      <div className="relative w-full max-w-[700px] aspect-square">
+        <VinylDisc
+          track={currentTrack}
+          isPlaying={isPlaying}
+          progress={progress}
+          onPlayPause={isPlaying ? pause : play}
+        />
+        <ToneArm isPlaying={isPlaying} progress={progress} />
       </div>
 
-      {/* Right Sidebar: Track Info + Controls, taking ~1/3rd */}
-      <div className="w-full lg:w-1/3 lg:min-w-[380px] flex flex-col gap-8 lg:sticky lg:top-24">
+      {/* Track Info + Controls - Below vinyl */}
+      <div className="w-full max-w-[600px] flex flex-col gap-8">
         {/* Now Playing Info */}
         <div className="space-y-6">
           <NowPlaying track={currentTrack} isPlaying={isPlaying} />

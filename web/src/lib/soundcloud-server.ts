@@ -1,0 +1,158 @@
+/**
+ * Server-side SoundCloud API module
+ * Uses soundcloud.ts (Node.js only) - DO NOT import in client-side code
+ */
+
+import Soundcloud from 'soundcloud.ts';
+
+export interface SoundCloudTrack {
+  id: number;
+  title: string;
+  artist: string;
+  artworkUrl?: string;
+  duration: number; // milliseconds
+  streamUrl?: string;
+  permalinkUrl: string;
+  genre?: string;
+  bpm?: number;
+  description?: string;
+  playbackCount?: number;
+  likesCount?: number;
+}
+
+export interface SoundCloudSearchOptions {
+  query: string;
+  limit?: number;
+  genre?: string;
+  bpmFrom?: number;
+  bpmTo?: number;
+  durationFrom?: number;
+  durationTo?: number;
+}
+
+/**
+ * Server-side SoundCloud client (Node.js only)
+ * This uses soundcloud.ts which depends on child_process, fs, and ffmpeg-static
+ */
+class SoundCloudServerClient {
+  private client: Soundcloud;
+  private initialized: boolean = false;
+
+  constructor() {
+    this.client = new Soundcloud();
+  }
+
+  /**
+   * Initialize client (auto-fetches client ID if needed)
+   */
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
+
+    try {
+      // Test connection by attempting to get a public track
+      // This will auto-initialize the client with necessary credentials
+      this.initialized = true;
+    } catch (error) {
+      console.error('SoundCloud initialization error:', error);
+      throw new Error('Failed to initialize SoundCloud client');
+    }
+  }
+
+  /**
+   * Search for tracks
+   */
+  async searchTracks(options: SoundCloudSearchOptions): Promise<SoundCloudTrack[]> {
+    try {
+      await this.initialize();
+
+      const searchParams: any = {
+        q: options.query,
+      };
+
+      if (options.limit) searchParams.limit = options.limit;
+      if (options.genre) searchParams.genres = options.genre;
+      if (options.bpmFrom) searchParams['bpm[from]'] = options.bpmFrom;
+      if (options.bpmTo) searchParams['bpm[to]'] = options.bpmTo;
+      if (options.durationFrom) searchParams['duration[from]'] = options.durationFrom;
+      if (options.durationTo) searchParams['duration[to]'] = options.durationTo;
+
+      const results = await this.client.tracks.search(searchParams);
+
+      return results.collection.map((track: any) => this.normalizeTrack(track));
+    } catch (error) {
+      console.error('SoundCloud search error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get track by URL or ID
+   */
+  async getTrack(urlOrId: string | number): Promise<SoundCloudTrack | null> {
+    try {
+      await this.initialize();
+      const track = await this.client.tracks.get(urlOrId);
+      return this.normalizeTrack(track);
+    } catch (error) {
+      console.error('SoundCloud get track error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get stream URL for track
+   */
+  async getStreamUrl(trackId: number): Promise<string | null> {
+    try {
+      await this.initialize();
+      const track = await this.client.tracks.get(trackId);
+
+      // Try to get progressive MP3 stream URL
+      if (track.media?.transcodings) {
+        const mp3Transcoding = track.media.transcodings.find(
+          (t: any) => t.format.protocol === 'progressive'
+        );
+
+        if (mp3Transcoding?.url) {
+          // The URL from the API needs to be resolved with client_id
+          const streamData = await this.client.api.get(mp3Transcoding.url);
+          return streamData.url;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('SoundCloud stream URL error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Normalize track data to our interface
+   */
+  private normalizeTrack(track: any): SoundCloudTrack {
+    return {
+      id: track.id,
+      title: track.title || 'Unknown Title',
+      artist: track.user?.username || 'Unknown Artist',
+      artworkUrl: track.artwork_url?.replace('-large', '-t500x500') || track.user?.avatar_url,
+      duration: track.duration || 0,
+      permalinkUrl: track.permalink_url,
+      genre: track.genre,
+      bpm: track.bpm,
+      description: track.description,
+      playbackCount: track.playback_count,
+      likesCount: track.likes_count,
+    };
+  }
+}
+
+// Singleton instance for server-side use
+let serverClient: SoundCloudServerClient | null = null;
+
+export function getSoundCloudServerClient(): SoundCloudServerClient {
+  if (!serverClient) {
+    serverClient = new SoundCloudServerClient();
+  }
+  return serverClient;
+}

@@ -1,9 +1,7 @@
 /**
- * SoundCloud API Client using soundcloud.ts
- * No registration required - auto-fetches client IDs
+ * SoundCloud API Client (Browser-compatible)
+ * Uses server-side API proxy to avoid Node.js dependencies in browser
  */
-
-import Soundcloud from 'soundcloud.ts';
 
 export interface SoundCloudTrack {
   id: number;
@@ -31,154 +29,98 @@ export interface SoundCloudSearchOptions {
 }
 
 /**
- * SoundCloud API Client
- * Uses soundcloud.ts which auto-fetches client IDs from SoundCloud's web player
+ * SoundCloud API Client (Browser-compatible)
+ * Proxies requests through Next.js API routes to avoid Node.js dependencies
  */
 export class SoundCloudClient {
-  private client: Soundcloud;
   private initialized: boolean = false;
 
   constructor() {
-    this.client = new Soundcloud();
+    // No initialization needed for client-side
+    this.initialized = true;
   }
 
   /**
-   * Initialize client (auto-fetches client ID if needed)
+   * Initialize client (no-op for browser client)
    */
   async initialize(): Promise<void> {
-    if (this.initialized) return;
-
-    try {
-      // Test connection by fetching a public track
-      await this.client.tracks.get('https://soundcloud.com/');
-      this.initialized = true;
-    } catch (error) {
-      console.error('SoundCloud initialization error:', error);
-      throw new Error('Failed to initialize SoundCloud client');
-    }
+    this.initialized = true;
   }
 
   /**
-   * Search for tracks
+   * Search for tracks via API proxy
    */
   async searchTracks(options: SoundCloudSearchOptions): Promise<SoundCloudTrack[]> {
     try {
-      const searchParams: any = {
+      // Build query parameters
+      const params = new URLSearchParams({
         q: options.query,
-      };
+      });
 
-      if (options.limit) searchParams.limit = options.limit;
-      if (options.genre) searchParams.genres = options.genre;
-      if (options.bpmFrom) searchParams['bpm[from]'] = options.bpmFrom;
-      if (options.bpmTo) searchParams['bpm[to]'] = options.bpmTo;
-      if (options.durationFrom) searchParams['duration[from]'] = options.durationFrom;
-      if (options.durationTo) searchParams['duration[to]'] = options.durationTo;
+      if (options.limit) params.set('limit', options.limit.toString());
+      if (options.genre) params.set('genre', options.genre);
+      if (options.bpmFrom) params.set('bpmFrom', options.bpmFrom.toString());
+      if (options.bpmTo) params.set('bpmTo', options.bpmTo.toString());
+      if (options.durationFrom) params.set('durationFrom', options.durationFrom.toString());
+      if (options.durationTo) params.set('durationTo', options.durationTo.toString());
 
-      const results = await this.client.tracks.search(searchParams);
+      // Call server-side API route
+      const response = await fetch(`/api/soundcloud/search?${params.toString()}`);
 
-      return results.collection.map((track: any) => this.normalizeTrack(track));
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'SoundCloud API error');
+      }
+
+      const data = await response.json();
+      return data.tracks || [];
     } catch (error) {
       console.error('SoundCloud search error:', error);
-      return [];
+      throw error;
     }
   }
 
   /**
    * Get track by URL or ID
+   * Note: This would require a separate API route - not implemented yet
    */
   async getTrack(urlOrId: string | number): Promise<SoundCloudTrack | null> {
-    try {
-      const track = await this.client.tracks.get(urlOrId);
-      return this.normalizeTrack(track);
-    } catch (error) {
-      console.error('SoundCloud get track error:', error);
-      return null;
-    }
+    console.warn('getTrack not yet implemented - requires API route');
+    return null;
   }
 
   /**
    * Get stream URL for track
+   * Note: This would require a separate API route - not implemented yet
    */
   async getStreamUrl(trackId: number): Promise<string | null> {
-    try {
-      // soundcloud.ts provides a download method that returns a readable stream
-      // For web playback, we need to get the stream URL instead
-      const track = await this.client.tracks.get(trackId);
-
-      // Try to get HLS stream URL (progressive download)
-      if (track.media?.transcodings) {
-        const mp3Transcoding = track.media.transcodings.find(
-          (t: any) => t.format.protocol === 'progressive'
-        );
-
-        if (mp3Transcoding?.url) {
-          // The URL from the API needs to be resolved with client_id
-          const streamData = await this.client.api.get(mp3Transcoding.url);
-          return streamData.url;
-        }
-      }
-
-      return null;
-    } catch (error) {
-      console.error('SoundCloud stream URL error:', error);
-      return null;
-    }
+    console.warn('getStreamUrl not yet implemented - requires API route');
+    return null;
   }
 
   /**
    * Get user's liked tracks (requires authentication)
+   * Note: This would require a separate API route - not implemented yet
    */
   async getLikedTracks(limit = 50): Promise<SoundCloudTrack[]> {
-    try {
-      const likes = await this.client.me.likes({ limit });
-      return likes.collection
-        .filter((item: any) => item.track)
-        .map((item: any) => this.normalizeTrack(item.track));
-    } catch (error) {
-      console.error('SoundCloud liked tracks error:', error);
-      return [];
-    }
+    console.warn('getLikedTracks not yet implemented - requires API route');
+    return [];
   }
 
   /**
    * Get user's playlists (requires authentication)
+   * Note: This would require a separate API route - not implemented yet
    */
   async getPlaylists(limit = 50): Promise<any[]> {
-    try {
-      const playlists = await this.client.me.playlists({ limit });
-      return playlists.collection;
-    } catch (error) {
-      console.error('SoundCloud playlists error:', error);
-      return [];
-    }
+    console.warn('getPlaylists not yet implemented - requires API route');
+    return [];
   }
 
   /**
    * Check if client is authenticated
    */
   isAuthenticated(): boolean {
-    // soundcloud.ts doesn't require OAuth for public content
-    // Authentication would be needed for user-specific content (likes, playlists)
     return this.initialized;
-  }
-
-  /**
-   * Normalize track data to our interface
-   */
-  private normalizeTrack(track: any): SoundCloudTrack {
-    return {
-      id: track.id,
-      title: track.title || 'Unknown Title',
-      artist: track.user?.username || 'Unknown Artist',
-      artworkUrl: track.artwork_url?.replace('-large', '-t500x500') || track.user?.avatar_url,
-      duration: track.duration || 0,
-      permalinkUrl: track.permalink_url,
-      genre: track.genre,
-      bpm: track.bpm,
-      description: track.description,
-      playbackCount: track.playback_count,
-      likesCount: track.likes_count,
-    };
   }
 }
 
