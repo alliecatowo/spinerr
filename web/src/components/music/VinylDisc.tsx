@@ -59,7 +59,9 @@ export function VinylDisc({
           console.log("[VinylDisc] Creating vinyl sketch...");
           const sketchInstance = createVinylSketch(
             containerRef.current,
+            track.id, // Use track ID for unique art
             track.coverColor,
+            undefined, // Artwork will be overlaid via React
             isPlaying,
             progress,
             undefined // No onSeek callback
@@ -99,6 +101,7 @@ export function VinylDisc({
     }
 
     console.log("[VinylDisc] Update effect - updating params:", {
+      trackId: track.id,
       albumColor: track.coverColor,
       isPlaying,
       hasUpdateParams: typeof (p5InstanceRef.current as any).updateParams === 'function'
@@ -107,7 +110,9 @@ export function VinylDisc({
     // Call updateParams on the p5 instance
     if (typeof (p5InstanceRef.current as any).updateParams === 'function') {
       (p5InstanceRef.current as any).updateParams({
+        trackId: track.id,
         albumColor: track.coverColor,
+        artworkUrl: undefined,
         isPlaying,
         progress: progressRef.current,
         onSeek: undefined, // No seek callback for performance
@@ -116,7 +121,7 @@ export function VinylDisc({
     } else {
       console.error("[VinylDisc] updateParams method not found on p5 instance!");
     }
-  }, [track.coverColor, isPlaying]); // Only trigger on important prop changes
+  }, [track.id, track.coverColor, isPlaying]); // Trigger on track ID, color, or play state change
 
   const [showPlayIcon, setShowPlayIcon] = useState(false);
 
@@ -150,7 +155,7 @@ export function VinylDisc({
         )}
       </div>
 
-      {/* Album Art Overlay */}
+      {/* Album Art Overlay - Rotates at 33⅓ RPM when playing */}
       <motion.div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden shadow-2xl pointer-events-none"
         style={{
@@ -159,13 +164,35 @@ export function VinylDisc({
           backgroundColor: track.coverColor,
           zIndex: 10
         }}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
+        initial={{ opacity: 0, scale: 0, rotate: 0 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          rotate: isPlaying ? 360 : undefined // When paused, freeze at current rotation
+        }}
+        transition={{
+          opacity: { delay: 0.4, duration: 0.5 },
+          scale: { delay: 0.4, duration: 0.5 },
+          rotate: isPlaying ? {
+            duration: 1.8, // 33⅓ RPM = 1.8 seconds per rotation
+            repeat: Infinity,
+            ease: "linear"
+          } : {
+            duration: 0 // Instant stop when pausing
+          }
+        }}
       >
-        <div className="w-full h-full flex items-center justify-center text-white font-bold text-4xl">
-          {track.album.charAt(0)}
-        </div>
+        {track.artworkUrl ? (
+          <img
+            src={track.artworkUrl}
+            alt={track.album}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-white font-bold text-4xl">
+            {track.album.charAt(0)}
+          </div>
+        )}
       </motion.div>
 
       {/* Center Spindle */}

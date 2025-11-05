@@ -10,6 +10,7 @@ export interface Track {
   title: string;
   artist: string;
   album: string;
+  artworkUrl?: string; // album artwork
   duration: number; // in seconds
   coverColor: string; // hex color
   genre?: string; // optional genre field
@@ -160,6 +161,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       title: track.title,
       artist: track.artist,
       album: album.title,
+      artworkUrl: album.artworkUrl || track.artworkUrl, // Use album or track artwork
       duration: track.duration,
       coverColor: '#8b5cf6', // Purple for albums
       genre: track.metadata?.genre,
