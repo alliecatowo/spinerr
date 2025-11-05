@@ -1,6 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator, type Firestore } from 'firebase/firestore';
 
 // Firebase configuration
 // These are public and safe to commit - they identify your Firebase project
@@ -28,6 +28,14 @@ export function initializeFirebase() {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+
+    // Connect to emulators in development
+    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
+      console.log('[Firebase] Connecting to emulators...');
+      connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+      connectFirestoreEmulator(db, 'localhost', 8080);
+      console.log('[Firebase] Connected to emulators');
+    }
 
     console.log('[Firebase] Initialized with project:', firebaseConfig.projectId);
   }
