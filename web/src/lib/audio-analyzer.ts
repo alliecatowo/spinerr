@@ -15,32 +15,45 @@ export class AudioAnalyzer {
    * Connect to an HTML5 Audio element
    */
   connect(audioElement: HTMLAudioElement): void {
-    if (this.connected) return;
+    if (this.connected) {
+      console.log('[AudioAnalyzer] Already connected, skipping');
+      return;
+    }
 
     try {
+      console.log('[AudioAnalyzer] Connecting to audio element...');
+
       // Create AudioContext
       this.audioContext = new AudioContext();
+      console.log('[AudioAnalyzer] AudioContext created, state:', this.audioContext.state);
 
       // Create analyser node
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 256; // Small FFT for performance (128 frequency bins)
-      this.analyser.smoothingTimeConstant = 0.8; // Smooth out rapid changes
+      this.analyser.smoothingTimeConstant = 0.75; // Less smoothing for more responsiveness
+
+      console.log('[AudioAnalyzer] Analyser created, bins:', this.analyser.frequencyBinCount);
 
       // Create source from audio element
       this.source = this.audioContext.createMediaElementSource(audioElement);
+      console.log('[AudioAnalyzer] Media source created from audio element');
 
       // Connect: source -> analyser -> destination
       this.source.connect(this.analyser);
       this.analyser.connect(this.audioContext.destination);
+      console.log('[AudioAnalyzer] Audio graph connected: source -> analyser -> destination');
 
       // Create data array for frequency data
       const bufferLength = this.analyser.frequencyBinCount;
       this.dataArray = new Uint8Array(bufferLength);
 
       this.connected = true;
-      console.log('[AudioAnalyzer] Connected to audio element');
+      console.log('[AudioAnalyzer] ✓ Successfully connected to audio element');
     } catch (error) {
-      console.error('[AudioAnalyzer] Failed to connect:', error);
+      console.error('[AudioAnalyzer] ✗ Failed to connect:', error);
+      if (error instanceof Error) {
+        console.error('[AudioAnalyzer] Error details:', error.message, error.stack);
+      }
     }
   }
 
@@ -49,15 +62,33 @@ export class AudioAnalyzer {
    * Average amplitude across all frequencies
    */
   getEnergy(): number {
-    if (!this.analyser || !this.dataArray) return 0;
+    if (!this.analyser || !this.dataArray) {
+      console.warn('[AudioAnalyzer] getEnergy called but not ready:', {
+        hasAnalyser: !!this.analyser,
+        hasDataArray: !!this.dataArray,
+        connected: this.connected
+      });
+      return 0;
+    }
 
     // Get frequency data
     this.analyser.getByteFrequencyData(this.dataArray);
 
     // Calculate average amplitude
     let sum = 0;
+    let maxVal = 0;
     for (let i = 0; i < this.dataArray.length; i++) {
       sum += this.dataArray[i];
+      maxVal = Math.max(maxVal, this.dataArray[i]);
+    }
+
+    // Log raw data occasionally for debugging
+    if (Math.random() < 0.01) {
+      console.log('[AudioAnalyzer] Raw FFT data:', {
+        avgValue: (sum / this.dataArray.length).toFixed(1),
+        maxValue: maxVal,
+        sampleValues: Array.from(this.dataArray.slice(0, 10))
+      });
     }
 
     // Normalize to 0-1 range (byte values are 0-255)

@@ -344,11 +344,15 @@ export function createVinylSketch(
         const baseBrightness = p.map(shimmerIntensity, 0, 1, 40, 65);
         const brightness = baseBrightness + midSmooth * 35; // Mids make it BRIGHT
 
+        // HUE SHIFTS with music! Mids rotate hue, treble adds variation
+        const hueShift = midSmooth * 30 + trebleSmooth * 15;
+        const dynamicHue = (groove.baseHue + hueShift) % 360;
+
         // TREBLE controls transparency (high frequencies create shimmer/sparkle)
         const baseAlpha = p.map(i, 0, grooves.length, 60, 120);
         const alpha = baseAlpha + trebleSmooth * 60;
 
-        p.stroke(groove.baseHue, saturation, brightness, alpha);
+        p.stroke(dynamicHue, saturation, brightness, alpha);
 
         // BASS also makes grooves THICKER
         p.strokeWeight(groove.width + bassSmooth * 1.5);

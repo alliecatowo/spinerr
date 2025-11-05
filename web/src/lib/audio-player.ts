@@ -43,8 +43,10 @@ export class AudioPlayer {
     this.audio.volume = volume;
 
     // Connect audio analyzer for real-time visualization
+    console.log('[AudioPlayer] Connecting audio analyzer to audio element');
     const analyzer = getAudioAnalyzer();
     analyzer.connect(this.audio);
+    console.log('[AudioPlayer] Audio analyzer connected');
 
     // Listen for time updates to sync progress
     this.audio.addEventListener('timeupdate', this.handleTimeUpdate);
