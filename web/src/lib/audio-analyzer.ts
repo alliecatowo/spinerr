@@ -7,7 +7,7 @@
 export class AudioAnalyzer {
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
-  private dataArray: Uint8Array | null = null;
+  private dataArray: Uint8Array<ArrayBuffer> | null = null;
   private source: MediaElementAudioSourceNode | null = null;
   private connected = false;
 

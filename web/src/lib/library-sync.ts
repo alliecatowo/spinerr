@@ -8,7 +8,7 @@ import {
   type DocumentData,
 } from 'firebase/firestore';
 import { getFirebaseDb } from './firebase';
-import type { Album, Track } from './store';
+import type { Album } from './providers/types';
 
 const STORAGE_KEY_ALBUMS = 'spinerr_albums';
 const STORAGE_KEY_RECENTLY_PLAYED = 'spinerr_recently_played';
