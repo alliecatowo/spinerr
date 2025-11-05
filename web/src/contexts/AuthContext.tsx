@@ -21,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Initialize Firebase
@@ -42,8 +43,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('[AuthProvider] No user detected, signing in anonymously...');
         try {
           await signInAnonymous();
-        } catch (error) {
+          setError(null); // Clear any previous errors
+        } catch (error: any) {
           console.error('[AuthProvider] Anonymous sign-in failed:', error);
+
+          // Handle configuration not found error
+          if (error?.code === 'auth/configuration-not-found') {
+            const msg = 'Firebase Authentication not enabled. Running in localStorage-only mode. See FIREBASE_SETUP.md';
+            console.warn('[AuthProvider]', msg);
+            setError(msg);
+            setLoading(false);
+            // Don't block the app - it will work with localStorage only
+          } else {
+            setError(error?.message || 'Authentication error');
+          }
         }
       }
     });
