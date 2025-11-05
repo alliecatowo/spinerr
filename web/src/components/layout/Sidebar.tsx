@@ -51,7 +51,7 @@ export function Sidebar() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="w-[280px] h-full overflow-y-auto px-6 py-4"
+        className="w-72 h-full overflow-y-auto px-6 py-4"
       >
         <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-neutral-800/50 overflow-hidden">
           {/* Recently Played Section */}
@@ -66,7 +66,7 @@ export function Sidebar() {
                 <p className="text-xs">No recent albums</p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-[280px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 scrollbar-track-transparent">
+              <div className="space-y-2 max-h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 scrollbar-track-transparent">
                 {displayedRecentlyPlayed.map((album) => (
                   <motion.div
                     key={`${album.provider}-${album.id}`}
@@ -159,7 +159,7 @@ export function Sidebar() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="mt-2 max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 scrollbar-track-transparent bg-gray-50 dark:bg-neutral-800/50 rounded-lg p-2"
+                  className="mt-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-neutral-700 scrollbar-track-transparent bg-gray-50 dark:bg-neutral-800/50 rounded-lg p-2"
                 >
                   {filteredAlbums.length === 0 ? (
                     <div className="text-center py-4 text-xs text-gray-500 dark:text-neutral-400">

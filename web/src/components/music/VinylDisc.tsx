@@ -20,6 +20,9 @@ export function VinylDisc({
 }: VinylDiscProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [rotation, setRotation] = useState(0);
+  const rotationRef = useRef(0);
+  const animationRef = useRef<number>();
 
   // INITIALIZATION: Initialize or reuse existing renderer
   useEffect(() => {
@@ -74,6 +77,35 @@ export function VinylDisc({
     });
   }, [track.id, track.coverColor, isPlaying, progress]); // Update on any prop change
 
+  // Smooth rotation animation that preserves position on pause
+  useEffect(() => {
+    if (!isPlaying) {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+      return;
+    }
+
+    let startTime = performance.now();
+    let startRotation = rotationRef.current;
+
+    const animate = (currentTime: number) => {
+      const elapsed = (currentTime - startTime) / 1000; // seconds
+      const newRotation = startRotation + (elapsed / 1.8) * 360; // 1.8s per rotation
+      rotationRef.current = newRotation % 360;
+      setRotation(rotationRef.current);
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isPlaying]);
+
   const [showPlayIcon, setShowPlayIcon] = useState(false);
 
   return (
@@ -107,32 +139,15 @@ export function VinylDisc({
       </div>
 
       {/* Album Art Overlay - Rotates at 33⅓ RPM when playing */}
-      <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden shadow-2xl pointer-events-none"
+      <div
+        className="absolute top-1/2 left-1/2 rounded-full overflow-hidden shadow-2xl pointer-events-none"
         style={{
           width: "30%",
           height: "30%",
           backgroundColor: track.coverColor,
-          zIndex: 10
-        }}
-        initial={{ opacity: 0, scale: 0, rotate: 0 }}
-        animate={isPlaying ? {
-          opacity: 1,
-          scale: 1,
-          rotate: 360
-        } : {
-          opacity: 1,
-          scale: 1
-          // Don't specify rotate when paused - preserves current rotation
-        }}
-        transition={{
-          opacity: { delay: 0.4, duration: 0.5 },
-          scale: { delay: 0.4, duration: 0.5 },
-          rotate: isPlaying ? {
-            duration: 1.8, // 33⅓ RPM = 1.8 seconds per rotation
-            repeat: Infinity,
-            ease: "linear"
-          } : undefined // Let it stay at current rotation
+          zIndex: 10,
+          transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+          transformOrigin: 'center center'
         }}
       >
         {track.artworkUrl ? (
@@ -146,7 +161,7 @@ export function VinylDisc({
             {track.album.charAt(0)}
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Center Spindle */}
       <div

@@ -81,6 +81,7 @@ export function createVinylSketch(
     let seed: number;
     let grooves: GrooveRing[] = [];
     let rotation = 0;
+    let rotationStartTime = 0;
     let centerRadius: number;
     let vinylRadius: number;
 
@@ -233,12 +234,17 @@ export function createVinylSketch(
 
     p.draw = () => {
       // Always keep looping for smooth animations
-      // Just don't update rotation when paused
       p.loop();
 
-      // Update rotation (33⅓ RPM = 0.556 rev/sec = ~0.0349 rad/frame at 60fps)
+      // Update rotation using time-based calculation (matches CSS animation exactly)
       if (params.isPlaying) {
-        rotation += (2 * Math.PI) / (60 * 60 / 33.33); // 33⅓ RPM at 60fps
+        if (rotationStartTime === 0) {
+          rotationStartTime = p.millis();
+        }
+        const elapsed = (p.millis() - rotationStartTime) / 1000; // seconds
+        rotation = (elapsed / 1.8) * (2 * Math.PI); // 1.8s per rotation = 33⅓ RPM
+      } else {
+        rotationStartTime = 0; // Reset when paused
       }
 
       // Get REAL audio energy from analyzer - separate frequency bands

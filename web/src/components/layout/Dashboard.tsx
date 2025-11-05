@@ -1,147 +1,95 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useViewModeStore } from "@/lib/store";
-import { InfoToggle } from "./InfoToggle";
+import { useFullscreen } from "@/hooks/useFullscreen";
 import { ThemeToggle } from "./ThemeToggle";
-import { Navigation } from "./Navigation";
-import { Sidebar } from "./Sidebar";
+import { AppSidebar } from "./AppSidebar";
 import { AccountButton } from "@/components/auth/AccountButton";
 import { AtAGlance } from "./AtAGlance";
 import { HelpButton } from "@/components/tours/HelpButton";
 import { Maximize2, Minimize2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DashboardProps {
   musicSection: React.ReactNode;
-  calendarSection: React.ReactNode;
 }
 
-export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
-  const { viewMode, showSidebar, showControls, showInfo, enterAmbientMode, exitAmbientMode, toggleSidebar, toggleInfo } = useViewModeStore();
+export function Dashboard({ musicSection }: DashboardProps) {
+  const { viewMode, showInfo, enterAmbientMode, exitAmbientMode } = useViewModeStore();
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
   const isAmbient = viewMode === 'ambient';
   const isMinimal = viewMode === 'minimal';
 
+
+  const handleAmbientToggle = async () => {
+    if (isAmbient) {
+      // Exit ambient mode and fullscreen
+      exitAmbientMode();
+      if (isFullscreen) {
+        await toggleFullscreen();
+      }
+    } else {
+      // Enter ambient mode and fullscreen
+      enterAmbientMode();
+      if (!isFullscreen) {
+        await toggleFullscreen();
+      }
+    }
+  };
+
   return (
-    <div className="relative min-h-screen bg-white dark:bg-neutral-950 overflow-hidden">
-      {/* Floating At a Glance - Always visible */}
-      <AnimatePresence>
-        {showInfo && <AtAGlance />}
-      </AnimatePresence>
-
-      {/* Main Container */}
-      <div className="h-screen flex flex-col">
-        {/* Top Navigation Bar - Collapsible */}
-        <AnimatePresence>
-          {!isMinimal && (
-            <motion.header
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex-shrink-0 w-full z-40"
-            >
-              <div className="flex items-start justify-between p-6">
-                {/* Left side controls */}
-                <div className="flex flex-col gap-3">
-                  <div data-tour="navigation">
-                    <Navigation />
-                  </div>
-                  <div data-tour="theme-toggle">
-                    <ThemeToggle />
-                  </div>
-                  {/* Sidebar toggle for mobile/ambient */}
-                  <button
-                    onClick={toggleSidebar}
-                    className="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-900 transition-colors"
-                    aria-label="Toggle sidebar"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                  </button>
-                </div>
-
-                {/* Right side controls */}
-                <div className="flex flex-col gap-3">
-                  <AccountButton />
-
-                  {/* Ambient Mode Toggle */}
-                  <button
-                    onClick={isAmbient ? exitAmbientMode : enterAmbientMode}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                      isAmbient
-                        ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20'
-                        : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-900'
-                    }`}
-                    aria-label={isAmbient ? "Exit ambient mode" : "Enter ambient mode"}
-                    title={isAmbient ? "Exit ambient mode" : "Enter ambient mode"}
-                  >
-                    {isAmbient ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-                  </button>
-
-                  <div data-tour="info-toggle">
-                    <InfoToggle />
-                  </div>
-                </div>
-              </div>
-            </motion.header>
-          )}
-        </AnimatePresence>
+    <SidebarProvider defaultOpen={!isAmbient}>
+      <div className="flex min-h-screen w-full bg-neutral-50 dark:bg-neutral-950">
+        {/* Left Sidebar - Using shadcn sidebar */}
+        {!isAmbient && !isMinimal && <AppSidebar />}
 
         {/* Main Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Sidebar - Collapsible */}
-          <AnimatePresence>
-            {showSidebar && !isAmbient && (
-              <motion.aside
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.3 }}
-                className="flex-shrink-0 hidden lg:block"
-                data-tour="sidebar"
-              >
-                <Sidebar />
-              </motion.aside>
-            )}
-          </AnimatePresence>
+        <SidebarInset className="flex-1 flex flex-col">
+          {/* Header Bar - Hidden in fullscreen */}
+          {!isMinimal && !isFullscreen && (
+            <header className="sticky top-0 z-50 w-full border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm">
+              <div className="container flex h-16 items-center justify-between px-6">
+                {/* Left Controls */}
+                <div className="flex items-center gap-4">
+                  {!isAmbient && <SidebarTrigger />}
+                  <ThemeToggle />
+                </div>
 
-          {/* Center Content - Music + Calendar */}
-          <main className="flex-1 flex items-center justify-center px-6 lg:px-12 py-8 overflow-hidden">
-            <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16 w-full max-w-[1600px]">
-              {/* Music Section - always visible */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="flex-1 flex items-center justify-center w-full"
-              >
-                {musicSection}
-              </motion.div>
-
-              {/* Calendar/Controls Section - Collapsible */}
-              <AnimatePresence mode="sync">
-                {showControls && !isMinimal && (
-                  <motion.div
-                    key="controls"
-                    initial={{ opacity: 0, x: 50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 50 }}
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    className="w-full lg:w-auto lg:min-w-[420px] lg:max-w-[480px]"
+                {/* Right Controls */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleAmbientToggle}
+                    className={cn(
+                      "p-2 rounded-lg transition-colors",
+                      isAmbient || isFullscreen
+                        ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+                        : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    )}
+                    aria-label={isAmbient ? "Exit fullscreen mode" : "Enter fullscreen mode"}
+                    title={isAmbient ? "Exit fullscreen mode" : "Enter fullscreen mode"}
                   >
-                    {calendarSection}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    {isAmbient || isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+                  </button>
+
+                  <AccountButton />
+                </div>
+              </div>
+            </header>
+          )}
+
+          {/* Main Content */}
+          <main className="flex-1 w-full">
+            <div className="h-full flex flex-col lg:flex-row items-center justify-evenly gap-8 p-8">
+              {musicSection}
+              {showInfo && !isMinimal && <AtAGlance />}
             </div>
           </main>
-        </div>
-      </div>
 
-      {/* Help Button - Hidden in ambient/minimal mode, or moved to settings */}
-      <AnimatePresence>
-        {!isAmbient && !isMinimal && <HelpButton />}
-      </AnimatePresence>
-    </div>
+          {/* Help Button */}
+          {!isAmbient && !isMinimal && <HelpButton />}
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 }
