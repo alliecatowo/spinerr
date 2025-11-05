@@ -91,10 +91,17 @@ export function createVinylSketch(
     let paletteHue: number;
     let hueVariation: number;
 
-    // Audio reactivity
-    let audioEnergy = 0;
-    let audioEnergySmooth = 0;
-    const audioSmoothFactor = 0.15;
+    // Audio reactivity - separate bands for different visual effects
+    let bassEnergy = 0;
+    let midEnergy = 0;
+    let trebleEnergy = 0;
+    let bassSmooth = 0;
+    let midSmooth = 0;
+    let trebleSmooth = 0;
+    // Less smoothing = more responsive (but still smooth enough to avoid jitter)
+    const bassSmoothFactor = 0.25; // Bass needs quick response for kick drums
+    const midSmoothFactor = 0.2;
+    const trebleSmoothFactor = 0.15;
 
     // Color utilities
     const hexToRgb = (hex: string): [number, number, number] => {
@@ -237,16 +244,34 @@ export function createVinylSketch(
         rotation += (2 * Math.PI) / (60 * 60 / 33.33); // 33⅓ RPM at 60fps
       }
 
-      // Get REAL audio energy from analyzer
+      // Get REAL audio energy from analyzer - separate frequency bands
       if (params.isPlaying && typeof window !== 'undefined') {
         const analyzer = getAudioAnalyzer();
-        audioEnergy = analyzer.getEnergy();
+        bassEnergy = analyzer.getBass();
+        midEnergy = analyzer.getMid();
+        trebleEnergy = analyzer.getTreble();
+
+        // Debug logging every 60 frames (once per second at 60fps)
+        if (p.frameCount % 60 === 0) {
+          console.log('[Vinyl Audio]', {
+            bass: bassEnergy.toFixed(2),
+            mid: midEnergy.toFixed(2),
+            treble: trebleEnergy.toFixed(2),
+            bassSmooth: bassSmooth.toFixed(2),
+            midSmooth: midSmooth.toFixed(2),
+            trebleSmooth: trebleSmooth.toFixed(2)
+          });
+        }
       } else {
-        audioEnergy = 0;
+        bassEnergy = 0;
+        midEnergy = 0;
+        trebleEnergy = 0;
       }
 
-      // Smooth audio energy for fluid animation
-      audioEnergySmooth += (audioEnergy - audioEnergySmooth) * audioSmoothFactor;
+      // Smooth each band separately for fluid animation
+      bassSmooth += (bassEnergy - bassSmooth) * bassSmoothFactor;
+      midSmooth += (midEnergy - midSmooth) * midSmoothFactor;
+      trebleSmooth += (trebleEnergy - trebleSmooth) * trebleSmoothFactor;
 
       // Clear background - TRANSPARENT
       p.clear();
@@ -275,19 +300,23 @@ export function createVinylSketch(
       // Use PRE-COMPUTED colors (no randomness = no visual jump on pause/play)
       p.noStroke();
 
-      // Dark outer edge with audio-reactive subtle glow
-      const glowBoost = audioEnergySmooth * 15;
-      for (let i = 0; i < 8; i++) {
-        const alpha = p.map(i, 0, 8, 40 + glowBoost, 0);
+      // BASS makes the vinyl PULSE outward
+      const bassPulse = bassSmooth * 25; // Up to 25px expansion on bass hits!
+
+      // Dark outer edge with DRAMATIC bass-reactive glow
+      const glowBoost = bassSmooth * 40; // Bass creates intense glow
+      for (let i = 0; i < 10; i++) {
+        const alpha = p.map(i, 0, 10, 50 + glowBoost, 0);
         p.colorMode(p.HSB);
-        p.fill(baseHue, baseSat * 0.6, baseBright * 0.7, alpha);
-        p.circle(0, 0, vinylRadius * 2 + i * 2);
+        p.fill(baseHue, baseSat * 0.6, baseBright * 0.7 + bassSmooth * 20, alpha);
+        p.circle(0, 0, vinylRadius * 2 + i * 3 + bassPulse);
       }
 
-      // Main vinyl surface
+      // Main vinyl surface - pulses with bass
       p.colorMode(p.HSB);
-      p.fill(baseHue, baseSat, baseBright);
-      p.circle(0, 0, vinylRadius * 2);
+      const dynamicBrightness = baseBright + midSmooth * 15; // Mids control brightness
+      p.fill(baseHue, baseSat, dynamicBrightness);
+      p.circle(0, 0, vinylRadius * 2 + bassPulse);
       p.colorMode(p.RGB); // Reset
     };
 
@@ -296,31 +325,43 @@ export function createVinylSketch(
       p.noFill();
       p.colorMode(p.HSB);
 
-      // Audio-reactive displacement
-      const audioDisplacement = audioEnergySmooth * 4;
+      // BASS creates MASSIVE displacement (grooves explode outward on bass hits!)
+      const bassDisplacement = bassSmooth * 20; // Up to 20px displacement!
+
+      // TREBLE controls shimmer speed (high notes make it sparkle faster)
+      const trebleShimmerSpeed = 0.03 + trebleSmooth * 0.08;
 
       for (let i = 0; i < grooves.length; i++) {
         const groove = grooves[i];
 
-        // Shimmer animation (smooth, continuous)
-        const shimmerIntensity = p.sin(groove.shimmerPhase + p.frameCount * 0.04) * 0.5 + 0.5;
+        // Shimmer animation - TREBLE controls speed
+        const shimmerIntensity = p.sin(groove.shimmerPhase + p.frameCount * trebleShimmerSpeed) * 0.5 + 0.5;
 
-        // Color modulation based on shimmer + audio
-        const saturation = p.map(i, 0, grooves.length, 70, 100);
-        const brightness = p.map(shimmerIntensity, 0, 1, 45, 75) + audioEnergySmooth * 20;
-        const alpha = p.map(i, 0, grooves.length, 70, 130);
+        // MIDS control saturation and brightness (vocals/guitars light it up!)
+        const baseSaturation = p.map(i, 0, grooves.length, 70, 100);
+        const saturation = baseSaturation + midSmooth * 30; // Mids boost saturation
+
+        const baseBrightness = p.map(shimmerIntensity, 0, 1, 40, 65);
+        const brightness = baseBrightness + midSmooth * 35; // Mids make it BRIGHT
+
+        // TREBLE controls transparency (high frequencies create shimmer/sparkle)
+        const baseAlpha = p.map(i, 0, grooves.length, 60, 120);
+        const alpha = baseAlpha + trebleSmooth * 60;
 
         p.stroke(groove.baseHue, saturation, brightness, alpha);
-        p.strokeWeight(groove.width + audioEnergySmooth * 0.8);
 
-        // Draw from CACHED path (no expensive noise calculations!)
+        // BASS also makes grooves THICKER
+        p.strokeWeight(groove.width + bassSmooth * 1.5);
+
+        // Draw from CACHED path with DRAMATIC bass displacement
         if (groove.cachedPath) {
           p.beginShape();
           for (const point of groove.cachedPath) {
-            // Only apply audio displacement, not recalculating noise
             const angle = Math.atan2(point.y, point.x);
             const dist = Math.sqrt(point.x * point.x + point.y * point.y);
-            const reactiveR = dist + audioDisplacement;
+
+            // Bass makes grooves EXPLODE outward, treble adds subtle flutter
+            const reactiveR = dist + bassDisplacement + trebleSmooth * 3;
 
             p.vertex(
               Math.cos(angle) * reactiveR,

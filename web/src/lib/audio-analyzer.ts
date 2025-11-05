@@ -61,7 +61,10 @@ export class AudioAnalyzer {
     }
 
     // Normalize to 0-1 range (byte values are 0-255)
-    return (sum / this.dataArray.length) / 255;
+    const energy = (sum / this.dataArray.length) / 255;
+
+    // Boost the response curve for more dramatic visuals
+    return Math.pow(energy, 0.7); // Power curve makes quiet parts quieter, loud parts louder
   }
 
   /**
@@ -73,14 +76,16 @@ export class AudioAnalyzer {
 
     this.analyser.getByteFrequencyData(this.dataArray);
 
-    // Bass is roughly first 20% of spectrum
-    const bassEnd = Math.floor(this.dataArray.length * 0.2);
+    // Bass is roughly first 15% of spectrum
+    const bassEnd = Math.floor(this.dataArray.length * 0.15);
     let sum = 0;
     for (let i = 0; i < bassEnd; i++) {
       sum += this.dataArray[i];
     }
 
-    return (sum / bassEnd) / 255;
+    const bass = (sum / bassEnd) / 255;
+    // Bass hits should be VERY dramatic
+    return Math.pow(bass, 0.6);
   }
 
   /**
@@ -92,15 +97,16 @@ export class AudioAnalyzer {
 
     this.analyser.getByteFrequencyData(this.dataArray);
 
-    // Mids are roughly 20-60% of spectrum
-    const midStart = Math.floor(this.dataArray.length * 0.2);
-    const midEnd = Math.floor(this.dataArray.length * 0.6);
+    // Mids are roughly 15-50% of spectrum
+    const midStart = Math.floor(this.dataArray.length * 0.15);
+    const midEnd = Math.floor(this.dataArray.length * 0.5);
     let sum = 0;
     for (let i = midStart; i < midEnd; i++) {
       sum += this.dataArray[i];
     }
 
-    return (sum / (midEnd - midStart)) / 255;
+    const mid = (sum / (midEnd - midStart)) / 255;
+    return Math.pow(mid, 0.7);
   }
 
   /**
@@ -112,14 +118,15 @@ export class AudioAnalyzer {
 
     this.analyser.getByteFrequencyData(this.dataArray);
 
-    // Treble is roughly 60-100% of spectrum
-    const trebleStart = Math.floor(this.dataArray.length * 0.6);
+    // Treble is roughly 50-100% of spectrum
+    const trebleStart = Math.floor(this.dataArray.length * 0.5);
     let sum = 0;
     for (let i = trebleStart; i < this.dataArray.length; i++) {
       sum += this.dataArray[i];
     }
 
-    return (sum / (this.dataArray.length - trebleStart)) / 255;
+    const treble = (sum / (this.dataArray.length - trebleStart)) / 255;
+    return Math.pow(treble, 0.8);
   }
 
   /**
