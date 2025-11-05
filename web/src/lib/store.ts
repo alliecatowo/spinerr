@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Album, Track as ProviderTrack, PlaylistRecord, UserLibrary } from './providers/types';
+import { getCurrentUser } from './auth';
+import { syncTourStateToFirebase } from './tour-firebase';
 
 // Types
 export type ViewMode = 'music' | 'both' | 'calendar';
@@ -399,23 +401,57 @@ export const useTourStore = create<TourState>()(
       completeTour: (tourId: string) => {
         console.log('[Tour] Completed:', tourId);
         const completionKey = `hasSeen${tourId.charAt(0).toUpperCase() + tourId.slice(1)}Tour`;
-        set({
+
+        // Update state and get latest for Firebase sync
+        const newState = {
           [completionKey]: true,
           activeTour: null,
           runTour: false,
           tourStepIndex: 0,
-        });
+        };
+        set(newState);
+
+        // Sync to Firebase after state update
+        setTimeout(() => {
+          const currentState = useTourStore.getState();
+          const user = getCurrentUser();
+          if (user) {
+            syncTourStateToFirebase(user, {
+              hasSeenOnboarding: currentState.hasSeenOnboarding,
+              hasSeenLibraryTour: currentState.hasSeenLibraryTour,
+              hasSeenPlayerTour: currentState.hasSeenPlayerTour,
+              hasSeenSettingsTour: currentState.hasSeenSettingsTour,
+            });
+          }
+        }, 0);
       },
 
       skipTour: (tourId: string) => {
         console.log('[Tour] Skipped:', tourId);
         const completionKey = `hasSeen${tourId.charAt(0).toUpperCase() + tourId.slice(1)}Tour`;
-        set({
+
+        // Update state and get latest for Firebase sync
+        const newState = {
           [completionKey]: true,
           activeTour: null,
           runTour: false,
           tourStepIndex: 0,
-        });
+        };
+        set(newState);
+
+        // Sync to Firebase after state update
+        setTimeout(() => {
+          const currentState = useTourStore.getState();
+          const user = getCurrentUser();
+          if (user) {
+            syncTourStateToFirebase(user, {
+              hasSeenOnboarding: currentState.hasSeenOnboarding,
+              hasSeenLibraryTour: currentState.hasSeenLibraryTour,
+              hasSeenPlayerTour: currentState.hasSeenPlayerTour,
+              hasSeenSettingsTour: currentState.hasSeenSettingsTour,
+            });
+          }
+        }, 0);
       },
 
       resetAllTours: () => {
@@ -429,6 +465,19 @@ export const useTourStore = create<TourState>()(
           runTour: false,
           tourStepIndex: 0,
         });
+
+        // Sync to Firebase
+        setTimeout(() => {
+          const user = getCurrentUser();
+          if (user) {
+            syncTourStateToFirebase(user, {
+              hasSeenOnboarding: false,
+              hasSeenLibraryTour: false,
+              hasSeenPlayerTour: false,
+              hasSeenSettingsTour: false,
+            });
+          }
+        }, 0);
       },
 
       setStepIndex: (index: number) => set({ tourStepIndex: index }),

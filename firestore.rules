@@ -22,5 +22,10 @@ service cloud.firestore {
     match /users/{userId}/playlists/{playlistId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
+
+    // Users can read/write their own preferences (tour state, settings, etc.)
+    match /users/{userId}/preferences/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }
