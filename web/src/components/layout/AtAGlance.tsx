@@ -2,11 +2,8 @@
 
 import { motion } from "framer-motion";
 import { format, isToday, isTomorrow } from "date-fns";
-import { Play, Pause } from "lucide-react";
 import { usePlayerStore, useCalendarStore } from "@/lib/store";
 import type { CalendarEvent } from "@/lib/store";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { useEffect, useState } from "react";
 
 // Helper function for event date labels (outside component so EventItem can use it)
@@ -18,11 +15,6 @@ function getEventDateLabel(date: Date): string {
 
 export function AtAGlance() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
-  const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const progress = usePlayerStore((state) => state.progress);
-  const play = usePlayerStore((state) => state.play);
-  const pause = usePlayerStore((state) => state.pause);
-  const updateProgress = usePlayerStore((state) => state.updateProgress);
   const events = useCalendarStore((state) => state.events);
 
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -41,24 +33,6 @@ export function AtAGlance() {
     .filter((event) => event.date >= new Date())
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, 3);
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const handleSeek = (newProgress: number) => {
-    updateProgress(newProgress);
-    if (typeof window !== "undefined") {
-      import("@/lib/audio-player").then(({ getAudioPlayer }) => {
-        getAudioPlayer().seek(newProgress);
-      });
-    }
-  };
-
-  const currentDuration = currentTrack ? progress * currentTrack.duration : 0;
-  const totalDuration = currentTrack?.duration || 0;
 
   return (
     <motion.div
@@ -102,9 +76,9 @@ export function AtAGlance() {
         {/* Divider */}
         {currentTrack && <div className="h-px bg-gray-200 dark:bg-neutral-800" />}
 
-        {/* Now Playing Section */}
+        {/* Now Playing Section - Info Only */}
         {currentTrack && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <h3 className="text-xs font-medium text-gray-500 dark:text-neutral-500 uppercase tracking-wide">
               Now Playing
             </h3>
@@ -117,37 +91,6 @@ export function AtAGlance() {
               <div className="text-sm text-gray-600 dark:text-neutral-400 truncate">
                 {currentTrack.artist}
               </div>
-            </div>
-
-            {/* Seek Bar */}
-            <div className="space-y-2">
-              <Slider
-                value={[progress * 100]}
-                onValueChange={(value) => handleSeek(value[0] / 100)}
-                max={100}
-                step={0.1}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-500 dark:text-neutral-500 tabular-nums">
-                <span>{formatTime(currentDuration)}</span>
-                <span>{formatTime(totalDuration)}</span>
-              </div>
-            </div>
-
-            {/* Play/Pause Button */}
-            <div className="flex justify-center pt-2">
-              <Button
-                variant="default"
-                size="icon"
-                onClick={isPlaying ? pause : play}
-                className="h-12 w-12"
-              >
-                {isPlaying ? (
-                  <Pause className="h-5 w-5" />
-                ) : (
-                  <Play className="h-5 w-5 ml-0.5" />
-                )}
-              </Button>
             </div>
           </div>
         )}

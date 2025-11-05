@@ -38,6 +38,11 @@ export class AudioPlayer {
     this.audio = new Audio();
     this.audio.preload = 'auto';
 
+    // CRITICAL: Enable CORS for Web Audio API to work with cross-origin streams
+    // Without this, createMediaElementSource will output silence
+    this.audio.crossOrigin = 'anonymous';
+    console.log('[AudioPlayer] Set crossOrigin=anonymous for Web Audio API');
+
     // Set initial volume from store
     const volume = usePlayerStore.getState().volume;
     this.audio.volume = volume;

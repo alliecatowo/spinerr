@@ -5,8 +5,7 @@ import { Dashboard } from "@/components/layout/Dashboard";
 import { VinylDisc } from "@/components/music/VinylDisc";
 import { ToneArm } from "@/components/music/ToneArm";
 import { NowPlaying } from "@/components/music/NowPlaying";
-import { PlayerControls } from "@/components/music/PlayerControls";
-import { AtAGlance } from "@/components/layout/AtAGlance";
+import { InfoPanel } from "@/components/layout/InfoPanel";
 import { usePlayerStore, useCalendarStore, useLibraryStore } from "@/lib/store";
 import { mockEvents } from "@/lib/mock-data";
 import { usePlayerProgress, useKeyboardShortcuts } from "@/hooks";
@@ -79,12 +78,12 @@ export default function Home() {
             </div>
           </div>
         }
-        calendarSection={<AtAGlance />}
+        calendarSection={<InfoPanel onSeek={handleSeek} />}
       />
     );
   }
 
-  // Music section - compact single-screen layout with improved centering
+  // Music section - vinyl player with track info
   const musicSection = (
     <div className="flex flex-col items-center justify-center gap-6 w-full max-w-[700px] mx-auto">
       {/* Vinyl Disc - Optimized size for better visual prominence */}
@@ -98,33 +97,14 @@ export default function Home() {
         <ToneArm isPlaying={isPlaying} progress={progress} />
       </div>
 
-      {/* Track Info + Controls - Compact below vinyl */}
-      <div className="w-full max-w-[500px] flex flex-col gap-3">
-        {/* Now Playing Info */}
-        <div>
-          <NowPlaying track={currentTrack} isPlaying={isPlaying} />
-        </div>
-
-        {/* Player Controls */}
-        <div>
-          <PlayerControls
-            isPlaying={isPlaying}
-            progress={progress}
-            volume={volume}
-            duration={currentTrack.duration}
-            onPlay={play}
-            onPause={pause}
-            onNext={nextTrack}
-            onPrev={prevTrack}
-            onSeek={handleSeek}
-            onVolumeChange={setVolume}
-          />
-        </div>
+      {/* Now Playing Info - Compact below vinyl */}
+      <div className="w-full max-w-[500px]">
+        <NowPlaying track={currentTrack} isPlaying={isPlaying} />
       </div>
     </div>
   );
 
   return (
-    <Dashboard musicSection={musicSection} calendarSection={<AtAGlance />} />
+    <Dashboard musicSection={musicSection} calendarSection={<InfoPanel onSeek={handleSeek} />} />
   );
 }
