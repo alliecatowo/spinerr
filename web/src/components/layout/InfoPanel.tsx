@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AtAGlance } from "./AtAGlance";
 import { PlayerControls } from "@/components/music/PlayerControls";
 import { usePlayerStore } from "@/lib/store";
 
@@ -10,9 +9,8 @@ interface InfoPanelProps {
 }
 
 /**
- * InfoPanel - Combines PlayerControls with AtAGlance info display
- * Layout: Controls on top, AtAGlance below, positioned beside vinyl player
- * Stacks below vinyl on mobile breakpoints
+ * InfoPanel - Minimal player controls
+ * At a Glance is now floating independently in top-right
  */
 export function InfoPanel({ onSeek }: InfoPanelProps) {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
@@ -25,34 +23,28 @@ export function InfoPanel({ onSeek }: InfoPanelProps) {
   const prevTrack = usePlayerStore((state) => state.prevTrack);
   const setVolume = usePlayerStore((state) => state.setVolume);
 
-  return (
-    <div className="w-full lg:min-w-[400px] lg:max-w-[440px] space-y-4">
-      {/* Player Controls - Top section */}
-      {currentTrack && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="rounded-xl border border-gray-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-900 shadow-lg shadow-gray-200/50 dark:shadow-black/20 p-5"
-          data-tour="player-controls"
-        >
-          <PlayerControls
-            isPlaying={isPlaying}
-            progress={progress}
-            volume={volume}
-            duration={currentTrack.duration}
-            onPlay={play}
-            onPause={pause}
-            onNext={nextTrack}
-            onPrev={prevTrack}
-            onSeek={onSeek}
-            onVolumeChange={setVolume}
-          />
-        </motion.div>
-      )}
+  if (!currentTrack) return null;
 
-      {/* AtAGlance - Time, Events, Now Playing Info below controls */}
-      <AtAGlance />
-    </div>
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
+      className="w-full lg:min-w-[400px] lg:max-w-[440px] rounded-2xl border border-gray-200/40 dark:border-neutral-800/40 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl shadow-2xl shadow-gray-200/50 dark:shadow-black/30 p-6"
+      data-tour="player-controls"
+    >
+      <PlayerControls
+        isPlaying={isPlaying}
+        progress={progress}
+        volume={volume}
+        duration={currentTrack.duration}
+        onPlay={play}
+        onPause={pause}
+        onNext={nextTrack}
+        onPrev={prevTrack}
+        onSeek={onSeek}
+        onVolumeChange={setVolume}
+      />
+    </motion.div>
   );
 }

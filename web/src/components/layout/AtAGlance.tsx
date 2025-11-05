@@ -36,65 +36,63 @@ export function AtAGlance() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="w-full lg:min-w-[400px] lg:max-w-[440px] sticky top-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="fixed top-8 right-8 z-30 space-y-8"
     >
-      <div className="rounded-xl border border-gray-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-900 shadow-lg shadow-gray-200/50 dark:shadow-black/20 p-6 space-y-6">
-        {/* Time Section */}
-        <div className="space-y-1">
-          <div className="text-4xl font-semibold text-gray-900 dark:text-white tabular-nums">
-            {format(currentTime, "h:mm a")}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-neutral-400">
-            {format(currentTime, "EEEE, MMMM d, yyyy")}
-          </div>
+      {/* Prominent Clock - Floating */}
+      <div className="text-right space-y-1">
+        <div className="text-7xl font-light text-gray-900 dark:text-white tabular-nums tracking-tight">
+          {format(currentTime, "h:mm")}
         </div>
-
-        {/* Divider */}
-        <div className="h-px bg-gray-200 dark:bg-neutral-800" />
-
-        {/* Upcoming Events */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-medium text-gray-500 dark:text-neutral-500 uppercase tracking-wide">
-            Upcoming
-          </h3>
-          {upcomingEvents.length > 0 ? (
-            <div className="space-y-2">
-              {upcomingEvents.map((event) => (
-                <EventItem key={event.id} event={event} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-sm text-gray-400 dark:text-neutral-600 py-2">
-              No upcoming events
-            </div>
-          )}
+        <div className="text-xl font-light text-gray-500 dark:text-neutral-500 tracking-wide uppercase">
+          {format(currentTime, "a")}
         </div>
-
-        {/* Divider */}
-        {currentTrack && <div className="h-px bg-gray-200 dark:bg-neutral-800" />}
-
-        {/* Now Playing Section - Info Only */}
-        {currentTrack && (
-          <div className="space-y-3">
-            <h3 className="text-xs font-medium text-gray-500 dark:text-neutral-500 uppercase tracking-wide">
-              Now Playing
-            </h3>
-
-            {/* Song Info */}
-            <div className="space-y-1">
-              <div className="text-base font-semibold text-gray-900 dark:text-white truncate">
-                {currentTrack.title}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-neutral-400 truncate">
-                {currentTrack.artist}
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="text-sm text-gray-400 dark:text-neutral-600 mt-2">
+          {format(currentTime, "EEEE, MMMM d")}
+        </div>
       </div>
+
+      {/* Upcoming Events - Minimal */}
+      {upcomingEvents.length > 0 && (
+        <div className="space-y-3 max-w-xs">
+          {upcomingEvents.slice(0, 2).map((event) => (
+            <motion.div
+              key={event.id}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-right space-y-0.5"
+            >
+              <div className="text-sm font-medium text-gray-700 dark:text-neutral-300 truncate">
+                {event.title}
+              </div>
+              <div className="text-xs text-gray-400 dark:text-neutral-600">
+                {getEventDateLabel(event.date)} • {event.time}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Now Playing - Minimal */}
+      {currentTrack && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="text-right space-y-1 max-w-xs"
+        >
+          <div className="text-xs text-gray-400 dark:text-neutral-600 uppercase tracking-wider">
+            Now Playing
+          </div>
+          <div className="text-sm font-medium text-gray-700 dark:text-neutral-300 truncate">
+            {currentTrack.title}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-neutral-500 truncate">
+            {currentTrack.artist}
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

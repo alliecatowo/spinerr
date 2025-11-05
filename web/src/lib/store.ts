@@ -5,7 +5,7 @@ import { getCurrentUser } from './auth';
 import { syncTourStateToFirebase } from './tour-firebase';
 
 // Types
-export type ViewMode = 'music' | 'both' | 'calendar';
+export type ViewMode = 'full' | 'ambient' | 'minimal';
 
 export interface Track {
   id: string;
@@ -225,6 +225,58 @@ export const useCalendarStore = create<CalendarState>((set) => ({
   })),
 
   setEvents: (events: CalendarEvent[]) => set({ events }),
+}));
+
+// View Mode Store - Ambient/Fullscreen view controls
+interface ViewModeState {
+  viewMode: ViewMode;
+  showSidebar: boolean;
+  showControls: boolean;
+  showInfo: boolean;
+
+  setViewMode: (mode: ViewMode) => void;
+  toggleSidebar: () => void;
+  toggleControls: () => void;
+  toggleInfo: () => void;
+  enterAmbientMode: () => void;
+  exitAmbientMode: () => void;
+}
+
+export const useViewModeStore = create<ViewModeState>((set) => ({
+  viewMode: 'full',
+  showSidebar: true,
+  showControls: true,
+  showInfo: true,
+
+  setViewMode: (mode: ViewMode) => {
+    set({ viewMode: mode });
+    // Auto-configure visibility based on mode
+    if (mode === 'minimal') {
+      set({ showSidebar: false, showControls: false, showInfo: false });
+    } else if (mode === 'ambient') {
+      set({ showSidebar: false, showControls: true, showInfo: true });
+    } else {
+      set({ showSidebar: true, showControls: true, showInfo: true });
+    }
+  },
+
+  toggleSidebar: () => set((state) => ({ showSidebar: !state.showSidebar })),
+  toggleControls: () => set((state) => ({ showControls: !state.showControls })),
+  toggleInfo: () => set((state) => ({ showInfo: !state.showInfo })),
+
+  enterAmbientMode: () => set({
+    viewMode: 'ambient',
+    showSidebar: false,
+    showControls: true,
+    showInfo: true
+  }),
+
+  exitAmbientMode: () => set({
+    viewMode: 'full',
+    showSidebar: true,
+    showControls: true,
+    showInfo: true
+  }),
 }));
 
 // Library Store - Album-focused music library management
