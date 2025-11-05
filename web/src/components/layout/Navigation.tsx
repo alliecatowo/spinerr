@@ -23,7 +23,7 @@ export function Navigation() {
         variant="ghost"
         size="sm"
         onClick={() => router.push('/library')}
-        className="h-8 px-3 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white"
+        className="h-9 px-3 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
       >
         <Library className="h-4 w-4 mr-2" />
         <span className="text-sm font-medium">Library</span>
@@ -33,7 +33,7 @@ export function Navigation() {
         variant="ghost"
         size="sm"
         onClick={() => router.push('/settings')}
-        className="h-8 px-3 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white"
+        className="h-9 px-3 text-gray-600 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
       >
         <Settings className="h-4 w-4 mr-2" />
         <span className="text-sm font-medium">Settings</span>

@@ -6,8 +6,7 @@ import { VinylDisc } from "@/components/music/VinylDisc";
 import { ToneArm } from "@/components/music/ToneArm";
 import { NowPlaying } from "@/components/music/NowPlaying";
 import { PlayerControls } from "@/components/music/PlayerControls";
-import { Calendar } from "@/components/calendar/Calendar";
-import { UpcomingEvents } from "@/components/calendar/UpcomingEvents";
+import { AtAGlance } from "@/components/layout/AtAGlance";
 import { usePlayerStore, useCalendarStore, useLibraryStore } from "@/lib/store";
 import { mockEvents } from "@/lib/mock-data";
 import { usePlayerProgress, useKeyboardShortcuts } from "@/hooks";
@@ -45,14 +44,13 @@ export default function Home() {
     // Set calendar events
     setEvents(mockEvents);
 
-    // Load first album if available
-    if (!currentTrack) {
-      const albumToLoad = recentlyPlayed[0] || albums[0];
-      if (albumToLoad && albumToLoad.tracks.length > 0) {
-        loadAlbum(albumToLoad);
-      }
+    // ALWAYS load first album on mount (so p5.js initializes immediately)
+    const albumToLoad = recentlyPlayed[0] || albums[0];
+    if (albumToLoad && albumToLoad.tracks.length > 0) {
+      console.log('[Home] Auto-loading first album on mount:', albumToLoad.title);
+      loadAlbum(albumToLoad);
     }
-  }, [setEvents]); // Only run once on mount
+  }, []); // Only run once on mount
 
   // Seek handler for PlayerControls
   const handleSeek = (newProgress: number) => {
@@ -70,7 +68,7 @@ export default function Home() {
     return (
       <Dashboard
         musicSection={
-          <div className="flex flex-col items-center justify-center gap-4 w-full max-w-[900px] mx-auto h-[60vh]">
+          <div className="flex flex-col items-center justify-center gap-4 w-full max-w-[700px] mx-auto h-[60vh]">
             <div className="text-center">
               <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 No music playing
@@ -81,29 +79,16 @@ export default function Home() {
             </div>
           </div>
         }
-        calendarSection={
-          <div className="flex flex-col gap-4 w-full sticky top-6">
-            <Calendar
-              selectedDate={selectedDate}
-              events={events}
-              onSelectDate={(date) => date && selectDate(date)}
-            />
-            <UpcomingEvents
-              events={events}
-              selectedDate={selectedDate}
-              maxEvents={4}
-            />
-          </div>
-        }
+        calendarSection={<AtAGlance />}
       />
     );
   }
 
-  // Music section - compact single-screen layout
+  // Music section - compact single-screen layout with improved centering
   const musicSection = (
-    <div className="flex flex-col items-center justify-center gap-8 w-full max-w-[900px] mx-auto">
-      {/* Vinyl Disc - Large but constrained to fit screen */}
-      <div className="relative w-full max-w-[550px] aspect-square">
+    <div className="flex flex-col items-center justify-center gap-6 w-full max-w-[700px] mx-auto">
+      {/* Vinyl Disc - Optimized size for better visual prominence */}
+      <div className="relative w-full max-w-[500px] aspect-square">
         <VinylDisc
           track={currentTrack}
           isPlaying={isPlaying}
@@ -114,7 +99,7 @@ export default function Home() {
       </div>
 
       {/* Track Info + Controls - Compact below vinyl */}
-      <div className="w-full max-w-[550px] flex flex-col gap-4">
+      <div className="w-full max-w-[500px] flex flex-col gap-3">
         {/* Now Playing Info */}
         <div>
           <NowPlaying track={currentTrack} isPlaying={isPlaying} />
@@ -139,23 +124,7 @@ export default function Home() {
     </div>
   );
 
-  // Calendar section - minimal
-  const calendarSection = (
-    <div className="flex flex-col gap-4 w-full sticky top-6">
-      <Calendar
-        selectedDate={selectedDate}
-        events={events}
-        onSelectDate={(date) => date && selectDate(date)}
-      />
-      <UpcomingEvents
-        events={events}
-        selectedDate={selectedDate}
-        maxEvents={4}
-      />
-    </div>
-  );
-
   return (
-    <Dashboard musicSection={musicSection} calendarSection={calendarSection} />
+    <Dashboard musicSection={musicSection} calendarSection={<AtAGlance />} />
   );
 }

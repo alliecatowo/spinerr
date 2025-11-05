@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useCalendarStore } from "@/lib/store";
-import { CalendarToggle } from "./CalendarToggle";
+import { InfoToggle } from "./InfoToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { Navigation } from "./Navigation";
 import { Sidebar } from "./Sidebar";
@@ -18,32 +18,36 @@ export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950 overflow-x-hidden">
       {/* Minimal Navigation - top left */}
-      <div className="fixed top-8 left-8 z-50">
+      <div className="fixed top-6 left-6 z-50">
         <Navigation />
       </div>
 
-      {/* Theme Toggle - top left, below nav */}
-      <div className="fixed top-20 left-8 z-50">
+      {/* Theme Toggle - top left, below nav with consistent spacing */}
+      <div className="fixed top-[60px] left-6 z-50">
         <ThemeToggle />
       </div>
 
-      {/* Calendar Toggle - top right */}
-      <div className="fixed top-8 right-8 z-50">
-        <CalendarToggle />
+      {/* Info Toggle - top right, aligned with navigation */}
+      <div className="fixed top-6 right-6 z-50">
+        <InfoToggle />
       </div>
 
-      {/* Sidebar - left side, below theme toggle */}
+      {/* Sidebar - left side, below theme toggle with consistent spacing */}
       <Sidebar />
 
       {/* Main Content - floating, zen layout with flex, no scroll */}
-      <div className="h-screen flex items-center justify-center px-12 py-8 overflow-hidden">
-        <div className="flex flex-col lg:flex-row items-start justify-center gap-16 w-full max-w-[1800px]">
+      {/* On large screens: offset left margin to optically center vinyl player, accounting for fixed sidebar */}
+      {/* When calendar is hidden: add right margin to truly center the vinyl */}
+      <div className={`h-screen flex items-center justify-center px-12 py-8 overflow-hidden transition-all duration-500 ${
+        showCalendar ? 'lg:ml-[140px]' : 'lg:ml-[140px] lg:mr-[140px]'
+      }`}>
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-16 w-full max-w-[1600px]">
           {/* Music Section - always visible */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 flex items-center justify-center"
+            className="flex-1 flex items-center justify-center w-full"
           >
             {musicSection}
           </motion.div>

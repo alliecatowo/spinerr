@@ -1,12 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Calendar } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { useCalendarStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export function CalendarToggle() {
+export function InfoToggle() {
   const showCalendar = useCalendarStore((state) => state.showCalendar);
   const toggleCalendar = useCalendarStore((state) => state.toggleCalendar);
 
@@ -27,8 +27,8 @@ export function CalendarToggle() {
             : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800'
         )}
       >
-        <Calendar className="h-4 w-4 mr-2" />
-        <span className="text-sm font-medium">Calendar</span>
+        <Info className="h-4 w-4 mr-2" />
+        <span className="text-sm font-medium">Info</span>
       </Button>
     </motion.div>
   );

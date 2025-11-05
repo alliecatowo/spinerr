@@ -51,7 +51,7 @@ export function Sidebar() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-32 left-8 z-40 w-[280px] hidden lg:block"
+        className="fixed top-[116px] left-6 z-40 w-[280px] hidden lg:block"
       >
         <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-neutral-800/50 overflow-hidden">
           {/* Recently Played Section */}
