@@ -46,12 +46,12 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Sidebar - Fixed position on left side */}
-      <motion.aside
+      {/* Sidebar - Relative position within flex layout */}
+      <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-[116px] left-6 z-40 w-[280px] hidden lg:block"
+        className="w-[280px] h-full overflow-y-auto px-6 py-4"
       >
         <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-neutral-800/50 overflow-hidden">
           {/* Recently Played Section */}
@@ -208,7 +208,7 @@ export function Sidebar() {
             </AnimatePresence>
           </div>
         </div>
-      </motion.aside>
+      </motion.div>
 
       {/* Album Search Modal */}
       <AlbumSearchModal

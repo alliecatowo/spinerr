@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, X } from 'lucide-react';
 import { useTour } from '@/contexts/TourContext';
@@ -11,19 +11,24 @@ export function HelpButton() {
   const [showMenu, setShowMenu] = useState(false);
   const { startTour } = useTour();
   const resetAllTours = useTourStore((state) => state.resetAllTours);
-  const tours = getAllTours();
 
-  const handleTourStart = (tourId: string) => {
+  // Memoize tours list - it never changes
+  const tours = useMemo(() => getAllTours(), []);
+
+  // Memoize callbacks to prevent unnecessary re-renders
+  const handleTourStart = useCallback((tourId: string) => {
     setShowMenu(false);
     startTour(tourId);
-  };
+  }, [startTour]);
 
-  const handleResetTours = () => {
+  const handleResetTours = useCallback(() => {
     resetAllTours();
     setShowMenu(false);
     // Optionally restart onboarding
     setTimeout(() => startTour('onboarding'), 500);
-  };
+  }, [resetAllTours, startTour]);
+
+  const toggleMenu = useCallback(() => setShowMenu(prev => !prev), []);
 
   return (
     <>
@@ -33,7 +38,7 @@ export function HelpButton() {
         animate={{ opacity: 1, scale: 1 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setShowMenu(!showMenu)}
+        onClick={toggleMenu}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white shadow-lg shadow-purple-500/30 flex items-center justify-center transition-colors"
         aria-label="Help & Tours"
       >
@@ -53,7 +58,7 @@ export function HelpButton() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowMenu(false)}
+              onClick={toggleMenu}
               className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
             />
 

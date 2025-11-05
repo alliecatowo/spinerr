@@ -53,55 +53,57 @@ export function TourProvider({ children }: { children: ReactNode }) {
   return (
     <TourContext.Provider value={{ startTour, stopTour }}>
       {children}
-      {typeof window !== 'undefined' && (
-        <JoyrideNoSSR
-          steps={steps}
-          run={runTour}
-          stepIndex={tourStepIndex}
-          callback={handleJoyrideCallback}
-          continuous
-          showProgress
-          showSkipButton
-          disableScrolling={false}
-          styles={{
-            options: {
-              primaryColor: '#8b5cf6', // Purple to match app theme
-              zIndex: 10000,
-              textColor: '#1f2937',
-              arrowColor: '#fff',
-            },
-            tooltip: {
-              borderRadius: 12,
-              padding: 20,
-            },
-            tooltipContainer: {
-              textAlign: 'left',
-            },
-            tooltipContent: {
-              padding: '8px 0',
-            },
-            buttonNext: {
-              borderRadius: 8,
-              padding: '8px 16px',
-              fontSize: 14,
-              fontWeight: 500,
-            },
-            buttonBack: {
-              marginRight: 10,
-              color: '#6b7280',
-            },
-            buttonSkip: {
-              color: '#9ca3af',
-            },
-            spotlight: {
-              borderRadius: 8,
-            },
-            overlay: {
-              mixBlendMode: 'normal',
-            },
-          }}
-        />
-      )}
+      <JoyrideNoSSR
+        steps={steps}
+        run={runTour}
+        stepIndex={tourStepIndex}
+        callback={handleJoyrideCallback}
+        continuous
+        showProgress
+        showSkipButton
+        disableScrolling={false}
+        disableOverlayClose={false}
+        spotlightClicks={true}
+        styles={{
+          options: {
+            primaryColor: '#8b5cf6', // Purple to match app theme
+            zIndex: 10000,
+            textColor: '#1f2937',
+            arrowColor: '#fff',
+            overlayColor: 'rgba(0, 0, 0, 0.4)', // Lighter overlay
+          },
+          tooltip: {
+            borderRadius: 12,
+            padding: 20,
+          },
+          tooltipContainer: {
+            textAlign: 'left',
+          },
+          tooltipContent: {
+            padding: '8px 0',
+          },
+          buttonNext: {
+            borderRadius: 8,
+            padding: '8px 16px',
+            fontSize: 14,
+            fontWeight: 500,
+          },
+          buttonBack: {
+            marginRight: 10,
+            color: '#6b7280',
+          },
+          buttonSkip: {
+            color: '#9ca3af',
+          },
+          spotlight: {
+            borderRadius: 8,
+            backgroundColor: 'transparent', // Make spotlight transparent so content shows through
+          },
+          overlay: {
+            mixBlendMode: 'normal',
+          },
+        }}
+      />
     </TourContext.Provider>
   );
 }

@@ -18,62 +18,71 @@ export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
   const showCalendar = useCalendarStore((state) => state.showCalendar);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950 overflow-x-hidden">
-      {/* Minimal Navigation - top left */}
-      <div className="fixed top-6 left-6 z-50" data-tour="navigation">
-        <Navigation />
-      </div>
+    <div className="relative min-h-screen bg-white dark:bg-neutral-950 overflow-hidden">
+      {/* Main Container - Responsive Grid Layout */}
+      <div className="h-screen flex flex-col">
+        {/* Top Navigation Bar */}
+        <header className="flex-shrink-0 w-full z-50">
+          <div className="flex items-start justify-between p-6">
+            {/* Left side controls */}
+            <div className="flex flex-col gap-3">
+              <div data-tour="navigation">
+                <Navigation />
+              </div>
+              <div data-tour="theme-toggle">
+                <ThemeToggle />
+              </div>
+            </div>
 
-      {/* Theme Toggle - top left, below nav with consistent spacing */}
-      <div className="fixed top-[60px] left-6 z-50" data-tour="theme-toggle">
-        <ThemeToggle />
-      </div>
+            {/* Right side controls */}
+            <div className="flex flex-col gap-3">
+              <AccountButton />
+              <div data-tour="info-toggle">
+                <InfoToggle />
+              </div>
+            </div>
+          </div>
+        </header>
 
-      {/* Account & Info - top right, aligned with navigation */}
-      <div className="fixed top-6 right-6 z-50 flex flex-col gap-3">
-        <AccountButton />
-        <div data-tour="info-toggle">
-          <InfoToggle />
-        </div>
-      </div>
+        {/* Main Content Area - Flex container for sidebar + content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Sidebar - left side */}
+          <aside className="flex-shrink-0 hidden lg:block" data-tour="sidebar">
+            <Sidebar />
+          </aside>
 
-      {/* Sidebar - left side, below theme toggle with consistent spacing */}
-      <div data-tour="sidebar">
-        <Sidebar />
-      </div>
-
-      {/* Main Content - floating, zen layout with flex, no scroll */}
-      {/* On large screens: offset left margin to optically center vinyl player, accounting for fixed sidebar */}
-      {/* When calendar is hidden: add right margin to truly center the vinyl */}
-      <div className={`h-screen flex items-center justify-center px-12 py-8 overflow-hidden transition-all duration-500 ${
-        showCalendar ? 'lg:ml-[140px]' : 'lg:ml-[140px] lg:mr-[140px]'
-      }`}>
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-16 w-full max-w-[1600px]">
-          {/* Music Section - always visible */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 flex items-center justify-center w-full"
-          >
-            {musicSection}
-          </motion.div>
-
-          {/* Calendar Section - toggleable */}
-          <AnimatePresence mode="sync">
-            {showCalendar && (
+          {/* Center Content - Music + Calendar */}
+          <main className="flex-1 flex items-center justify-center px-6 lg:px-12 py-8 overflow-hidden">
+            <div className={`flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16 w-full transition-all duration-500 ${
+              showCalendar ? 'max-w-[1600px]' : 'max-w-[1200px]'
+            }`}>
+              {/* Music Section - always visible */}
               <motion.div
-                key="calendar"
-                initial={{ opacity: 0, x: 100 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 100 }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full lg:w-auto lg:min-w-[420px] lg:max-w-[480px]"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="flex-1 flex items-center justify-center w-full"
               >
-                {calendarSection}
+                {musicSection}
               </motion.div>
-            )}
-          </AnimatePresence>
+
+              {/* Calendar Section - toggleable */}
+              <AnimatePresence mode="sync">
+                {showCalendar && (
+                  <motion.div
+                    key="calendar"
+                    initial={{ opacity: 0, x: 100 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 100 }}
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-full lg:w-auto lg:min-w-[420px] lg:max-w-[480px]"
+                  >
+                    {calendarSection}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </main>
         </div>
       </div>
 
