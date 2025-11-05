@@ -1,0 +1,249 @@
+[debug] [2025-11-05T05:32:42.712Z] ----------------------------------------------------------------------
+[debug] [2025-11-05T05:32:42.716Z] Command:       /usr/local/bin/firebase /home/Allie/.cache/firebase/tools/lib/node_modules/firebase-tools/lib/bin/firebase deploy --project spinerr-app
+[debug] [2025-11-05T05:32:42.717Z] CLI Version:   14.23.0
+[debug] [2025-11-05T05:32:42.717Z] Platform:      linux
+[debug] [2025-11-05T05:32:42.718Z] Node Version:  v20.18.2
+[debug] [2025-11-05T05:32:42.718Z] Time:          Tue Nov 04 2025 21:32:42 GMT-0800 (Pacific Standard Time)
+[debug] [2025-11-05T05:32:42.718Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-11-05T05:32:43.129Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-05T05:32:43.130Z] > authorizing via signed-in user (allisonemilycoleman@gmail.com)
+[debug] [2025-11-05T05:32:43.131Z] [iam] checking project spinerr-app for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-11-05T05:32:43.133Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:32:43.133Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:32:43.136Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/spinerr-app:testIamPermissions [none]
+[debug] [2025-11-05T05:32:43.136Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/spinerr-app:testIamPermissions x-goog-quota-user=projects/spinerr-app
+[debug] [2025-11-05T05:32:43.136Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/spinerr-app:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-11-05T05:32:43.361Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/spinerr-app:testIamPermissions 200
+[debug] [2025-11-05T05:32:43.362Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/spinerr-app:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-11-05T05:32:43.363Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:32:43.363Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:32:43.364Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app [none]
+[debug] [2025-11-05T05:32:43.708Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app 200
+[debug] [2025-11-05T05:32:43.709Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app {"projectId":"spinerr-app","projectNumber":"514476382717","displayName":"Spinerr","name":"projects/spinerr-app","resources":{"hostingSite":"spinerr-app"},"state":"ACTIVE","etag":"1_28c140c8-74fd-4ce3-ba7f-7a9a74cd5823"}
+[debug] [2025-11-05T05:32:50.305Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:32:50.305Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:32:50.306Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites pageToken=&pageSize=10
+[debug] [2025-11-05T05:32:50.971Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites 200
+[debug] [2025-11-05T05:32:50.971Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites {"sites":[{"name":"projects/spinerr-app/sites/spinerr-app","defaultUrl":"https://spinerr-app.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2025-11-05T05:32:50.971Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:32:50.972Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:32:50.972Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites 
+[debug] [2025-11-05T05:32:51.278Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites 200
+[debug] [2025-11-05T05:32:51.278Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites {"sites":[{"name":"projects/spinerr-app/sites/spinerr-app","defaultUrl":"https://spinerr-app.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2025-11-05T05:32:51.278Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:32:51.279Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:32:51.279Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app/webApps/-/config [none]
+[debug] [2025-11-05T05:32:52.097Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app/webApps/-/config 200
+[debug] [2025-11-05T05:32:52.097Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app/webApps/-/config {"projectId":"spinerr-app","appId":"1:514476382717:web:826f5ed15a9cf3b9eda194","storageBucket":"spinerr-app.firebasestorage.app","apiKey":"AIzaSyDjHYDKydcVZ7BM1_1P5c1yo3gEnChrtJc","authDomain":"spinerr-app.firebaseapp.com","messagingSenderId":"514476382717","projectNumber":"514476382717","version":"2"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2025-11-05T05:33:04.368Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:33:04.368Z] Checked if tokens are valid: true, expires at: 1762321824119
+[debug] [2025-11-05T05:33:04.368Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites/spinerr-app [none]
+[debug] [2025-11-05T05:33:04.898Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites/spinerr-app 200
+[debug] [2025-11-05T05:33:04.898Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites/spinerr-app {"name":"projects/spinerr-app/sites/spinerr-app","defaultUrl":"https://spinerr-app.web.app","type":"DEFAULT_SITE"}
+[info]  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /home/Allie/develop/spinerr/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /home/Allie/develop/spinerr/web/pnpm-lock.yaml
+
+
+[info]    ▲ Next.js 16.0.1 (Turbopack)
+
+[info]    - Environments: .env.local
+
+
+[info]    Creating an optimized production build ...
+
+[info] 
+-----
+FATAL: An unexpected Turbopack error occurred. A panic log has been written to /tmp/next-panic-2bc4133763a55632ef015b0a17929cb9.log.
+
+To help make Turbopack better, report this error by ttps://github.com/vercel/next.js/discussions/new?category=turbopack-error-report&title=Turbopack%20Error%3A%20Failed%20to%20write%20app%20endpoint%20%2Fpage&body=Turbopack%20version%3A%20%60142b08bf%60%0ANext.js%20version%3A%20%600.0.0%60%0A%0AError%20message%3A%0A%60%60%60%0AFailed%20to%20write%20app%20endpoint%20%2Fpage%0A%0ACaused%20by%3A%0A-%20%5Bproject%5D%2Fweb%2Fsrc%2Fapp%2Fglobals.css%20%5Bapp-client%5D%20%28css%29%0A-%20creating%20new%20process%0A-%20node%20process%20exited%20before%20we%20could%20connect%20to%20it%20with%20exit%20status%3A%201%0A%0ADebug%20info%3A%0A-%20Execution%20of%20get_all_written_entrypoints_with_issues_operation%20failed%0A-%20Execution%20of%20EntrypointsOperation%3A%3Anew%20failed%0A-%20Execution%20of%20all_entrypoints_write_to_disk_operation%20failed%0A-%20Execution%20of%20Project%3A%3Aemit_all_output_assets%20failed%0A-%20Execution%20of%20%2Aemit_assets%20failed%0A-%20Execution%20of%20all_assets_from_entries_operation%20failed%0A-%20Execution%20of%20%2Aall_assets_from_entries%20failed%0A-%20Execution%20of%20output_assets_operation%20failed%0A-%20Execution%20of%20%3CAppEndpoint%20as%20Endpoint%3E%3A%3Aoutput%20failed%0A-%20Failed%20to%20write%20app%20endpoint%20%2Fpage%0A-%20Execution%20of%20AppEndpoint%3A%3Aoutput%20failed%0A-%20Execution%20of%20whole_app_module_graph_operation%20failed%0A-%20Execution%20of%20%2AModuleGraph%3A%3Afrom_single_graph%20failed%0A-%20Execution%20of%20SingleModuleGraph%3A%3Anew_with_entries%20failed%0A-%20%5Bproject%5D%2Fweb%2Fsrc%2Fapp%2Fglobals.css%20%5Bapp-client%5D%20%28css%29%0A-%20Execution%20of%20primary_chunkable_referenced_modules%20failed%0A-%20Execution%20of%20%3CCssModuleAsset%20as%20Module%3E%3A%3Areferences%20failed%0A-%20Execution%20of%20parse_css%20failed%0A-%20Execution%20of%20%3CPostCssTransformedAsset%20as%20Asset%3E%3A%3Acontent%20failed%0A-%20Execution%20of%20PostCssTransformedAsset%3A%3Aprocess%20failed%0A-%20creating%20new%20process%0A-%20node%20process%20exited%20before%20we%20could%20connect%20to%20it%20with%20exit%20status%3A%201%0A%20%20Process%20output%3A%0A%20%20Error%3A%20%2Fhome%2FAllie%2F.cache%2Ffirebase%2Fruntime%2Fnode.js%20is%20not%20a%20Firebase%20command%0A%20%20Process%20error%20output%3A%0A%60%60%60&labels=Turbopack,Turbopack%20Panic%20Backtrace\clicking here.
+-----
+
+
+[info] 
+
+[info] > Build error occurred
+
+[info] Error [TurbopackInternalError]: Failed to write app endpoint /page
+
+Caused by:
+- [project]/web/src/app/globals.css [app-client] (css)
+- creating new process
+- node process exited before we could connect to it with exit status: 1
+
+Debug info:
+- Execution of get_all_written_entrypoints_with_issues_operation failed
+- Execution of EntrypointsOperation::new failed
+- Execution of all_entrypoints_write_to_disk_operation failed
+- Execution of Project::emit_all_output_assets failed
+- Execution of *emit_assets failed
+- Execution of all_assets_from_entries_operation failed
+- Execution of *all_assets_from_entries failed
+- Execution of output_assets_operation failed
+- Execution of <AppEndpoint as Endpoint>::output failed
+- Failed to write app endpoint /page
+- Execution of AppEndpoint::output failed
+- Execution of whole_app_module_graph_operation failed
+- Execution of *ModuleGraph::from_single_graph failed
+- Execution of SingleModuleGraph::new_with_entries failed
+- [project]/web/src/app/globals.css [app-client] (css)
+- Execution of primary_chunkable_referenced_modules failed
+- Execution of <CssModuleAsset as Module>::references failed
+- Execution of parse_css failed
+- Execution of <PostCssTransformedAsset as Asset>::content failed
+- Execution of PostCssTransformedAsset::process failed
+- creating new process
+- node process exited before we could connect to it with exit status: 1
+  Process output:
+  Error: /home/Allie/.cache/firebase/runtime/node.js is not a Firebase command
+  Process error output:
+    at <unknown> (TurbopackInternalError: Failed to write app endpoint /page) {
+  type: 'TurbopackInternalError',
+  location: undefined
+}
+
+[debug] [2025-11-05T05:33:57.583Z] Error: ENOENT: no such file or directory, open '/home/Allie/develop/spinerr/web/.next/server/middleware-manifest.json'
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-11-05T05:36:05.769Z] ----------------------------------------------------------------------
+[debug] [2025-11-05T05:36:05.774Z] Command:       /usr/local/bin/firebase /home/Allie/.cache/firebase/tools/lib/node_modules/firebase-tools/lib/bin/firebase deploy --project spinerr-app --only hosting
+[debug] [2025-11-05T05:36:05.774Z] CLI Version:   14.23.0
+[debug] [2025-11-05T05:36:05.774Z] Platform:      linux
+[debug] [2025-11-05T05:36:05.775Z] Node Version:  v20.18.2
+[debug] [2025-11-05T05:36:05.775Z] Time:          Tue Nov 04 2025 21:36:05 GMT-0800 (Pacific Standard Time)
+[debug] [2025-11-05T05:36:05.775Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-11-05T05:36:06.187Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-11-05T05:36:06.188Z] > authorizing via signed-in user (allisonemilycoleman@gmail.com)
+[debug] [2025-11-05T05:36:06.189Z] [iam] checking project spinerr-app for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-11-05T05:36:06.191Z] Checked if tokens are valid: false, expires at: 1762321824119
+[debug] [2025-11-05T05:36:06.191Z] Checked if tokens are valid: false, expires at: 1762321824119
+[debug] [2025-11-05T05:36:06.192Z] > refreshing access token with scopes: []
+[debug] [2025-11-05T05:36:06.196Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-11-05T05:36:06.196Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-05T05:36:06.485Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-11-05T05:36:06.486Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-11-05T05:36:06.513Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/spinerr-app:testIamPermissions [none]
+[debug] [2025-11-05T05:36:06.513Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/spinerr-app:testIamPermissions x-goog-quota-user=projects/spinerr-app
+[debug] [2025-11-05T05:36:06.513Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/spinerr-app:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-11-05T05:36:06.705Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/spinerr-app:testIamPermissions 200
+[debug] [2025-11-05T05:36:06.705Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/spinerr-app:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-11-05T05:36:06.706Z] Checked if tokens are valid: true, expires at: 1762324565486
+[debug] [2025-11-05T05:36:06.707Z] Checked if tokens are valid: true, expires at: 1762324565486
+[debug] [2025-11-05T05:36:06.707Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app [none]
+[debug] [2025-11-05T05:36:06.968Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app 200
+[debug] [2025-11-05T05:36:06.969Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app {"projectId":"spinerr-app","projectNumber":"514476382717","displayName":"Spinerr","name":"projects/spinerr-app","resources":{"hostingSite":"spinerr-app"},"state":"ACTIVE","etag":"1_28c140c8-74fd-4ce3-ba7f-7a9a74cd5823"}
+[debug] [2025-11-05T05:36:14.549Z] Checked if tokens are valid: true, expires at: 1762324565486
+[debug] [2025-11-05T05:36:14.549Z] Checked if tokens are valid: true, expires at: 1762324565486
+[debug] [2025-11-05T05:36:14.549Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites pageToken=&pageSize=10
+[debug] [2025-11-05T05:36:15.112Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites 200
+[debug] [2025-11-05T05:36:15.112Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites {"sites":[{"name":"projects/spinerr-app/sites/spinerr-app","defaultUrl":"https://spinerr-app.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2025-11-05T05:36:15.113Z] Checked if tokens are valid: true, expires at: 1762324565486
+[debug] [2025-11-05T05:36:15.113Z] Checked if tokens are valid: true, expires at: 1762324565486
+[debug] [2025-11-05T05:36:15.113Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites 
+[debug] [2025-11-05T05:36:15.364Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites 200
+[debug] [2025-11-05T05:36:15.364Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites {"sites":[{"name":"projects/spinerr-app/sites/spinerr-app","defaultUrl":"https://spinerr-app.web.app","type":"DEFAULT_SITE"}]}
+[debug] [2025-11-05T05:36:15.365Z] Checked if tokens are valid: true, expires at: 1762324565486
+[debug] [2025-11-05T05:36:15.365Z] Checked if tokens are valid: true, expires at: 1762324565486
+[debug] [2025-11-05T05:36:15.365Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app/webApps/-/config [none]
+[debug] [2025-11-05T05:36:15.844Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app/webApps/-/config 200
+[debug] [2025-11-05T05:36:15.844Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/spinerr-app/webApps/-/config {"projectId":"spinerr-app","appId":"1:514476382717:web:826f5ed15a9cf3b9eda194","storageBucket":"spinerr-app.firebasestorage.app","apiKey":"AIzaSyDjHYDKydcVZ7BM1_1P5c1yo3gEnChrtJc","authDomain":"spinerr-app.firebaseapp.com","messagingSenderId":"514476382717","projectNumber":"514476382717","version":"2"}
+[info] 
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[debug] [2025-11-05T05:36:28.512Z] Checked if tokens are valid: true, expires at: 1762324565486
+[debug] [2025-11-05T05:36:28.512Z] Checked if tokens are valid: true, expires at: 1762324565486
+[debug] [2025-11-05T05:36:28.513Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites/spinerr-app [none]
+[debug] [2025-11-05T05:36:29.085Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites/spinerr-app 200
+[debug] [2025-11-05T05:36:29.085Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/spinerr-app/sites/spinerr-app {"name":"projects/spinerr-app/sites/spinerr-app","defaultUrl":"https://spinerr-app.web.app","type":"DEFAULT_SITE"}
+[info]  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /home/Allie/develop/spinerr/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /home/Allie/develop/spinerr/web/pnpm-lock.yaml
+
+
+[info]    ▲ Next.js 16.0.1 (Turbopack)
+
+[info]    - Environments: .env.local
+
+
+[info]    Creating an optimized production build ...
+
+[info] 
+-----
+FATAL: An unexpected Turbopack error occurred. A panic log has been written to /tmp/next-panic-ae9aa1c8d04ba269fe94444338fbc7ce.log.
+
+To help make Turbopack better, report this error by ttps://github.com/vercel/next.js/discussions/new?category=turbopack-error-report&title=Turbopack%20Error%3A%20Failed%20to%20write%20app%20endpoint%20%2Fpage&body=Turbopack%20version%3A%20%60142b08bf%60%0ANext.js%20version%3A%20%600.0.0%60%0A%0AError%20message%3A%0A%60%60%60%0AFailed%20to%20write%20app%20endpoint%20%2Fpage%0A%0ACaused%20by%3A%0A-%20%5Bproject%5D%2Fweb%2Fsrc%2Fapp%2Fglobals.css%20%5Bapp-client%5D%20%28css%29%0A-%20creating%20new%20process%0A-%20node%20process%20exited%20before%20we%20could%20connect%20to%20it%20with%20exit%20status%3A%201%0A%0ADebug%20info%3A%0A-%20Execution%20of%20get_all_written_entrypoints_with_issues_operation%20failed%0A-%20Execution%20of%20EntrypointsOperation%3A%3Anew%20failed%0A-%20Execution%20of%20all_entrypoints_write_to_disk_operation%20failed%0A-%20Execution%20of%20Project%3A%3Aemit_all_output_assets%20failed%0A-%20Execution%20of%20%2Aemit_assets%20failed%0A-%20Execution%20of%20all_assets_from_entries_operation%20failed%0A-%20Execution%20of%20%2Aall_assets_from_entries%20failed%0A-%20Execution%20of%20output_assets_operation%20failed%0A-%20Execution%20of%20%3CAppEndpoint%20as%20Endpoint%3E%3A%3Aoutput%20failed%0A-%20Failed%20to%20write%20app%20endpoint%20%2Fpage%0A-%20Execution%20of%20AppEndpoint%3A%3Aoutput%20failed%0A-%20Execution%20of%20whole_app_module_graph_operation%20failed%0A-%20Execution%20of%20%2AModuleGraph%3A%3Afrom_single_graph%20failed%0A-%20Execution%20of%20SingleModuleGraph%3A%3Anew_with_entries%20failed%0A-%20%5Bproject%5D%2Fweb%2Fsrc%2Fapp%2Fglobals.css%20%5Bapp-client%5D%20%28css%29%0A-%20Execution%20of%20primary_chunkable_referenced_modules%20failed%0A-%20Execution%20of%20%3CCssModuleAsset%20as%20Module%3E%3A%3Areferences%20failed%0A-%20Execution%20of%20parse_css%20failed%0A-%20Execution%20of%20%3CPostCssTransformedAsset%20as%20Asset%3E%3A%3Acontent%20failed%0A-%20Execution%20of%20PostCssTransformedAsset%3A%3Aprocess%20failed%0A-%20creating%20new%20process%0A-%20node%20process%20exited%20before%20we%20could%20connect%20to%20it%20with%20exit%20status%3A%201%0A%20%20Process%20output%3A%0A%20%20Error%3A%20%2Fhome%2FAllie%2F.cache%2Ffirebase%2Fruntime%2Fnode.js%20is%20not%20a%20Firebase%20command%0A%20%20Process%20error%20output%3A%0A%60%60%60&labels=Turbopack,Turbopack%20Panic%20Backtrace\clicking here.
+-----
+
+
+[info] 
+
+[info] > Build error occurred
+
+[info] Error [TurbopackInternalError]: Failed to write app endpoint /page
+
+Caused by:
+- [project]/web/src/app/globals.css [app-client] (css)
+- creating new process
+- node process exited before we could connect to it with exit status: 1
+
+Debug info:
+- Execution of get_all_written_entrypoints_with_issues_operation failed
+- Execution of EntrypointsOperation::new failed
+- Execution of all_entrypoints_write_to_disk_operation failed
+- Execution of Project::emit_all_output_assets failed
+- Execution of *emit_assets failed
+- Execution of all_assets_from_entries_operation failed
+- Execution of *all_assets_from_entries failed
+- Execution of output_assets_operation failed
+- Execution of <AppEndpoint as Endpoint>::output failed
+- Failed to write app endpoint /page
+- Execution of AppEndpoint::output failed
+- Execution of whole_app_module_graph_operation failed
+- Execution of *ModuleGraph::from_single_graph failed
+- Execution of SingleModuleGraph::new_with_entries failed
+- [project]/web/src/app/globals.css [app-client] (css)
+- Execution of primary_chunkable_referenced_modules failed
+- Execution of <CssModuleAsset as Module>::references failed
+- Execution of parse_css failed
+- Execution of <PostCssTransformedAsset as Asset>::content failed
+- Execution of PostCssTransformedAsset::process failed
+- creating new process
+- node process exited before we could connect to it with exit status: 1
+  Process output:
+  Error: /home/Allie/.cache/firebase/runtime/node.js is not a Firebase command
+  Process error output:
+    at <unknown> (TurbopackInternalError: Failed to write app endpoint /page) {
+  type: 'TurbopackInternalError',
+  location: undefined
+}
+
+[debug] [2025-11-05T05:37:21.782Z] Error: ENOENT: no such file or directory, open '/home/Allie/develop/spinerr/web/.next/server/middleware-manifest.json'
+[error] 
+[error] Error: An unexpected error has occurred.

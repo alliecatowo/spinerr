@@ -4,12 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:emulators": "NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "emulators": "cd .. && firebase emulators:start",
-    "test:local": "pnpm emulators & pnpm dev:emulators"
+    "lint": "eslint"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.8",
@@ -22,7 +19,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "firebase": "^12.5.0",
     "framer-motion": "^12.23.24",
     "idb-keyval": "^6.2.2",
     "jsmediatags": "^3.9.7",

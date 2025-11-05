@@ -6,7 +6,6 @@ import { InfoToggle } from "./InfoToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { Navigation } from "./Navigation";
 import { Sidebar } from "./Sidebar";
-import { AccountButton } from "@/components/auth/AccountButton";
 
 interface DashboardProps {
   musicSection: React.ReactNode;
@@ -28,13 +27,8 @@ export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
         <ThemeToggle />
       </div>
 
-      {/* Account Button - top right */}
+      {/* Info Toggle - top right, aligned with navigation */}
       <div className="fixed top-6 right-6 z-50">
-        <AccountButton />
-      </div>
-
-      {/* Info Toggle - top right, below account button */}
-      <div className="fixed top-[60px] right-6 z-50">
         <InfoToggle />
       </div>
 
