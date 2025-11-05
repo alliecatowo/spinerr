@@ -1,9 +1,11 @@
 /**
  * HTML5 Audio Player Singleton
  * Manages audio playback for SoundCloud streams with store integration
+ * Includes real-time audio analysis
  */
 
 import { usePlayerStore } from './store';
+import { getAudioAnalyzer } from './audio-analyzer';
 
 export class AudioPlayer {
   private static instance: AudioPlayer | null = null;
@@ -40,6 +42,10 @@ export class AudioPlayer {
     const volume = usePlayerStore.getState().volume;
     this.audio.volume = volume;
 
+    // Connect audio analyzer for real-time visualization
+    const analyzer = getAudioAnalyzer();
+    analyzer.connect(this.audio);
+
     // Listen for time updates to sync progress
     this.audio.addEventListener('timeupdate', this.handleTimeUpdate);
 
@@ -54,6 +60,7 @@ export class AudioPlayer {
     this.audio.addEventListener('waiting', this.handleWaiting);
 
     this.isInitialized = true;
+    console.log('[AudioPlayer] Initialized with audio analyzer');
   }
 
   /**
@@ -124,6 +131,10 @@ export class AudioPlayer {
     }
 
     try {
+      // Resume audio context (needed for autoplay restrictions)
+      const analyzer = getAudioAnalyzer();
+      await analyzer.resume();
+
       await this.audio.play();
       console.log('[AudioPlayer] Playing successfully');
     } catch (error) {

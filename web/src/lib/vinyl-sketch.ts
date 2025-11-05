@@ -8,6 +8,7 @@
  */
 
 import type p5 from 'p5';
+import { getAudioAnalyzer } from './audio-analyzer';
 
 interface VinylSketchParams {
   trackId: string;
@@ -236,9 +237,15 @@ export function createVinylSketch(
         rotation += (2 * Math.PI) / (60 * 60 / 33.33); // 33⅓ RPM at 60fps
       }
 
-      // Smooth audio energy (simulated for now - will connect to real audio later)
-      // This creates gentle pulsing even without audio
-      audioEnergy = params.isPlaying ? (p.sin(p.frameCount * 0.05) * 0.5 + 0.5) : 0;
+      // Get REAL audio energy from analyzer
+      if (params.isPlaying && typeof window !== 'undefined') {
+        const analyzer = getAudioAnalyzer();
+        audioEnergy = analyzer.getEnergy();
+      } else {
+        audioEnergy = 0;
+      }
+
+      // Smooth audio energy for fluid animation
       audioEnergySmooth += (audioEnergy - audioEnergySmooth) * audioSmoothFactor;
 
       // Clear background - TRANSPARENT
