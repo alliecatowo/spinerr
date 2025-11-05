@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Album, Track as ProviderTrack, PlaylistRecord, UserLibrary } from './providers/types';
+import { getLibraryStorage } from './library-sync';
 
 // Types
 export type ViewMode = 'music' | 'both' | 'calendar';
@@ -236,6 +237,8 @@ interface LibraryState extends UserLibrary {
   updatePlaylist: (playlistId: string, tracks: ProviderTrack[]) => void;
   deletePlaylist: (playlistId: string) => void;
   clearLibrary: () => void;
+  syncToFirestore: (userId: string) => Promise<void>;
+  loadFromFirestore: (userId: string) => Promise<void>;
 }
 
 const MAX_RECENTLY_PLAYED = 10;
@@ -345,6 +348,42 @@ export const useLibraryStore = create<LibraryState>()(
         recentlyPlayed: [],
         favorites: []
       }),
+
+      // Sync current library state to Firestore (for authenticated users)
+      syncToFirestore: async (userId: string) => {
+        const state = get();
+        const storage = getLibraryStorage(userId);
+
+        try {
+          await storage.saveAlbums(state.albums);
+          await storage.saveRecentlyPlayed(state.recentlyPlayed);
+          console.log('[LibraryStore] Synced to Firestore');
+        } catch (error) {
+          console.error('[LibraryStore] Firestore sync failed:', error);
+        }
+      },
+
+      // Load library from Firestore (when user signs in)
+      loadFromFirestore: async (userId: string) => {
+        const storage = getLibraryStorage(userId);
+
+        try {
+          const albums = await storage.getAlbums();
+          const recentlyPlayed = await storage.getRecentlyPlayed();
+
+          set({
+            albums,
+            recentlyPlayed,
+          });
+
+          console.log('[LibraryStore] Loaded from Firestore:', {
+            albums: albums.length,
+            recentlyPlayed: recentlyPlayed.length,
+          });
+        } catch (error) {
+          console.error('[LibraryStore] Firestore load failed:', error);
+        }
+      },
     }),
     {
       name: 'spinerr-library',
