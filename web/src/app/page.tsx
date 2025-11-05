@@ -58,36 +58,45 @@ export default function Home() {
     );
   }
 
-  // Music section with all player components
+  // Music section with centered vinyl + right sidebar layout
   const musicSection = (
-    <div className="flex flex-col items-center justify-center space-y-6 w-full max-w-[600px]">
-      {/* Vinyl Player Area - compact with padding for tonearm */}
-      <div className="relative w-full max-w-[500px] aspect-square">
-        <VinylDisc
-          track={currentTrack}
-          isPlaying={isPlaying}
-          progress={progress}
-          onPlayPause={isPlaying ? pause : play}
-        />
-        <ToneArm isPlaying={isPlaying} progress={progress} />
+    <div className="flex flex-col lg:flex-row items-start justify-center gap-12 w-full max-w-[1400px]">
+      {/* Main Area: Large Centered Vinyl */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="relative w-full max-w-[650px] aspect-square">
+          <VinylDisc
+            track={currentTrack}
+            isPlaying={isPlaying}
+            progress={progress}
+            onPlayPause={isPlaying ? pause : play}
+          />
+          <ToneArm isPlaying={isPlaying} progress={progress} />
+        </div>
       </div>
 
-      {/* Now Playing Info */}
-      <NowPlaying track={currentTrack} isPlaying={isPlaying} />
+      {/* Right Sidebar: Track Info + Controls */}
+      <div className="w-full lg:w-[380px] flex flex-col gap-8 lg:sticky lg:top-24">
+        {/* Now Playing Info */}
+        <div className="space-y-6">
+          <NowPlaying track={currentTrack} isPlaying={isPlaying} />
+        </div>
 
-      {/* Player Controls */}
-      <PlayerControls
-        isPlaying={isPlaying}
-        progress={progress}
-        volume={volume}
-        duration={currentTrack.duration}
-        onPlay={play}
-        onPause={pause}
-        onNext={nextTrack}
-        onPrev={prevTrack}
-        onSeek={handleSeek}
-        onVolumeChange={setVolume}
-      />
+        {/* Player Controls */}
+        <div className="space-y-4">
+          <PlayerControls
+            isPlaying={isPlaying}
+            progress={progress}
+            volume={volume}
+            duration={currentTrack.duration}
+            onPlay={play}
+            onPause={pause}
+            onNext={nextTrack}
+            onPrev={prevTrack}
+            onSeek={handleSeek}
+            onVolumeChange={setVolume}
+          />
+        </div>
+      </div>
     </div>
   );
 
