@@ -22,13 +22,18 @@ interface GrooveRing {
   width: number;
 }
 
+export interface VinylSketchInstance {
+  cleanup: () => void;
+  p5Instance: p5 | null;
+}
+
 export function createVinylSketch(
   containerRef: HTMLElement,
   albumColor: string,
   isPlaying: boolean,
   progress: number,
   onSeek?: (progress: number) => void
-): () => void {
+): VinylSketchInstance {
   console.log("[vinyl-sketch] createVinylSketch called with:", {
     containerRef,
     albumColor,
@@ -395,16 +400,29 @@ export function createVinylSketch(
 
     // Public update method
     (p as any).updateParams = (newParams: Partial<VinylSketchParams>) => {
+      console.log("[vinyl-sketch] updateParams called with:", newParams);
+      console.log("[vinyl-sketch] Current params before update:", { ...params });
+
       let shouldReinitialize = false;
 
       if (newParams.albumColor !== undefined && newParams.albumColor !== params.albumColor) {
+        console.log("[vinyl-sketch] Updating albumColor:", newParams.albumColor);
         params.albumColor = newParams.albumColor;
         shouldReinitialize = true;
       }
 
       if (newParams.isPlaying !== undefined) {
+        console.log("[vinyl-sketch] Updating isPlaying:", params.isPlaying, "->", newParams.isPlaying);
         params.isPlaying = newParams.isPlaying;
         needsRedraw = true;
+
+        // Force loop/noLoop immediately
+        if (newParams.isPlaying) {
+          console.log("[vinyl-sketch] Calling p.loop() because isPlaying = true");
+          p.loop();
+        } else {
+          console.log("[vinyl-sketch] Setting needsRedraw for stopped state");
+        }
       }
 
       if (newParams.progress !== undefined) {
@@ -418,8 +436,11 @@ export function createVinylSketch(
       }
 
       if (shouldReinitialize) {
+        console.log("[vinyl-sketch] Reinitializing vinyl due to color change");
         initializeVinyl();
       }
+
+      console.log("[vinyl-sketch] Params after update:", { ...params });
     };
   };
 
@@ -437,12 +458,15 @@ export function createVinylSketch(
     });
   }
 
-  // Cleanup function
-  return () => {
-    console.log("[vinyl-sketch] Cleanup function called");
-    if (p5Instance) {
-      p5Instance.remove();
-      p5Instance = null;
-    }
+  // Return both cleanup function and p5 instance reference
+  return {
+    cleanup: () => {
+      console.log("[vinyl-sketch] Cleanup function called");
+      if (p5Instance) {
+        p5Instance.remove();
+        p5Instance = null;
+      }
+    },
+    p5Instance
   };
 }

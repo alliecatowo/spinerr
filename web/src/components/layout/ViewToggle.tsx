@@ -57,12 +57,9 @@ export function ViewToggle({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           className={cn(
-            'inline-flex items-center gap-2 p-1.5',
-            'rounded-xl border border-slate-800/50',
-            'bg-slate-900/80 backdrop-blur-xl',
-            'shadow-2xl shadow-slate-950/50',
-            'dark:border-slate-700/50',
-            'dark:bg-slate-900/90'
+            'inline-flex items-center gap-1 p-1',
+            'rounded-lg border border-gray-200 dark:border-neutral-800',
+            'bg-white dark:bg-neutral-900 shadow-sm'
           )}
         >
           {viewOptions.map((option) => {
@@ -73,37 +70,19 @@ export function ViewToggle({
               <motion.div key={option.value} className="relative">
                 <Button
                   variant={isActive ? 'default' : 'ghost'}
-                  size="default"
+                  size="sm"
                   onClick={() => handleViewChange(option.value)}
                   className={cn(
-                    'relative px-4 py-2 h-9',
-                    'transition-all duration-200',
+                    'relative px-3 py-1.5 h-8 text-xs',
+                    'transition-colors duration-150',
                     isActive
-                      ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50',
-                    'dark:hover:bg-slate-800/70'
+                      ? 'bg-gray-900 dark:bg-white text-white dark:text-black'
+                      : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800'
                   )}
                 >
-                  <Icon className="size-4 mr-2" />
+                  <Icon className="size-3.5 mr-1.5" />
                   <span className="font-medium">{option.label}</span>
                 </Button>
-
-                {/* Active indicator */}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeIndicator"
-                    className={cn(
-                      'absolute inset-0 rounded-md',
-                      'bg-gradient-to-br from-blue-600 to-purple-600',
-                      'opacity-20 blur-sm'
-                    )}
-                    transition={{
-                      type: 'spring',
-                      stiffness: 380,
-                      damping: 30,
-                    }}
-                  />
-                )}
               </motion.div>
             );
           })}
@@ -124,13 +103,10 @@ export function ViewToggle({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           className={cn(
-            'flex items-center justify-around gap-2',
-            'mx-4 mb-4 p-2',
-            'rounded-2xl border border-slate-800/50',
-            'bg-slate-900/95 backdrop-blur-xl',
-            'shadow-2xl shadow-slate-950/50',
-            'dark:border-slate-700/50',
-            'dark:bg-slate-900/95'
+            'flex items-center justify-around gap-1',
+            'mx-4 mb-4 p-1',
+            'rounded-lg border border-gray-200 dark:border-neutral-800',
+            'bg-white dark:bg-neutral-900 shadow-sm'
           )}
         >
           {viewOptions.map((option) => {
@@ -148,36 +124,18 @@ export function ViewToggle({
                   size="default"
                   onClick={() => handleViewChange(option.value)}
                   className={cn(
-                    'relative w-full flex-col h-auto py-3 px-2',
-                    'transition-all duration-200',
+                    'relative w-full flex-col h-auto py-2 px-2',
+                    'transition-colors duration-150',
                     isActive
-                      ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50',
-                    'dark:hover:bg-slate-800/70'
+                      ? 'bg-gray-900 dark:bg-white text-white dark:text-black'
+                      : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800'
                   )}
                 >
-                  <Icon className="size-5 mb-1" />
+                  <Icon className="size-4 mb-1" />
                   <span className="text-xs font-medium">
                     {option.shortLabel}
                   </span>
                 </Button>
-
-                {/* Active indicator for mobile */}
-                {isActive && (
-                  <motion.div
-                    layoutId="mobileActiveIndicator"
-                    className={cn(
-                      'absolute inset-0 rounded-md',
-                      'bg-gradient-to-br from-blue-600 to-purple-600',
-                      'opacity-20 blur-sm'
-                    )}
-                    transition={{
-                      type: 'spring',
-                      stiffness: 380,
-                      damping: 30,
-                    }}
-                  />
-                )}
               </motion.div>
             );
           })}

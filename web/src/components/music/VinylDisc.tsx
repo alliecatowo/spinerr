@@ -10,6 +10,7 @@ interface VinylDiscProps {
   isPlaying: boolean;
   progress: number;
   onSeek?: (progress: number) => void;
+  onPlayPause?: () => void;
 }
 
 export function VinylDisc({
@@ -17,24 +18,41 @@ export function VinylDisc({
   isPlaying,
   progress,
   onSeek,
+  onPlayPause,
 }: VinylDiscProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const p5InstanceRef = useRef<any>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize sketch on mount
+  // Store frequently-changing values in refs to avoid stale closures
+  const progressRef = useRef(progress);
+  const onSeekRef = useRef(onSeek);
+
+  // Update refs when props change (but don't trigger re-renders)
   useEffect(() => {
+    progressRef.current = progress;
+    onSeekRef.current = onSeek;
+  }, [progress, onSeek]);
+
+  // INITIALIZATION: Create p5 sketch once on mount
+  useEffect(() => {
+    console.log("[VinylDisc] Mount effect - initializing p5 sketch");
+
     if (!containerRef.current) {
+      console.error("[VinylDisc] No container ref available");
       return;
     }
 
     // Load p5.js dynamically
-    const loadP5 = async () => {
+    const initializeP5 = async () => {
       try {
         // Check if p5 is already loaded
         if (!(window as any).p5) {
+          console.log("[VinylDisc] Loading p5.js module...");
           const p5Module = await import("p5");
           (window as any).p5 = p5Module.default;
+          console.log("[VinylDisc] p5.js loaded successfully");
         }
 
         // Wait a frame to ensure container has dimensions
@@ -42,7 +60,8 @@ export function VinylDisc({
 
         // Create the sketch
         if (containerRef.current) {
-          cleanupRef.current = createVinylSketch(
+          console.log("[VinylDisc] Creating vinyl sketch...");
+          const sketchInstance = createVinylSketch(
             containerRef.current,
             track.coverColor,
             isPlaying,
@@ -50,6 +69,11 @@ export function VinylDisc({
             onSeek
           );
 
+          // Store references
+          p5InstanceRef.current = sketchInstance.p5Instance;
+          cleanupRef.current = sketchInstance.cleanup;
+
+          console.log("[VinylDisc] Sketch created successfully, p5Instance:", p5InstanceRef.current);
           setIsLoading(false);
         }
       } catch (error) {
@@ -58,35 +82,47 @@ export function VinylDisc({
       }
     };
 
-    loadP5();
+    initializeP5();
 
     // Cleanup on unmount
     return () => {
+      console.log("[VinylDisc] Unmounting, cleaning up...");
       if (cleanupRef.current) {
         cleanupRef.current();
         cleanupRef.current = null;
       }
+      p5InstanceRef.current = null;
     };
   }, []); // Only run once on mount
 
-  // Update sketch when IMPORTANT props change (NOT progress - too frequent!)
+  // UPDATE: Handle prop changes after initialization
   useEffect(() => {
-    if (containerRef.current && (window as any).p5) {
-      const canvas = containerRef.current.querySelector("canvas");
-
-      if (canvas && (canvas as any)._pInst) {
-        const p5Instance = (canvas as any)._pInst;
-        if (p5Instance.updateParams) {
-          p5Instance.updateParams({
-            albumColor: track.coverColor,
-            isPlaying,
-            progress, // Pass current value but don't trigger on every change
-            onSeek,
-          });
-        }
-      }
+    if (!p5InstanceRef.current) {
+      console.log("[VinylDisc] Update effect - p5 instance not ready yet");
+      return;
     }
-  }, [track.coverColor, isPlaying]); // REMOVED progress and onSeek from deps!
+
+    console.log("[VinylDisc] Update effect - updating params:", {
+      albumColor: track.coverColor,
+      isPlaying,
+      hasUpdateParams: typeof (p5InstanceRef.current as any).updateParams === 'function'
+    });
+
+    // Call updateParams on the p5 instance
+    if (typeof (p5InstanceRef.current as any).updateParams === 'function') {
+      (p5InstanceRef.current as any).updateParams({
+        albumColor: track.coverColor,
+        isPlaying,
+        progress: progressRef.current,
+        onSeek: onSeekRef.current,
+      });
+      console.log("[VinylDisc] updateParams called successfully");
+    } else {
+      console.error("[VinylDisc] updateParams method not found on p5 instance!");
+    }
+  }, [track.coverColor, isPlaying]); // Only trigger on important prop changes
+
+  const [showPlayIcon, setShowPlayIcon] = useState(false);
 
   return (
     <motion.div
@@ -96,9 +132,12 @@ export function VinylDisc({
         duration: 0.8,
         ease: [0.16, 1, 0.3, 1],
       }}
-      className="relative w-full h-full z-10"
+      className="relative w-full h-full z-10 cursor-pointer group"
+      onClick={onPlayPause}
+      onMouseEnter={() => setShowPlayIcon(true)}
+      onMouseLeave={() => setShowPlayIcon(false)}
     >
-      {/* P5 Canvas Container - with explicit min size and visible border for debugging */}
+      {/* P5 Canvas Container */}
       <div
         ref={containerRef}
         className="w-full h-full min-h-[400px]"
@@ -109,8 +148,8 @@ export function VinylDisc({
       >
         {/* Loading state */}
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-200 text-slate-600 text-lg font-medium">
-            Loading vinyl visualization...
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-neutral-900 text-gray-600 dark:text-neutral-400 text-sm">
+            Loading...
           </div>
         )}
       </div>
@@ -138,6 +177,30 @@ export function VinylDisc({
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-gray-800 rounded-full shadow-inner pointer-events-none"
         style={{ zIndex: 11 }}
       />
+
+      {/* Play/Pause Overlay - shows on hover or when paused */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: (showPlayIcon || !isPlaying) ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        style={{ zIndex: 12 }}
+      >
+        <motion.div
+          whileHover={{ scale: 1.1 }}
+          className="w-20 h-20 rounded-full bg-black/50 dark:bg-white/20 backdrop-blur-md flex items-center justify-center"
+        >
+          {isPlaying ? (
+            <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+            </svg>
+          ) : (
+            <svg className="w-10 h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
+        </motion.div>
+      </motion.div>
     </motion.div>
   );
 }

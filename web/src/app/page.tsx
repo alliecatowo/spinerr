@@ -52,22 +52,23 @@ export default function Home() {
   // If no track loaded yet, show loading state
   if (!currentTrack) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-neutral-950">
+        <div className="text-gray-900 dark:text-white text-sm">Loading...</div>
       </div>
     );
   }
 
   // Music section with all player components
   const musicSection = (
-    <div className="flex flex-col items-center space-y-6 w-full max-w-xl">
-      {/* Vinyl Player Area */}
-      <div className="relative w-full aspect-square max-w-md">
+    <div className="flex flex-col items-center justify-center space-y-8 w-full">
+      {/* Vinyl Player Area - much larger */}
+      <div className="relative w-full aspect-square">
         <VinylDisc
           track={currentTrack}
           isPlaying={isPlaying}
           progress={progress}
           onSeek={handleSeek}
+          onPlayPause={isPlaying ? pause : play}
         />
         <ToneArm isPlaying={isPlaying} progress={progress} />
       </div>
@@ -93,7 +94,7 @@ export default function Home() {
 
   // Calendar section - minimal
   const calendarSection = (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4 w-full sticky top-6">
       <Calendar
         selectedDate={selectedDate}
         events={events}

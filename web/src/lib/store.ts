@@ -53,7 +53,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   setTrack: (track: Track) => set({
     currentTrack: track,
-    isPlaying: true,
+    isPlaying: false, // Don't auto-play
     progress: 0
   }),
 
@@ -66,7 +66,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   }),
 
   nextTrack: () => {
-    const { currentTrack, playlist } = get();
+    const { currentTrack, playlist, isPlaying } = get();
     if (!currentTrack || playlist.length === 0) return;
 
     const currentIndex = playlist.findIndex(track => track.id === currentTrack.id);
@@ -74,13 +74,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
     set({
       currentTrack: playlist[nextIndex],
-      isPlaying: true,
+      isPlaying, // Keep current playing state
       progress: 0
     });
   },
 
   prevTrack: () => {
-    const { currentTrack, playlist } = get();
+    const { currentTrack, playlist, isPlaying } = get();
     if (!currentTrack || playlist.length === 0) return;
 
     const currentIndex = playlist.findIndex(track => track.id === currentTrack.id);
@@ -88,7 +88,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
     set({
       currentTrack: playlist[prevIndex],
-      isPlaying: true,
+      isPlaying, // Keep current playing state
       progress: 0
     });
   },

@@ -62,34 +62,34 @@ export function PlayerControls({
           step={0.1}
           className="w-full"
         />
-        <div className="flex justify-between text-sm text-muted-foreground">
+        <div className="flex justify-between text-xs text-gray-500 dark:text-neutral-500">
           <span>{formatTime(currentTime)}</span>
           <span>{formatTime(duration)}</span>
         </div>
       </div>
 
-      {/* Control Buttons */}
-      <div className="flex items-center justify-center gap-4">
+      {/* Control Buttons with inline volume */}
+      <div className="flex items-center justify-center gap-6">
         <Button
           variant="ghost"
           size="icon"
           onClick={onPrev}
-          className="hover:scale-110 transition-transform"
+          className="h-9 w-9 hover:bg-gray-100 dark:hover:bg-neutral-800"
         >
-          <SkipBack className="h-5 w-5" />
+          <SkipBack className="h-4 w-4" />
         </Button>
 
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
           <Button
             variant="default"
-            size="icon-lg"
+            size="icon"
             onClick={isPlaying ? onPause : onPlay}
-            className="shadow-lg"
+            className="h-12 w-12"
           >
             {isPlaying ? (
               <Pause className="h-6 w-6" />
             ) : (
-              <Play className="h-6 w-6 ml-1" />
+              <Play className="h-6 w-6 ml-0.5" />
             )}
           </Button>
         </motion.div>
@@ -98,36 +98,33 @@ export function PlayerControls({
           variant="ghost"
           size="icon"
           onClick={onNext}
-          className="hover:scale-110 transition-transform"
+          className="h-9 w-9 hover:bg-gray-100 dark:hover:bg-neutral-800"
         >
-          <SkipForward className="h-5 w-5" />
+          <SkipForward className="h-4 w-4" />
         </Button>
-      </div>
 
-      {/* Volume Control */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => onVolumeChange(isMuted ? 0.7 : 0)}
-          className="shrink-0"
-        >
-          {isMuted ? (
-            <VolumeX className="h-4 w-4" />
-          ) : (
-            <Volume2 className="h-4 w-4" />
-          )}
-        </Button>
-        <Slider
-          value={[volume * 100]}
-          onValueChange={(value) => onVolumeChange(value[0] / 100)}
-          max={100}
-          step={1}
-          className="flex-1"
-        />
-        <span className="text-sm text-muted-foreground w-12 text-right">
-          {Math.round(volume * 100)}%
-        </span>
+        {/* Compact Volume - inline */}
+        <div className="flex items-center gap-2 ml-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onVolumeChange(isMuted ? 0.7 : 0)}
+            className="h-7 w-7 shrink-0 hover:bg-gray-100 dark:hover:bg-neutral-800"
+          >
+            {isMuted ? (
+              <VolumeX className="h-3.5 w-3.5" />
+            ) : (
+              <Volume2 className="h-3.5 w-3.5" />
+            )}
+          </Button>
+          <Slider
+            value={[volume * 100]}
+            onValueChange={(value) => onVolumeChange(value[0] / 100)}
+            max={100}
+            step={1}
+            className="w-24"
+          />
+        </div>
       </div>
     </motion.div>
   );

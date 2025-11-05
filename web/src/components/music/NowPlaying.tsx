@@ -17,25 +17,25 @@ export function NowPlaying({ track, isPlaying = false }: NowPlayingProps) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.3 }}
-        className="text-center space-y-3"
+        className="text-center"
       >
         {/* Track Title */}
-        <h2 className="text-2xl font-semibold text-white">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
           {track.title}
         </h2>
 
         {/* Artist */}
-        <p className="text-base text-white/70">
+        <p className="text-base text-gray-600 dark:text-neutral-400 mt-1">
           {track.artist}
         </p>
 
-        {/* Music Bars - Optimized with will-change */}
-        {isPlaying && (
-          <div className="flex gap-1 justify-center items-end h-8 pt-2">
-            {[0, 1, 2, 3, 4].map((i) => (
+        {/* Music Bars - Fixed height container to prevent layout shift */}
+        <div className="flex gap-1 justify-center items-end h-8 mt-3">
+          {isPlaying ? (
+            [0, 1, 2, 3].map((i) => (
               <motion.div
                 key={i}
-                className="w-1 bg-white/40 rounded-full will-change-transform"
+                className="w-0.5 bg-gray-400 dark:bg-neutral-600 rounded-full will-change-transform"
                 style={{ transformOrigin: "bottom" }}
                 animate={{
                   scaleY: [0.3, 1, 0.3],
@@ -47,14 +47,9 @@ export function NowPlaying({ track, isPlaying = false }: NowPlayingProps) {
                   ease: "easeInOut",
                 }}
               />
-            ))}
-          </div>
-        )}
-
-        {/* Album - subtle */}
-        <p className="text-xs text-white/40">
-          {track.album}
-        </p>
+            ))
+          ) : null}
+        </div>
       </motion.div>
     </AnimatePresence>
   );

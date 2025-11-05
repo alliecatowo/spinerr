@@ -44,7 +44,7 @@ export function Calendar({
   return (
     <div
       className={cn(
-        "relative rounded-xl border border-white/5 bg-gradient-to-br from-white/5 to-white/[0.02] p-6 backdrop-blur-xl",
+        "relative rounded-lg border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4",
         className
       )}
     >
@@ -67,19 +67,19 @@ export function Calendar({
               <button
                 type="button"
                 className={cn(
-                  "relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium transition-all duration-200",
-                  "hover:bg-white/10 hover:scale-105",
+                  "relative inline-flex h-8 w-8 items-center justify-center rounded text-sm transition-colors duration-150",
+                  "hover:bg-gray-100 dark:hover:bg-neutral-800",
                   modifiers.selected &&
-                    "bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-white shadow-lg shadow-blue-500/20 ring-1 ring-white/20",
+                    "bg-gray-900 dark:bg-white text-white dark:text-black font-medium",
                   modifiers.today &&
                     !modifiers.selected &&
-                    "bg-white/5 font-semibold text-white ring-1 ring-white/10",
-                  modifiers.outside && "text-white/30",
+                    "font-medium text-gray-900 dark:text-white ring-1 ring-gray-300 dark:ring-neutral-700",
+                  modifiers.outside && "text-gray-300 dark:text-neutral-700",
                   modifiers.disabled && "opacity-30 cursor-not-allowed",
                   !modifiers.selected &&
                     !modifiers.today &&
                     !modifiers.outside &&
-                    "text-white/70"
+                    "text-gray-600 dark:text-neutral-400"
                 )}
                 {...props}
               >
@@ -87,10 +87,10 @@ export function Calendar({
                 {showDot && (
                   <span
                     className={cn(
-                      "absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full transition-all duration-200",
+                      "absolute bottom-0.5 left-1/2 h-0.5 w-0.5 -translate-x-1/2 rounded-full",
                       modifiers.selected
-                        ? "bg-white/80 shadow-lg shadow-white/50"
-                        : "bg-blue-400/70"
+                        ? "bg-white dark:bg-black"
+                        : "bg-blue-500 dark:bg-blue-400"
                     )}
                   />
                 )}
@@ -99,9 +99,6 @@ export function Calendar({
           },
         }}
       />
-
-      {/* Ambient glow effect */}
-      <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5" />
     </div>
   )
 }
