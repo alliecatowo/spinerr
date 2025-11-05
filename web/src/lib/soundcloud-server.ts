@@ -120,24 +120,35 @@ class SoundCloudServerClient {
   async getStreamUrl(trackId: number): Promise<string | null> {
     try {
       await this.initialize();
+      console.log('[SC Server] Fetching track:', trackId);
+
       const track = await this.client.tracks.get(trackId);
+      console.log('[SC Server] Track fetched:', track.title);
 
       // Try to get progressive MP3 stream URL
       if (track.media?.transcodings) {
+        console.log('[SC Server] Found', track.media.transcodings.length, 'transcodings');
+
         const mp3Transcoding = track.media.transcodings.find(
           (t: any) => t.format.protocol === 'progressive'
         );
 
         if (mp3Transcoding?.url) {
+          console.log('[SC Server] Found progressive transcoding, resolving URL...');
           // The URL from the API needs to be resolved with client_id
           const streamData = await this.client.api.get(mp3Transcoding.url);
+          console.log('[SC Server] Stream URL resolved successfully');
           return streamData.url;
+        } else {
+          console.warn('[SC Server] No progressive transcoding found');
         }
+      } else {
+        console.warn('[SC Server] No media.transcodings available');
       }
 
       return null;
     } catch (error) {
-      console.error('SoundCloud stream URL error:', error);
+      console.error('[SC Server] Error getting stream URL:', error);
       return null;
     }
   }

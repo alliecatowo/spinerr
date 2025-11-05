@@ -38,12 +38,17 @@ export async function GET(request: NextRequest) {
     // Get server-side SoundCloud client
     const client = getSoundCloudServerClient();
 
+    console.log('[Stream API] Fetching stream URL for track ID:', trackId);
+
     // Fetch stream URL
     const streamUrl = await client.getStreamUrl(trackId);
 
+    console.log('[Stream API] Stream URL result:', streamUrl ? 'SUCCESS' : 'FAILED');
+
     if (!streamUrl) {
+      console.error('[Stream API] No stream URL found for track:', trackId);
       return NextResponse.json(
-        { error: 'Stream URL not available for this track' },
+        { error: 'Stream URL not available for this track', trackId },
         { status: 404 }
       );
     }
