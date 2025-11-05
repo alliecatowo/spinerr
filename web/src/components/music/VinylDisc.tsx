@@ -9,7 +9,6 @@ interface VinylDiscProps {
   track: Track;
   isPlaying: boolean;
   progress: number;
-  onSeek?: (progress: number) => void;
   onPlayPause?: () => void;
 }
 
@@ -17,7 +16,6 @@ export function VinylDisc({
   track,
   isPlaying,
   progress,
-  onSeek,
   onPlayPause,
 }: VinylDiscProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -27,13 +25,11 @@ export function VinylDisc({
 
   // Store frequently-changing values in refs to avoid stale closures
   const progressRef = useRef(progress);
-  const onSeekRef = useRef(onSeek);
 
   // Update refs when props change (but don't trigger re-renders)
   useEffect(() => {
     progressRef.current = progress;
-    onSeekRef.current = onSeek;
-  }, [progress, onSeek]);
+  }, [progress]);
 
   // INITIALIZATION: Create p5 sketch once on mount
   useEffect(() => {
@@ -66,7 +62,7 @@ export function VinylDisc({
             track.coverColor,
             isPlaying,
             progress,
-            onSeek
+            undefined // No onSeek callback
           );
 
           // Store references
@@ -114,7 +110,7 @@ export function VinylDisc({
         albumColor: track.coverColor,
         isPlaying,
         progress: progressRef.current,
-        onSeek: onSeekRef.current,
+        onSeek: undefined, // No seek callback for performance
       });
       console.log("[VinylDisc] updateParams called successfully");
     } else {

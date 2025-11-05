@@ -71,8 +71,6 @@ export function createVinylSketch(
     let targetRotation = 0;
     let centerRadius: number;
     let vinylRadius: number;
-    let isHovering = false;
-    let hoverAngle = 0;
     let needsRedraw = true;
     let lastFrameTime = 0;
     const frameInterval = 1000 / 30; // Target 30fps for better performance
@@ -129,24 +127,10 @@ export function createVinylSketch(
 
       initializeVinyl();
 
-      // Set up interaction handlers
-      canvas.mousePressed(() => handleInteraction());
-      canvas.mouseMoved(() => {
-        const d = p.dist(p.mouseX, p.mouseY, p.width / 2, p.height / 2);
-        isHovering = d <= vinylRadius;
-        if (isHovering) {
-          hoverAngle = p.atan2(p.mouseY - p.height / 2, p.mouseX - p.width / 2);
-          needsRedraw = true;
-        }
-      });
+      // REMOVED: Touch seek functionality for performance
+      // No interaction handlers needed
 
       console.log("[vinyl-sketch] Setup complete, vinylRadius:", vinylRadius);
-    };
-
-    // Touch event handler (p5 global, not canvas method)
-    p.touchStarted = () => {
-      handleInteraction();
-      return false; // Prevent default
     };
 
     const initializeVinyl = () => {
@@ -186,24 +170,6 @@ export function createVinylSketch(
 
       console.log("[vinyl-sketch] Generated", grooves.length, "grooves");
       needsRedraw = true;
-    };
-
-    const handleInteraction = () => {
-      const d = p.dist(p.mouseX, p.mouseY, p.width / 2, p.height / 2);
-      if (d <= vinylRadius && d >= centerRadius) {
-        // Calculate angle relative to current rotation
-        const angle = p.atan2(p.mouseY - p.height / 2, p.mouseX - p.width / 2);
-        const normalizedAngle = (angle - rotation + p.TWO_PI) % p.TWO_PI;
-        const seekProgress = normalizedAngle / p.TWO_PI;
-
-        if (params.onSeek) {
-          params.onSeek(seekProgress);
-        }
-
-        // Visual feedback
-        needsRedraw = true;
-      }
-      return false; // Prevent default
     };
 
     p.draw = () => {
@@ -259,13 +225,6 @@ export function createVinylSketch(
       p.pop();
 
       needsRedraw = false; // Reset after drawing
-
-      // Draw hover indicator
-      if (isHovering) {
-        drawHoverIndicator();
-      }
-
-      needsRedraw = false;
     };
 
     const drawVinylBase = () => {
@@ -373,24 +332,6 @@ export function createVinylSketch(
       p.drawingContext.beginPath();
       p.drawingContext.arc(0, 0, vinylRadius, 0, Math.PI * 2);
       p.drawingContext.fill();
-    };
-
-    const drawHoverIndicator = () => {
-      p.push();
-      p.translate(p.width / 2, p.height / 2);
-
-      // Draw seek indicator line
-      p.stroke(217, 119, 87, 150);
-      p.strokeWeight(2);
-      const indicatorLength = vinylRadius - centerRadius;
-      p.line(
-        p.cos(hoverAngle) * centerRadius,
-        p.sin(hoverAngle) * centerRadius,
-        p.cos(hoverAngle) * vinylRadius,
-        p.sin(hoverAngle) * vinylRadius
-      );
-
-      p.pop();
     };
 
     p.windowResized = () => {

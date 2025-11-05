@@ -128,13 +128,13 @@ export default function TrackPage({ params }: { params: { id: string } }) {
                       background: `radial-gradient(circle at center, ${track.coverColor}40 0%, ${track.coverColor}30 20%, ${track.coverColor}20 40%, ${track.coverColor}15 60%, #000 100%)`,
                     }}
                   >
-                    {/* Grooves */}
-                    {[...Array(30)].map((_, i) => (
+                    {/* Grooves - optimized for performance */}
+                    {[...Array(20)].map((_, i) => (
                       <div
                         key={i}
                         className="absolute inset-0 rounded-full border border-white/5"
                         style={{
-                          transform: `scale(${1 - i * 0.03})`,
+                          transform: `scale(${1 - i * 0.045})`,
                         }}
                       />
                     ))}

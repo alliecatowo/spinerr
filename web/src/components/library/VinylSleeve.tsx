@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { Track } from "@/lib/store";
@@ -11,7 +11,7 @@ interface VinylSleeveProps {
   onClick?: () => void;
 }
 
-export function VinylSleeve({ track, onClick }: VinylSleeveProps) {
+export const VinylSleeve = memo(function VinylSleeve({ track, onClick }: VinylSleeveProps) {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -44,13 +44,13 @@ export function VinylSleeve({ track, onClick }: VinylSleeveProps) {
             background: `radial-gradient(circle at center, ${track.coverColor}aa 0%, ${track.coverColor}99 8%, ${track.coverColor}77 12%, #2a2a2a 18%, #1a1a1a 40%, #0a0a0a 100%)`,
           }}
         >
-          {/* Grooves - more visible, lighter in dark mode */}
-          {[...Array(30)].map((_, i) => (
+          {/* Grooves - optimized count for performance */}
+          {[...Array(20)].map((_, i) => (
             <div
               key={i}
               className="absolute inset-0 rounded-full border"
               style={{
-                transform: `scale(${1 - i * 0.028})`,
+                transform: `scale(${1 - i * 0.042})`,
                 borderColor: i % 2 === 0 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.4)',
               }}
             />
@@ -128,4 +128,4 @@ export function VinylSleeve({ track, onClick }: VinylSleeveProps) {
       </div>
     </motion.div>
   );
-}
+});

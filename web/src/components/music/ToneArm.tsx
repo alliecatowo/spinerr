@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 
 interface ToneArmProps {
@@ -7,7 +8,7 @@ interface ToneArmProps {
   progress: number;
 }
 
-export function ToneArm({ isPlaying, progress }: ToneArmProps) {
+export const ToneArm = memo(function ToneArm({ isPlaying, progress }: ToneArmProps) {
   // Correct: Playing = 25° (on vinyl) | Paused = -35° (off vinyl)
   const baseRotation = isPlaying ? 25 : -35;
   const progressRotation = isPlaying ? progress * 15 : 0;
@@ -71,4 +72,4 @@ export function ToneArm({ isPlaying, progress }: ToneArmProps) {
       )}
     </motion.div>
   );
-}
+});

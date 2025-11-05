@@ -44,7 +44,7 @@ export default function Home() {
     setEvents(mockEvents);
   }, [setPlaylist, setTrack, setEvents]);
 
-  // Seek handler for VinylDisc and PlayerControls
+  // Seek handler for PlayerControls
   const handleSeek = (newProgress: number) => {
     updateProgress(newProgress);
   };
@@ -67,7 +67,6 @@ export default function Home() {
           track={currentTrack}
           isPlaying={isPlaying}
           progress={progress}
-          onSeek={handleSeek}
           onPlayPause={isPlaying ? pause : play}
         />
         <ToneArm isPlaying={isPlaying} progress={progress} />

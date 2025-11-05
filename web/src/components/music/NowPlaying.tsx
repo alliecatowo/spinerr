@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Track } from "@/lib/store";
 
@@ -8,7 +9,7 @@ interface NowPlayingProps {
   isPlaying?: boolean;
 }
 
-export function NowPlaying({ track, isPlaying = false }: NowPlayingProps) {
+export const NowPlaying = memo(function NowPlaying({ track, isPlaying = false }: NowPlayingProps) {
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -53,4 +54,4 @@ export function NowPlaying({ track, isPlaying = false }: NowPlayingProps) {
       </motion.div>
     </AnimatePresence>
   );
-}
+});
