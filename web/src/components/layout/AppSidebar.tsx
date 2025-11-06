@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Library, Music, Play, Settings } from "lucide-react";
+import { Search, Plus, Library, Music, Play, Settings, Maximize2, Minimize2, MonitorPlay } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -15,10 +16,13 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useLibraryStore, usePlayerStore } from "@/lib/store";
+import { useLibraryStore, usePlayerStore, useViewModeStore } from "@/lib/store";
 import { AlbumSearchModal } from "@/components/library/AlbumSearchModal";
 import type { Album } from "@/lib/providers/types";
 import { cn } from "@/lib/utils";
+import { useFullscreen } from "@/hooks/useFullscreen";
+import { AccountButton } from "@/components/auth/AccountButton";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function AppSidebar() {
   const router = useRouter();
@@ -30,6 +34,13 @@ export function AppSidebar() {
   const loadAlbum = usePlayerStore((state) => state.loadAlbum);
   const addAlbum = useLibraryStore((state) => state.addAlbum);
   const addToRecentlyPlayed = useLibraryStore((state) => state.addToRecentlyPlayed);
+
+  const { toggleTheaterMode, isTheaterMode, toggleInfo } = useViewModeStore();
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
+
+  const handleFullscreenToggle = async () => {
+    await toggleFullscreen();
+  };
 
   const filteredAlbums = localSearchQuery.trim()
     ? albums.filter(
@@ -189,7 +200,42 @@ export function AppSidebar() {
               </div>
             </SidebarGroupContent>
           </SidebarGroup>
+
+          {/* View Controls */}
+          <SidebarGroup>
+            <SidebarGroupLabel>View</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={toggleTheaterMode}>
+                    <MonitorPlay className="h-4 w-4" />
+                    <span>Theater Mode</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={handleFullscreenToggle}>
+                    {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                    <span>Fullscreen</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={toggleInfo}>
+                    <Play className="h-4 w-4" />
+                    <span>Toggle Info</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         </SidebarContent>
+
+        {/* Footer - Account & Theme */}
+        <SidebarFooter>
+          <div className="flex items-center justify-between px-2 py-2">
+            <ThemeToggle />
+            <AccountButton />
+          </div>
+        </SidebarFooter>
       </Sidebar>
 
       <AlbumSearchModal

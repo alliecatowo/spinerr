@@ -78,6 +78,7 @@ export function VinylDisc({
   }, [track.id, track.coverColor, isPlaying, progress]); // Update on any prop change
 
   // Smooth rotation animation that preserves position on pause
+  // Throttled to 30fps for better performance
   useEffect(() => {
     if (!isPlaying) {
       if (animationRef.current) {
@@ -88,8 +89,18 @@ export function VinylDisc({
 
     let startTime = performance.now();
     let startRotation = rotationRef.current;
+    let lastUpdateTime = 0;
+    const fps = 30; // Throttle to 30fps for performance
+    const frameInterval = 1000 / fps;
 
     const animate = (currentTime: number) => {
+      // Throttle updates
+      if (currentTime - lastUpdateTime < frameInterval) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastUpdateTime = currentTime;
+
       const elapsed = (currentTime - startTime) / 1000; // seconds
       const newRotation = startRotation + (elapsed / 1.8) * 360; // 1.8s per rotation
       rotationRef.current = newRotation % 360;

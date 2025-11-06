@@ -233,6 +233,7 @@ interface ViewModeState {
   showSidebar: boolean;
   showControls: boolean;
   showInfo: boolean;
+  isTheaterMode: boolean;
 
   setViewMode: (mode: ViewMode) => void;
   toggleSidebar: () => void;
@@ -240,6 +241,9 @@ interface ViewModeState {
   toggleInfo: () => void;
   enterAmbientMode: () => void;
   exitAmbientMode: () => void;
+  enterTheaterMode: () => void;
+  exitTheaterMode: () => void;
+  toggleTheaterMode: () => void;
 }
 
 export const useViewModeStore = create<ViewModeState>((set) => ({
@@ -247,6 +251,7 @@ export const useViewModeStore = create<ViewModeState>((set) => ({
   showSidebar: true,
   showControls: true,
   showInfo: true,
+  isTheaterMode: false,
 
   setViewMode: (mode: ViewMode) => {
     set({ viewMode: mode });
@@ -268,14 +273,37 @@ export const useViewModeStore = create<ViewModeState>((set) => ({
     viewMode: 'ambient',
     showSidebar: false,
     showControls: true,
-    showInfo: true
+    showInfo: true,
+    isTheaterMode: false
   }),
 
   exitAmbientMode: () => set({
     viewMode: 'full',
     showSidebar: true,
     showControls: true,
+    showInfo: true,
+    isTheaterMode: false
+  }),
+
+  enterTheaterMode: () => set({
+    isTheaterMode: true,
+    showSidebar: false,
+    showInfo: false
+  }),
+
+  exitTheaterMode: () => set({
+    isTheaterMode: false,
+    showSidebar: true,
     showInfo: true
+  }),
+
+  toggleTheaterMode: () => set((state) => {
+    const newTheaterMode = !state.isTheaterMode;
+    return {
+      isTheaterMode: newTheaterMode,
+      showSidebar: !newTheaterMode,
+      showInfo: !newTheaterMode
+    };
   }),
 }));
 
