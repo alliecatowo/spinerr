@@ -96,9 +96,9 @@ export default function Home() {
     );
   }
 
-  // Music section - vinyl player takes full square
+  // Music section - vinyl player takes up almost entire left half
   const musicSection = (
-    <div className="relative w-full max-w-2xl aspect-square" data-tour="vinyl-disc">
+    <div className="relative w-full aspect-square" data-tour="vinyl-disc">
       <VinylDisc
         track={currentTrack}
         isPlaying={isPlaying}

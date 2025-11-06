@@ -26,21 +26,27 @@ export function Dashboard({ musicSection }: DashboardProps) {
 
         {/* Main Content Area */}
         <SidebarInset className="flex-1 flex flex-col">
-          {/* Main Content - Two equal halves */}
+          {/* Main Content - Two halves, vinyl dominates */}
           <main className="flex-1 w-full">
-            <div className="h-full flex flex-col lg:flex-row">
-              {/* Left Half - Vinyl Player (takes full square) */}
-              <div className="flex-1 flex items-center justify-center p-8">
-                {musicSection}
-              </div>
+            {showInfo && !isTheaterMode ? (
+              // Two column layout when showing info
+              <div className="h-full flex flex-col lg:flex-row">
+                {/* Left Half - Vinyl Player (huge, takes almost entire space) */}
+                <div className="flex-1 flex items-center justify-center p-4">
+                  {musicSection}
+                </div>
 
-              {/* Right Half - At a Glance (centered with space around) */}
-              {showInfo && !isTheaterMode && (
-                <div className="hidden lg:flex flex-1 items-center justify-center p-8">
+                {/* Right Half - At a Glance (centered with generous space) */}
+                <div className="hidden lg:flex flex-1 items-center justify-center p-12">
                   <AtAGlance />
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              // Single column centered when no info (theater/fullscreen)
+              <div className="h-full flex items-center justify-center p-4">
+                {musicSection}
+              </div>
+            )}
           </main>
 
           {/* Help Button - Hidden in fullscreen */}

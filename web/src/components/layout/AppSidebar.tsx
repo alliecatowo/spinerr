@@ -231,7 +231,7 @@ export function AppSidebar() {
 
         {/* Footer - Account & Theme */}
         <SidebarFooter>
-          <div className="flex items-center justify-between px-2 py-2">
+          <div className="flex items-center justify-between gap-2 px-2 py-3">
             <ThemeToggle />
             <AccountButton />
           </div>

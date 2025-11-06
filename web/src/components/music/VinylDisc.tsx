@@ -20,9 +20,6 @@ export function VinylDisc({
 }: VinylDiscProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [rotation, setRotation] = useState(0);
-  const rotationRef = useRef(0);
-  const animationRef = useRef<number>();
 
   // INITIALIZATION: Initialize or reuse existing renderer
   useEffect(() => {
@@ -39,7 +36,7 @@ export function VinylDisc({
           containerRef.current,
           track.id,
           track.coverColor,
-          undefined,
+          track.artworkUrl, // Pass artwork URL to p5
           isPlaying,
           progress
         );
@@ -65,57 +62,18 @@ export function VinylDisc({
     console.log("[VinylDisc] Updating renderer params:", {
       trackId: track.id,
       albumColor: track.coverColor,
+      artworkUrl: track.artworkUrl,
       isPlaying,
     });
 
     vinylRenderer.updateParams({
       trackId: track.id,
       albumColor: track.coverColor,
-      artworkUrl: undefined,
+      artworkUrl: track.artworkUrl, // Update artwork in p5
       isPlaying,
       progress,
     });
-  }, [track.id, track.coverColor, isPlaying, progress]); // Update on any prop change
-
-  // Smooth rotation animation that preserves position on pause
-  // Throttled to 30fps for better performance
-  useEffect(() => {
-    if (!isPlaying) {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-      return;
-    }
-
-    let startTime = performance.now();
-    let startRotation = rotationRef.current;
-    let lastUpdateTime = 0;
-    const fps = 30; // Throttle to 30fps for performance
-    const frameInterval = 1000 / fps;
-
-    const animate = (currentTime: number) => {
-      // Throttle updates
-      if (currentTime - lastUpdateTime < frameInterval) {
-        animationRef.current = requestAnimationFrame(animate);
-        return;
-      }
-      lastUpdateTime = currentTime;
-
-      const elapsed = (currentTime - startTime) / 1000; // seconds
-      const newRotation = startRotation + (elapsed / 1.8) * 360; // 1.8s per rotation
-      rotationRef.current = newRotation % 360;
-      setRotation(rotationRef.current);
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isPlaying]);
+  }, [track.id, track.coverColor, track.artworkUrl, isPlaying, progress]); // Update on any prop change
 
   const [showPlayIcon, setShowPlayIcon] = useState(false);
 
@@ -148,37 +106,6 @@ export function VinylDisc({
           </div>
         )}
       </div>
-
-      {/* Album Art Overlay - Rotates at 33⅓ RPM when playing */}
-      <div
-        className="absolute top-1/2 left-1/2 rounded-full overflow-hidden shadow-2xl pointer-events-none"
-        style={{
-          width: "30%",
-          height: "30%",
-          backgroundColor: track.coverColor,
-          zIndex: 10,
-          transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-          transformOrigin: 'center center'
-        }}
-      >
-        {track.artworkUrl ? (
-          <img
-            src={track.artworkUrl}
-            alt={track.album}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-white font-bold text-4xl">
-            {track.album.charAt(0)}
-          </div>
-        )}
-      </div>
-
-      {/* Center Spindle */}
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-gray-800 rounded-full shadow-inner pointer-events-none"
-        style={{ zIndex: 11 }}
-      />
 
       {/* Play/Pause Overlay - shows on hover or when paused */}
       <motion.div

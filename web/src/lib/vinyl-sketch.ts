@@ -84,6 +84,7 @@ export function createVinylSketch(
     let rotationStartTime = 0;
     let centerRadius: number;
     let vinylRadius: number;
+    let artworkImage: any = null; // p5.Image type
 
     // Cached values for performance (computed once, reused every frame)
     let baseHue: number;
@@ -179,12 +180,26 @@ export function createVinylSketch(
       paletteHue = p.random(0, 360);
       hueVariation = p.random(40, 100);
 
+      // Load artwork image if provided
+      if (params.artworkUrl) {
+        p.loadImage(params.artworkUrl, (img) => {
+          artworkImage = img;
+          console.log("[vinyl-sketch] Artwork loaded");
+        }, () => {
+          console.error("[vinyl-sketch] Failed to load artwork");
+          artworkImage = null;
+        });
+      } else {
+        artworkImage = null;
+      }
+
       console.log("[vinyl-sketch] initializeVinyl:", {
         seed,
         vinylRadius,
         centerRadius,
         baseHue,
         paletteHue,
+        hasArtwork: !!params.artworkUrl,
         canvasSize: { width: p.width, height: p.height }
       });
 
@@ -383,11 +398,28 @@ export function createVinylSketch(
     };
 
     const drawCenterLabel = () => {
-      // Center label area - artwork will be overlaid via React component
-      // Just draw a subtle background
+      // Center label background
       p.noStroke();
       p.fill(30, 30, 35);
       p.circle(0, 0, centerRadius * 2);
+
+      // Draw artwork if loaded
+      if (artworkImage) {
+        p.push();
+        // Clip to circle
+        p.drawingContext.save();
+        p.drawingContext.beginPath();
+        p.drawingContext.arc(0, 0, centerRadius, 0, Math.PI * 2);
+        p.drawingContext.clip();
+
+        // Draw image centered and scaled
+        const imgSize = centerRadius * 2;
+        p.imageMode(p.CENTER);
+        p.image(artworkImage, 0, 0, imgSize, imgSize);
+
+        p.drawingContext.restore();
+        p.pop();
+      }
 
       // Inner spindle hole
       p.fill(20, 20, 25);
@@ -434,8 +466,20 @@ export function createVinylSketch(
         params.albumColor = newParams.albumColor;
       }
 
-      if (newParams.artworkUrl !== undefined) {
+      if (newParams.artworkUrl !== undefined && newParams.artworkUrl !== params.artworkUrl) {
         params.artworkUrl = newParams.artworkUrl;
+        // Reload artwork image
+        if (params.artworkUrl) {
+          p.loadImage(params.artworkUrl, (img) => {
+            artworkImage = img;
+            console.log("[vinyl-sketch] Artwork updated");
+          }, () => {
+            console.error("[vinyl-sketch] Failed to load new artwork");
+            artworkImage = null;
+          });
+        } else {
+          artworkImage = null;
+        }
       }
 
       if (newParams.isPlaying !== undefined) {
