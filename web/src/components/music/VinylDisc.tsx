@@ -93,9 +93,8 @@ export function VinylDisc({
       {/* P5 Canvas Container */}
       <div
         ref={containerRef}
-        className="w-full h-full min-h-[400px]"
+        className="absolute inset-0 flex items-center justify-center"
         style={{
-          position: 'relative',
           zIndex: 1
         }}
       >

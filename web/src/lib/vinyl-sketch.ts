@@ -150,9 +150,8 @@ export function createVinylSketch(
         canvasStyle: canvas.elt.style.cssText
       });
 
-      // Ensure canvas is visible with explicit styles
+      // Ensure canvas is visible with explicit styles (centered by parent flex container)
       canvas.elt.style.display = 'block';
-      canvas.elt.style.position = 'relative';
       canvas.elt.style.zIndex = '2';
 
       initializeVinyl();

@@ -1,6 +1,6 @@
 "use client";
 
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useViewModeStore } from "@/lib/store";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { AppSidebar } from "./AppSidebar";
@@ -25,25 +25,32 @@ export function Dashboard({ musicSection }: DashboardProps) {
         <AppSidebar />
 
         {/* Main Content Area */}
-        <SidebarInset className="flex-1 flex flex-col">
+        <SidebarInset className="flex-1 flex flex-col relative">
+          {/* Floating Sidebar Toggle - only show when sidebar is collapsed */}
+          {!sidebarOpen && (
+            <div className="fixed top-4 left-4 z-50">
+              <SidebarTrigger />
+            </div>
+          )}
+
           {/* Main Content - Two halves, vinyl dominates */}
-          <main className="flex-1 w-full">
+          <main className="flex-1 w-full overflow-hidden flex items-center justify-center">
             {showInfo && !isTheaterMode ? (
               // Two column layout when showing info
-              <div className="h-full flex flex-col lg:flex-row">
+              <div className="w-full h-full flex flex-col lg:flex-row">
                 {/* Left Half - Vinyl Player (huge, takes almost entire space) */}
-                <div className="flex-1 flex items-center justify-center p-4">
+                <div className="flex-1 flex items-center justify-center p-4 min-h-0">
                   {musicSection}
                 </div>
 
                 {/* Right Half - At a Glance (centered with generous space) */}
-                <div className="hidden lg:flex flex-1 items-center justify-center p-12">
+                <div className="hidden lg:flex flex-1 items-center justify-center p-12 min-h-0">
                   <AtAGlance />
                 </div>
               </div>
             ) : (
               // Single column centered when no info (theater/fullscreen)
-              <div className="h-full flex items-center justify-center p-4">
+              <div className="w-full h-full flex items-center justify-center p-8">
                 {musicSection}
               </div>
             )}
