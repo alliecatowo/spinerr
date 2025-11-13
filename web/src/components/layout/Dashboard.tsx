@@ -20,12 +20,12 @@ export function Dashboard({ musicSection }: DashboardProps) {
 
   return (
     <SidebarProvider open={sidebarOpen} onOpenChange={() => {}}>
-      <div className="flex min-h-screen w-full bg-neutral-50 dark:bg-neutral-950">
+      <div className="flex h-screen w-full overflow-hidden bg-neutral-50 dark:bg-neutral-950">
         {/* Left Sidebar - collapsed in theater/fullscreen */}
         <AppSidebar />
 
         {/* Main Content Area */}
-        <SidebarInset className="flex-1 flex flex-col relative">
+        <SidebarInset className="flex-1 flex flex-col relative overflow-hidden">
           {/* Floating Sidebar Toggle - only show when sidebar is collapsed */}
           {!sidebarOpen && (
             <div className="fixed top-4 left-4 z-50">
@@ -34,24 +34,30 @@ export function Dashboard({ musicSection }: DashboardProps) {
           )}
 
           {/* Main Content - Two halves, vinyl dominates */}
-          <main className="flex-1 w-full overflow-hidden flex items-center justify-center">
+          <main className="flex-1 w-full overflow-auto flex items-center justify-center">
             {showInfo && !isTheaterMode ? (
               // Two column layout when showing info
-              <div className="w-full h-full flex flex-col lg:flex-row">
-                {/* Left Half - Vinyl Player (huge, takes almost entire space) */}
-                <div className="flex-1 flex items-center justify-center p-4 min-h-0">
-                  {musicSection}
+              <div className="w-full h-full flex flex-col lg:flex-row overflow-auto">
+                {/* Left Half - Vinyl Player */}
+                <div className="flex-1 flex items-center justify-center p-4 min-w-0 min-h-0">
+                  <div className="w-full h-full max-w-3xl max-h-3xl">
+                    {musicSection}
+                  </div>
                 </div>
 
-                {/* Right Half - At a Glance (centered with generous space) */}
-                <div className="hidden lg:flex flex-1 items-center justify-center p-12 min-h-0">
-                  <AtAGlance />
+                {/* Right Half - At a Glance */}
+                <div className="hidden lg:flex flex-1 items-center justify-center p-8 min-w-0 min-h-0 overflow-auto">
+                  <div className="w-full max-w-2xl">
+                    <AtAGlance />
+                  </div>
                 </div>
               </div>
             ) : (
               // Single column centered when no info (theater/fullscreen)
-              <div className="w-full h-full flex items-center justify-center p-8">
-                {musicSection}
+              <div className="w-full h-full flex items-center justify-center p-4 sm:p-8">
+                <div className="w-full h-full max-w-4xl max-h-4xl">
+                  {musicSection}
+                </div>
               </div>
             )}
           </main>
