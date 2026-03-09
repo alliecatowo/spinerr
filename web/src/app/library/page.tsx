@@ -249,7 +249,7 @@ export default function LibraryPage() {
             animate={{ opacity: 1 }}
             className="text-center py-12 text-gray-500 dark:text-neutral-400"
           >
-            <p>No albums found for "{searchQuery}"</p>
+            <p>No albums found for &ldquo;{searchQuery}&rdquo;</p>
           </motion.div>
         )}
       </div>
