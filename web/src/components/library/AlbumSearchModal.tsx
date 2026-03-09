@@ -182,7 +182,7 @@ export function AlbumSearchModal({ isOpen, onClose, onSelectAlbum }: AlbumSearch
               {!loading && !error && query && results.length === 0 && (
                 <div className="text-center py-12 text-gray-500 dark:text-neutral-400">
                   <Music className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No albums found for "{query}"</p>
+                  <p>No albums found for &ldquo;{query}&rdquo;</p>
                 </div>
               )}
 

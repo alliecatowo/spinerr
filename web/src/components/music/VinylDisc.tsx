@@ -18,8 +18,19 @@ export function VinylDisc({
   progress,
   onPlayPause,
 }: VinylDiscProps) {
+  interface P5Instance {
+    updateParams?: (params: {
+      trackId: string;
+      albumColor: string;
+      artworkUrl: undefined;
+      isPlaying: boolean;
+      progress: number;
+      onSeek: undefined;
+    }) => void;
+  }
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const p5InstanceRef = useRef<any>(null);
+  const p5InstanceRef = useRef<P5Instance | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -44,10 +55,11 @@ export function VinylDisc({
     const initializeP5 = async () => {
       try {
         // Check if p5 is already loaded
-        if (!(window as any).p5) {
+        const win = window as Window & typeof globalThis & { p5?: unknown };
+        if (!win.p5) {
           console.log("[VinylDisc] Loading p5.js module...");
           const p5Module = await import("p5");
-          (window as any).p5 = p5Module.default;
+          win.p5 = p5Module.default;
           console.log("[VinylDisc] p5.js loaded successfully");
         }
 
@@ -104,12 +116,12 @@ export function VinylDisc({
       trackId: track.id,
       albumColor: track.coverColor,
       isPlaying,
-      hasUpdateParams: typeof (p5InstanceRef.current as any).updateParams === 'function'
+      hasUpdateParams: typeof p5InstanceRef.current?.updateParams === 'function'
     });
 
     // Call updateParams on the p5 instance
-    if (typeof (p5InstanceRef.current as any).updateParams === 'function') {
-      (p5InstanceRef.current as any).updateParams({
+    if (typeof p5InstanceRef.current?.updateParams === 'function') {
+      p5InstanceRef.current.updateParams({
         trackId: track.id,
         albumColor: track.coverColor,
         artworkUrl: undefined,
