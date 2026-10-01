@@ -1,0 +1,13 @@
+# dependencies
+node_modules/
+
+# logs
+*.log
+firebase-debug.log
+
+# env files
+.env*
+
+# build output
+dist/
+.firebase/
