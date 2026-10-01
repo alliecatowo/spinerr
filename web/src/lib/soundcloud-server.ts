@@ -5,6 +5,34 @@
 
 import Soundcloud from 'soundcloud.ts';
 
+// The fields we read from SoundCloud's API objects
+interface RawTrack {
+  id: number;
+  title?: string;
+  user?: { username?: string; avatar_url?: string };
+  artwork_url?: string | null;
+  duration?: number;
+  permalink_url: string;
+  genre?: string | null;
+  bpm?: number | null;
+  description?: string | null;
+  playback_count?: number | null;
+  likes_count?: number | null;
+}
+
+interface RawPlaylist {
+  id: number;
+  title?: string;
+  description?: string | null;
+  artwork_url?: string | null;
+  user?: { username?: string };
+  track_count?: number;
+  tracks?: RawTrack[];
+  duration?: number;
+  permalink_url: string;
+  created_at?: string;
+}
+
 export interface SoundCloudTrack {
   id: number;
   title: string;
@@ -80,7 +108,7 @@ class SoundCloudServerClient {
     try {
       await this.initialize();
 
-      const searchParams: any = {
+      const searchParams: { q: string } & Record<string, string | number> = {
         q: options.query,
       };
 
@@ -93,7 +121,7 @@ class SoundCloudServerClient {
 
       const results = await this.client.tracks.search(searchParams);
 
-      return results.collection.map((track: any) => this.normalizeTrack(track));
+      return results.collection.map((track) => this.normalizeTrack(track as RawTrack));
     } catch (error) {
       console.error('SoundCloud search error:', error);
       throw error;
@@ -144,7 +172,7 @@ class SoundCloudServerClient {
     try {
       await this.initialize();
 
-      const searchParams: any = {
+      const searchParams: { q: string } & Record<string, string | number> = {
         q: options.query,
       };
 
@@ -152,7 +180,7 @@ class SoundCloudServerClient {
 
       const results = await this.client.playlists.search(searchParams);
 
-      return results.collection.map((playlist: any) => this.normalizePlaylist(playlist));
+      return results.collection.map((playlist) => this.normalizePlaylist(playlist as RawPlaylist));
     } catch (error) {
       console.error('SoundCloud playlist search error:', error);
       throw error;
@@ -166,7 +194,7 @@ class SoundCloudServerClient {
     try {
       await this.initialize();
       const playlist = await this.client.playlists.get(id);
-      return this.normalizePlaylist(playlist);
+      return this.normalizePlaylist(playlist as RawPlaylist);
     } catch (error) {
       console.error('SoundCloud get playlist error:', error);
       return null;
@@ -176,7 +204,7 @@ class SoundCloudServerClient {
   /**
    * Normalize track data to our interface
    */
-  private normalizeTrack(track: any): SoundCloudTrack {
+  private normalizeTrack(track: RawTrack): SoundCloudTrack {
     return {
       id: track.id,
       title: track.title || 'Unknown Title',
@@ -184,28 +212,28 @@ class SoundCloudServerClient {
       artworkUrl: track.artwork_url?.replace('-large', '-t500x500') || track.user?.avatar_url,
       duration: track.duration || 0,
       permalinkUrl: track.permalink_url,
-      genre: track.genre,
-      bpm: track.bpm,
-      description: track.description,
-      playbackCount: track.playback_count,
-      likesCount: track.likes_count,
+      genre: track.genre ?? undefined,
+      bpm: track.bpm ?? undefined,
+      description: track.description ?? undefined,
+      playbackCount: track.playback_count ?? undefined,
+      likesCount: track.likes_count ?? undefined,
     };
   }
 
   /**
    * Normalize playlist data to our interface
    */
-  private normalizePlaylist(playlist: any): SoundCloudPlaylist {
+  private normalizePlaylist(playlist: RawPlaylist): SoundCloudPlaylist {
     return {
       id: playlist.id,
       title: playlist.title || 'Unknown Album',
-      description: playlist.description,
+      description: playlist.description ?? undefined,
       artworkUrl: playlist.artwork_url?.replace('-large', '-t500x500'),
       user: {
         username: playlist.user?.username || 'Unknown Artist',
       },
       trackCount: playlist.track_count || playlist.tracks?.length || 0,
-      tracks: playlist.tracks ? playlist.tracks.map((t: any) => this.normalizeTrack(t)) : undefined,
+      tracks: playlist.tracks ? playlist.tracks.map((t) => this.normalizeTrack(t)) : undefined,
       duration: playlist.duration || 0,
       permalinkUrl: playlist.permalink_url,
       createdAt: playlist.created_at,

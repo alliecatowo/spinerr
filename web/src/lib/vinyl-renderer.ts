@@ -4,7 +4,10 @@
  */
 
 import type p5 from 'p5';
-import { createVinylSketch, type VinylSketchInstance } from './vinyl-sketch';
+import { createVinylSketch, type VinylSketchInstance, type VinylSketchParams } from './vinyl-sketch';
+
+type WindowWithP5 = Window & { p5?: unknown };
+type UpdatableSketch = { updateParams?: (params: Partial<VinylSketchParams>) => void };
 
 class VinylRenderer {
   private static instance: VinylRenderer;
@@ -51,10 +54,10 @@ class VinylRenderer {
     }
 
     // Load p5.js if not already loaded
-    if (!(window as any).p5) {
+    if (!(window as WindowWithP5).p5) {
       console.log('[VinylRenderer] Loading p5.js module...');
       const p5Module = await import('p5');
-      (window as any).p5 = p5Module.default;
+      (window as WindowWithP5).p5 = p5Module.default;
       console.log('[VinylRenderer] p5.js loaded');
     }
 
@@ -91,8 +94,9 @@ class VinylRenderer {
     }
 
     // Call updateParams on the p5 instance
-    if (typeof (this.p5Instance as any).updateParams === 'function') {
-      (this.p5Instance as any).updateParams({
+    const instance = this.p5Instance as unknown as UpdatableSketch;
+    if (typeof instance.updateParams === 'function') {
+      instance.updateParams({
         trackId: params.trackId,
         albumColor: params.albumColor,
         artworkUrl: params.artworkUrl,

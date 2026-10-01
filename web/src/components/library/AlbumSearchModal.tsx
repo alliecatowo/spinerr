@@ -23,6 +23,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { LocalFilePicker } from "@/components/music/LocalFilePicker";
 import { SOUNDCLOUD_AVAILABLE, SOUNDCLOUD_UNAVAILABLE_MESSAGE } from "@/lib/runtime";
 import type { Album, ProviderId } from "@/lib/providers/types";
+import type { SoundCloudPlaylist } from "@/lib/soundcloud-server";
+
+interface SpotifyAlbumTrack {
+  id: string;
+  name: string;
+  artists: { name: string }[];
+  duration_ms: number;
+  external_urls: { spotify: string };
+}
 import { providerManager } from "@/lib/providers/provider-manager";
 import type { SearchResult } from "@/lib/providers/provider-manager";
 
@@ -107,11 +116,11 @@ export function AlbumSearchModal({ isOpen, onClose, onSelectAlbum }: AlbumSearch
         const response = await fetch(`/api/soundcloud/playlist?id=${id}`);
         if (!response.ok) throw new Error("Failed to fetch album details");
 
-        const data = await response.json();
+        const data: { playlist: SoundCloudPlaylist } = await response.json();
         const fullPlaylist = data.playlist;
 
         // Update album with full track list
-        result.album.tracks = (fullPlaylist.tracks || []).map((track: any) => ({
+        result.album.tracks = (fullPlaylist.tracks || []).map((track) => ({
           id: `soundcloud-${track.id}`,
           provider: "soundcloud" as const,
           title: track.title,
@@ -131,13 +140,13 @@ export function AlbumSearchModal({ isOpen, onClose, onSelectAlbum }: AlbumSearch
           // Fetch album tracks from Spotify API
           const albumData = await fetch(`https://api.spotify.com/v1/albums/${result.album.id}/tracks`, {
             headers: {
-              'Authorization': `Bearer ${(spotifyClient as any).accessToken}`
+              'Authorization': `Bearer ${spotifyClient.getAccessToken()}`
             }
           });
 
           if (albumData.ok) {
-            const tracksData = await albumData.json();
-            result.album.tracks = tracksData.items.map((track: any) => ({
+            const tracksData: { items: SpotifyAlbumTrack[] } = await albumData.json();
+            result.album.tracks = tracksData.items.map((track) => ({
               id: track.id,
               provider: "spotify" as const,
               title: track.name,
@@ -240,7 +249,7 @@ export function AlbumSearchModal({ isOpen, onClose, onSelectAlbum }: AlbumSearch
                 ) : query ? (
                   <div className="text-center py-8">
                     <Music className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No albums found for "{query}"</p>
+                    <p>No albums found for &ldquo;{query}&rdquo;</p>
                   </div>
                 ) : (
                   <div className="text-center py-8">

@@ -18,7 +18,7 @@ export interface Track {
   duration: number; // seconds
   streamUrl?: string;
   externalUrl?: string;
-  metadata?: Record<string, any>;
+  metadata?: { genre?: string; [key: string]: unknown };
 }
 
 /**

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Play, Pause, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,20 +12,13 @@ import { mockTracks } from "@/lib/mock-data";
 export function TrackView({ id }: { id: string }) {
   const router = useRouter();
   const [discPulled, setDiscPulled] = useState(false);
-  const [track, setTrackData] = useState<typeof mockTracks[0] | null>(null);
+  const track = useMemo(() => mockTracks.find((t) => t.id === id) ?? null, [id]);
 
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const setTrack = usePlayerStore((state) => state.setTrack);
   const play = usePlayerStore((state) => state.play);
   const pause = usePlayerStore((state) => state.pause);
-
-  useEffect(() => {
-    const foundTrack = mockTracks.find((t) => t.id === id);
-    if (foundTrack) {
-      setTrackData(foundTrack);
-    }
-  }, [id]);
 
   if (!track) {
     return (

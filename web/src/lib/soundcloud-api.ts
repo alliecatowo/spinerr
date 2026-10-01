@@ -111,7 +111,7 @@ export class SoundCloudClient {
    * Get user's playlists (requires authentication)
    * Note: This would require a separate API route - not implemented yet
    */
-  async getPlaylists(limit = 50): Promise<any[]> {
+  async getPlaylists(): Promise<SoundCloudTrack[]> {
     console.warn('getPlaylists not yet implemented - requires API route');
     return [];
   }

@@ -207,7 +207,7 @@ export function SoundCloudSettings() {
             ⚠️ Note: This uses an unofficial API client (soundcloud.ts) which auto-fetches client IDs.
           </p>
           <p className="text-sm text-gray-500 dark:text-neutral-500 italic">
-            For production apps, consider using SoundCloud's official Widget API.
+            For production apps, consider using SoundCloud&apos;s official Widget API.
           </p>
         </div>
       </CardContent>

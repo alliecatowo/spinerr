@@ -6,7 +6,7 @@ export const onboardingSteps: Step[] = [
     content: (
       <div>
         <h2 className="text-xl font-bold mb-2">Welcome to Spinerr 🎵</h2>
-        <p>A zen music player with beautiful generative vinyl visualizations. Let's take a quick tour!</p>
+        <p>A zen music player with beautiful generative vinyl visualizations. Let&apos;s take a quick tour!</p>
       </div>
     ),
     placement: 'center',
@@ -58,7 +58,7 @@ export const onboardingSteps: Step[] = [
     content: (
       <div>
         <h3 className="font-semibold mb-1">Your Queue</h3>
-        <p>See your currently playing album's tracks here. Click any track to jump to it.</p>
+        <p>See your currently playing album&apos;s tracks here. Click any track to jump to it.</p>
       </div>
     ),
     placement: 'right',

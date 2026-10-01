@@ -10,7 +10,7 @@
 import type p5 from 'p5';
 import { getAudioAnalyzer } from './audio-analyzer';
 
-interface VinylSketchParams {
+export interface VinylSketchParams {
   trackId: string;
   albumColor: string;
   artworkUrl?: string;
@@ -69,7 +69,7 @@ export function createVinylSketch(
   const sketch = (p: p5) => {
     console.log("[vinyl-sketch] Sketch function called, p5 instance:", p);
 
-    let params: VinylSketchParams = {
+    const params: VinylSketchParams = {
       trackId,
       albumColor,
       artworkUrl,
@@ -84,7 +84,7 @@ export function createVinylSketch(
     let rotationStartTime = 0;
     let centerRadius: number;
     let vinylRadius: number;
-    let artworkImage: any = null; // p5.Image type
+    let artworkImage: p5.Image | null = null;
 
     // Cached values for performance (computed once, reused every frame)
     let baseHue: number;
@@ -119,7 +119,8 @@ export function createVinylSketch(
       b /= 255;
       const max = Math.max(r, g, b);
       const min = Math.min(r, g, b);
-      let h = 0, s = 0, l = (max + min) / 2;
+      let h = 0, s = 0;
+      const l = (max + min) / 2;
 
       if (max !== min) {
         const d = max - min;
@@ -449,7 +450,7 @@ export function createVinylSketch(
     };
 
     // Public update method
-    (p as any).updateParams = (newParams: Partial<VinylSketchParams>) => {
+    (p as p5 & { updateParams?: (params: Partial<VinylSketchParams>) => void }).updateParams = (newParams: Partial<VinylSketchParams>) => {
       console.log("[vinyl-sketch] updateParams called with:", newParams);
 
       let shouldReinitialize = false;
@@ -503,15 +504,15 @@ export function createVinylSketch(
 
   // Create p5 instance
   // Note: Assumes p5 is available globally or imported
-  if (typeof window !== 'undefined' && (window as any).p5) {
-    const P5 = (window as any).p5;
+  const P5 = typeof window !== 'undefined' ? (window as Window & { p5?: new (sketch: (p: p5) => void) => p5 }).p5 : undefined;
+  if (P5) {
     console.log("[vinyl-sketch] Creating p5 instance with P5 constructor:", P5);
     p5Instance = new P5(sketch);
     console.log("[vinyl-sketch] p5 instance created:", p5Instance);
   } else {
     console.error("[vinyl-sketch] p5 is not available on window!", {
       hasWindow: typeof window !== 'undefined',
-      windowP5: (window as any)?.p5
+      windowP5: P5
     });
   }
 
