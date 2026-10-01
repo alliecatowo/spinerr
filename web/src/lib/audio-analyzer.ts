@@ -7,7 +7,7 @@
 export class AudioAnalyzer {
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
-  private dataArray: Uint8Array | null = null;
+  private dataArray: Uint8Array<ArrayBuffer> | null = null;
   private source: MediaElementAudioSourceNode | null = null;
   private connected = false;
 
@@ -45,7 +45,7 @@ export class AudioAnalyzer {
 
       // Create data array for frequency data
       const bufferLength = this.analyser.frequencyBinCount;
-      this.dataArray = new Uint8Array(bufferLength);
+      this.dataArray = new Uint8Array(bufferLength) as Uint8Array<ArrayBuffer>;
 
       this.connected = true;
       console.log('[AudioAnalyzer] ✓ Successfully connected to audio element');
