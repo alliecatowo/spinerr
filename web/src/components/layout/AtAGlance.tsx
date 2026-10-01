@@ -30,14 +30,18 @@ export function AtAGlance({ onSeek }: AtAGlanceProps) {
   const setVolume = usePlayerStore((state) => state.setVolume);
   const updateProgress = usePlayerStore((state) => state.updateProgress);
   const events = useCalendarStore((state) => state.events);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // Starts null so the pre-rendered HTML doesn't bake in the build time
+  // (which would cause a hydration mismatch); filled in on the client.
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
-  // Update time every minute
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(timer);
+    const tick = () => setCurrentTime(new Date());
+    const first = setTimeout(tick, 0);
+    const timer = setInterval(tick, 5000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
   }, []);
 
   // Get next 2 upcoming events
@@ -61,14 +65,14 @@ export function AtAGlance({ onSeek }: AtAGlanceProps) {
       <div className="space-y-3">
         <div className="flex items-baseline justify-center gap-2">
           <span className="text-9xl font-light text-gray-900 dark:text-white tabular-nums tracking-tight">
-            {format(currentTime, "h:mm")}
+            {currentTime ? format(currentTime, "h:mm") : "--:--"}
           </span>
           <span className="text-4xl font-light text-gray-500 dark:text-neutral-400 uppercase tracking-wide">
-            {format(currentTime, "a")}
+            {currentTime ? format(currentTime, "a") : ""}
           </span>
         </div>
         <div className="text-lg text-gray-500 dark:text-neutral-500 font-light">
-          {format(currentTime, "EEEE, MMMM d")}
+          {currentTime ? format(currentTime, "EEEE, MMMM d") : "\u00a0"}
         </div>
       </div>
 
