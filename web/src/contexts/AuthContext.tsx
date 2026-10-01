@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { User } from 'firebase/auth';
 import { initializeFirebase } from '@/lib/firebase';
 import { signInAnonymous, onAuthChange, createAccount, signIn, signInWithGoogle, signOut } from '@/lib/auth';
+import { loadTourStateFromFirebase, syncTourStateToFirebase } from '@/lib/tour-firebase';
+import { useTourStore } from '@/lib/store';
 
 interface AuthContextType {
   user: User | null;
@@ -37,6 +39,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(firebaseUser);
       setLoading(false);
+
+      // Load tour state from Firebase for this user
+      if (firebaseUser) {
+        const tourState = await loadTourStateFromFirebase(firebaseUser);
+        if (tourState) {
+          // Update Zustand store with Firebase state
+          const { hasSeenOnboarding, hasSeenLibraryTour, hasSeenPlayerTour, hasSeenSettingsTour } = tourState;
+          // Batch update to prevent multiple re-renders
+          useTourStore.setState({
+            hasSeenOnboarding,
+            hasSeenLibraryTour,
+            hasSeenPlayerTour,
+            hasSeenSettingsTour,
+          });
+          console.log('[AuthProvider] Loaded tour state from Firebase');
+        }
+      }
 
       // If no user, auto-sign in anonymously for seamless experience
       if (!firebaseUser) {

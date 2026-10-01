@@ -4,11 +4,9 @@ import { useEffect } from "react";
 import { Dashboard } from "@/components/layout/Dashboard";
 import { VinylDisc } from "@/components/music/VinylDisc";
 import { ToneArm } from "@/components/music/ToneArm";
-import { NowPlaying } from "@/components/music/NowPlaying";
-import { InfoPanel } from "@/components/layout/InfoPanel";
 import { usePlayerStore, useCalendarStore, useLibraryStore } from "@/lib/store";
 import { mockEvents } from "@/lib/mock-data";
-import { usePlayerProgress, useKeyboardShortcuts } from "@/hooks";
+import { usePlayerProgress, useKeyboardShortcuts, useFirstVisit } from "@/hooks";
 
 export default function Home() {
   // Player store
@@ -37,19 +35,35 @@ export default function Home() {
   // Custom hooks for player functionality
   usePlayerProgress(); // Auto-updates progress and handles track advancement
   useKeyboardShortcuts(); // Enables keyboard controls
+  useFirstVisit(); // Auto-start onboarding tour on first visit
 
-  // Initialize with first album from library or recently played on mount
+  // Initialize calendar events
   useEffect(() => {
-    // Set calendar events
     setEvents(mockEvents);
+  }, []);
 
-    // ALWAYS load first album on mount (so p5.js initializes immediately)
+  // Auto-load most recent album after store rehydration
+  useEffect(() => {
+    // Only auto-load if no track is currently loaded
+    if (currentTrack) {
+      console.log('[Home] Track already loaded, skipping auto-load');
+      return;
+    }
+
+    // Wait for store rehydration (albums/recentlyPlayed populated)
+    if (recentlyPlayed.length === 0 && albums.length === 0) {
+      console.log('[Home] Waiting for store rehydration...');
+      return;
+    }
+
     const albumToLoad = recentlyPlayed[0] || albums[0];
     if (albumToLoad && albumToLoad.tracks.length > 0) {
-      console.log('[Home] Auto-loading first album on mount:', albumToLoad.title);
+      console.log('[Home] Auto-loading most recent album:', albumToLoad.title);
       loadAlbum(albumToLoad);
+    } else {
+      console.warn('[Home] No albums found in library to auto-load');
     }
-  }, []); // Only run once on mount
+  }, [recentlyPlayed, albums, currentTrack]); // Re-run when store rehydrates
 
   // Seek handler for PlayerControls
   const handleSeek = (newProgress: number) => {
@@ -67,7 +81,7 @@ export default function Home() {
     return (
       <Dashboard
         musicSection={
-          <div className="flex flex-col items-center justify-center gap-4 w-full max-w-[700px] mx-auto h-[60vh]">
+          <div className="flex flex-col items-center justify-center gap-4 w-full max-w-3xl mx-auto min-h-screen">
             <div className="text-center">
               <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 No music playing
@@ -78,33 +92,22 @@ export default function Home() {
             </div>
           </div>
         }
-        calendarSection={<InfoPanel onSeek={handleSeek} />}
       />
     );
   }
 
-  // Music section - vinyl player with track info
+  // Music section - vinyl player takes up almost entire left half
   const musicSection = (
-    <div className="flex flex-col items-center justify-center gap-6 w-full max-w-[700px] mx-auto">
-      {/* Vinyl Disc - Optimized size for better visual prominence */}
-      <div className="relative w-full max-w-[500px] aspect-square">
-        <VinylDisc
-          track={currentTrack}
-          isPlaying={isPlaying}
-          progress={progress}
-          onPlayPause={isPlaying ? pause : play}
-        />
-        <ToneArm isPlaying={isPlaying} progress={progress} />
-      </div>
-
-      {/* Now Playing Info - Compact below vinyl */}
-      <div className="w-full max-w-[500px]">
-        <NowPlaying track={currentTrack} isPlaying={isPlaying} />
-      </div>
+    <div className="relative w-full h-full" data-tour="vinyl-disc" style={{ aspectRatio: '1/1', maxWidth: '100%', maxHeight: '100%' }}>
+      <VinylDisc
+        track={currentTrack}
+        isPlaying={isPlaying}
+        progress={progress}
+        onPlayPause={isPlaying ? pause : play}
+      />
+      <ToneArm isPlaying={isPlaying} progress={progress} />
     </div>
   );
 
-  return (
-    <Dashboard musicSection={musicSection} calendarSection={<InfoPanel onSeek={handleSeek} />} />
-  );
+  return <Dashboard musicSection={musicSection} />;
 }
