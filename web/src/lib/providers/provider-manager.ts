@@ -6,6 +6,8 @@
 import type { Album, ProviderId, SearchResults, SearchOptions } from './types';
 import { createSpotifyClient, SpotifyClient } from '../spotify-api';
 import { SoundCloudClient } from '../soundcloud-api';
+import type { SoundCloudPlaylist } from '../soundcloud-server';
+import { SOUNDCLOUD_AVAILABLE } from '../runtime';
 
 export interface ProviderConfig {
   id: ProviderId;
@@ -51,7 +53,7 @@ export class ProviderManager {
 
     this.configs.set('soundcloud', {
       id: 'soundcloud',
-      enabled: true, // Always enabled (free music player)
+      enabled: SOUNDCLOUD_AVAILABLE, // Needs the server-side proxy routes
       priority: 5,
       authenticated: false,
     });
@@ -185,7 +187,7 @@ export class ProviderManager {
       const results = await this.spotifyClient.search(query, ['album'], 20);
 
       // Convert Spotify albums to our Album format
-      return results.albums.items.map(album => ({
+      return (results.albums?.items ?? []).map(album => ({
         id: album.id,
         provider: 'spotify' as ProviderId,
         title: album.name,
@@ -209,14 +211,25 @@ export class ProviderManager {
   private async searchSoundCloud(query: string): Promise<Album[]> {
     try {
       // Use existing SoundCloud album search
-      const response = await fetch(`/api/soundcloud/albums?query=${encodeURIComponent(query)}&limit=20`);
+      const response = await fetch(`/api/soundcloud/albums?q=${encodeURIComponent(query)}&limit=20`);
 
       if (!response.ok) {
         throw new Error('SoundCloud search failed');
       }
 
-      const data = await response.json();
-      return data.albums || [];
+      // The route returns SoundCloud playlists; convert them to Albums
+      const data: { albums?: SoundCloudPlaylist[] } = await response.json();
+      return (data.albums ?? []).map((playlist) => ({
+        id: `soundcloud-${playlist.id}`,
+        provider: 'soundcloud' as ProviderId,
+        title: playlist.title,
+        artist: playlist.user?.username ?? 'Unknown Artist',
+        artworkUrl: playlist.artworkUrl,
+        trackCount: playlist.trackCount ?? 0,
+        tracks: [], // Loaded when the album is picked
+        duration: Math.round((playlist.duration ?? 0) / 1000),
+        externalUrl: playlist.permalinkUrl,
+      }));
     } catch (error) {
       console.error('SoundCloud search error:', error);
       return [];

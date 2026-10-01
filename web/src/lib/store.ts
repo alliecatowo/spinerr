@@ -27,6 +27,10 @@ export interface CalendarEvent {
   description: string;
 }
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'This track could not be played.';
+}
+
 // Player Store
 interface PlayerState {
   currentTrack: Track | null;
@@ -34,8 +38,10 @@ interface PlayerState {
   progress: number; // 0-1
   volume: number; // 0-1
   playlist: Track[];
+  playbackError: string | null; // user-facing message when a track can't be played
 
   // Actions
+  setPlaybackError: (message: string | null) => void;
   play: () => void;
   pause: () => void;
   setTrack: (track: Track) => void;
@@ -53,6 +59,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   progress: 0,
   volume: 0.7,
   playlist: [],
+  playbackError: null,
+
+  setPlaybackError: (message: string | null) => set({ playbackError: message }),
 
   play: () => {
     set({ isPlaying: true });
@@ -63,6 +72,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
           console.error('[Store] Play error, reverting state:', error);
           set({ isPlaying: false });
         });
+        set({ playbackError: null });
       });
     }
   },
@@ -120,9 +130,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         const audioPlayer = getAudioPlayer();
         audioPlayer.loadTrack(nextTrack.id).then(() => {
           if (isPlaying) {
-            audioPlayer.play();
+            return audioPlayer.play();
           }
-        });
+        }).catch((error) => set({ isPlaying: false, playbackError: errorMessage(error) }));
       });
     }
   },
@@ -147,9 +157,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         const audioPlayer = getAudioPlayer();
         audioPlayer.loadTrack(prevTrack.id).then(() => {
           if (isPlaying) {
-            audioPlayer.play();
+            return audioPlayer.play();
           }
-        });
+        }).catch((error) => set({ isPlaying: false, playbackError: errorMessage(error) }));
       });
     }
   },
@@ -175,6 +185,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       currentTrack: playerTracks[0] || null,
       progress: 0,
       isPlaying: true,
+      playbackError: null,
     });
 
     // Load and play first track via audio player (client-side only)
@@ -182,9 +193,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       import('./audio-player').then(({ getAudioPlayer }) => {
         const audioPlayer = getAudioPlayer();
         audioPlayer.initialize();
-        audioPlayer.loadTrack(playerTracks[0].id).then(() => {
-          audioPlayer.play();
-        });
+        audioPlayer.loadTrack(playerTracks[0].id)
+          .then(() => audioPlayer.play())
+          .catch((error) => set({ isPlaying: false, playbackError: errorMessage(error) }));
       });
     }
   },
@@ -431,6 +442,13 @@ export const useLibraryStore = create<LibraryState>()(
     {
       name: 'spinerr-library',
       version: 1,
+      // Local files play from object URLs that die with the page, so they
+      // are never persisted; everything else is.
+      partialize: (state) => ({
+        ...state,
+        albums: state.albums.filter((a) => a.provider !== 'local'),
+        recentlyPlayed: state.recentlyPlayed.filter((a) => a.provider !== 'local'),
+      }),
     }
   )
 );

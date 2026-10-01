@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { AccountButton } from "@/components/auth/AccountButton";
 import { ThemeToggle } from "./ThemeToggle";
+import { LocalFilePicker } from "@/components/music/LocalFilePicker";
 
 export function AppSidebar() {
   const router = useRouter();
@@ -139,6 +140,15 @@ export function AppSidebar() {
                     <Plus className="h-4 w-4" />
                     <span>Add Album</span>
                   </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <LocalFilePicker
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2 px-2 font-normal"
+                  >
+                    <span>Play Local Files</span>
+                  </LocalFilePicker>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>

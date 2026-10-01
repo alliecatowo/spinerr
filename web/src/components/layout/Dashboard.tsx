@@ -6,6 +6,7 @@ import { useFullscreen } from "@/hooks/useFullscreen";
 import { AppSidebar } from "./AppSidebar";
 import { AtAGlance } from "./AtAGlance";
 import { HelpButton } from "@/components/tours/HelpButton";
+import { PlaybackNotice } from "@/components/music/PlaybackNotice";
 
 interface DashboardProps {
   musicSection: React.ReactNode;
@@ -27,11 +28,10 @@ export function Dashboard({ musicSection }: DashboardProps) {
         {/* Main Content Area */}
         <SidebarInset className="flex-1 flex flex-col relative overflow-hidden">
           {/* Floating Sidebar Toggle - only show when sidebar is collapsed */}
-          {!sidebarOpen && (
-            <div className="fixed top-4 left-4 z-50">
-              <SidebarTrigger />
-            </div>
-          )}
+          {/* (on phones the sidebar is an off-canvas sheet, so always offer the toggle) */}
+          <div className={`fixed top-4 left-4 z-50 ${sidebarOpen ? "md:hidden" : ""}`}>
+            <SidebarTrigger />
+          </div>
 
           {/* Main Content - Two halves, vinyl dominates */}
           <main className="flex-1 w-full overflow-auto flex items-center justify-center">
@@ -64,6 +64,8 @@ export function Dashboard({ musicSection }: DashboardProps) {
 
           {/* Help Button - Hidden in fullscreen */}
           {!isFullscreen && <HelpButton />}
+
+          <PlaybackNotice />
         </SidebarInset>
       </div>
     </SidebarProvider>

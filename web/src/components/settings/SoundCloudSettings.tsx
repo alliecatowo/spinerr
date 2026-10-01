@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { SOUNDCLOUD_AVAILABLE, SOUNDCLOUD_UNAVAILABLE_MESSAGE } from "@/lib/runtime";
 import { getSoundCloudClient, SoundCloudTrack } from "@/lib/soundcloud-api";
 
 export function SoundCloudSettings() {
@@ -62,6 +63,20 @@ export function SoundCloudSettings() {
       setIsTesting(false);
     }
   };
+
+  if (!SOUNDCLOUD_AVAILABLE) {
+    return (
+      <Card className="border-gray-200/60 dark:border-neutral-800/60">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Music2 className="h-5 w-5 text-orange-600 dark:text-orange-500" />
+            <CardTitle>SoundCloud Integration</CardTitle>
+          </div>
+          <CardDescription>{SOUNDCLOUD_UNAVAILABLE_MESSAGE}</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-gray-200/60 dark:border-neutral-800/60">

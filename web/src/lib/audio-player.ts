@@ -1,11 +1,13 @@
 /**
  * HTML5 Audio Player Singleton
- * Manages audio playback for SoundCloud streams with store integration
+ * Manages audio playback (local files and SoundCloud streams) with store integration
  * Includes real-time audio analysis
  */
 
 import { usePlayerStore } from './store';
 import { getAudioAnalyzer } from './audio-analyzer';
+import { getLocalTrackUrl, isLocalTrackId } from './local-files';
+import { SOUNDCLOUD_AVAILABLE, SOUNDCLOUD_UNAVAILABLE_MESSAGE } from './runtime';
 
 export class AudioPlayer {
   private static instance: AudioPlayer | null = null;
@@ -89,22 +91,10 @@ export class AudioPlayer {
         return;
       }
 
-      // Fetch stream URL from API
-      const response = await fetch(`/api/soundcloud/stream?trackId=${trackId}`);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Stream API error:', response.status, errorData);
-        throw new Error(`Failed to fetch stream URL: ${response.status} - ${errorData.error || 'Unknown error'}`);
-      }
-
-      const data = await response.json();
-      if (!data.streamUrl) {
-        console.error('No stream URL in response:', data);
-        throw new Error('No stream URL available');
-      }
+      const src = await this.resolveSource(trackId);
 
       // Load new audio source
-      this.audio.src = data.streamUrl;
+      this.audio.src = src;
       this.currentTrackId = trackId;
 
       // Reset progress in store
@@ -121,6 +111,40 @@ export class AudioPlayer {
       // Re-throw so caller knows it failed, but player state is stable
       throw error;
     }
+  }
+
+  /**
+   * Work out a playable URL for a track: local files come from the in-memory
+   * object URL registry, SoundCloud tracks from the server-side stream proxy.
+   */
+  private async resolveSource(trackId: string): Promise<string> {
+    if (isLocalTrackId(trackId)) {
+      const url = getLocalTrackUrl(trackId);
+      if (!url) {
+        throw new Error('This local file is no longer available. Pick it again to play it.');
+      }
+      return url;
+    }
+
+    if (trackId.startsWith('spotify-') || /^[0-9A-Za-z]{22}$/.test(trackId)) {
+      throw new Error('Spotify tracks can be browsed but not streamed in Spinerr yet.');
+    }
+
+    if (!SOUNDCLOUD_AVAILABLE) {
+      throw new Error(SOUNDCLOUD_UNAVAILABLE_MESSAGE);
+    }
+
+    const response = await fetch(`/api/soundcloud/stream?trackId=${encodeURIComponent(trackId)}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(`Failed to fetch stream URL: ${response.status} - ${errorData.error || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    if (!data.streamUrl) {
+      throw new Error('No stream URL available');
+    }
+    return data.streamUrl;
   }
 
   /**

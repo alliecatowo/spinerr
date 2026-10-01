@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { Dashboard } from "@/components/layout/Dashboard";
 import { VinylDisc } from "@/components/music/VinylDisc";
 import { ToneArm } from "@/components/music/ToneArm";
+import { LocalFilePicker } from "@/components/music/LocalFilePicker";
+import { SOUNDCLOUD_AVAILABLE } from "@/lib/runtime";
 import { usePlayerStore, useCalendarStore, useLibraryStore } from "@/lib/store";
 import { mockEvents } from "@/lib/mock-data";
 import { usePlayerProgress, useKeyboardShortcuts, useFirstVisit } from "@/hooks";
@@ -82,14 +84,17 @@ export default function Home() {
       <Dashboard
         musicSection={
           <div className="flex flex-col items-center justify-center gap-4 w-full max-w-3xl mx-auto min-h-screen">
-            <div className="text-center">
+            <div className="text-center px-6">
               <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 No music playing
               </p>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
-                Add an album to your library to get started
+              <p className="text-sm text-gray-600 dark:text-neutral-400 max-w-sm mx-auto">
+                {SOUNDCLOUD_AVAILABLE
+                  ? "Pick some audio files from your computer, or use Add Album to search SoundCloud."
+                  : "Pick some audio files from your computer. They play right here in your browser and are never uploaded."}
               </p>
             </div>
+            <LocalFilePicker size="lg" />
           </div>
         }
       />
@@ -98,14 +103,18 @@ export default function Home() {
 
   // Music section - vinyl player takes up almost entire left half
   const musicSection = (
-    <div className="relative w-full h-full" data-tour="vinyl-disc" style={{ aspectRatio: '1/1', maxWidth: '100%', maxHeight: '100%' }}>
-      <VinylDisc
-        track={currentTrack}
-        isPlaying={isPlaying}
-        progress={progress}
-        onPlayPause={isPlaying ? pause : play}
-      />
-      <ToneArm isPlaying={isPlaying} progress={progress} />
+    // Size container: the record is a square as large as the smaller side,
+    // so the tone arm (positioned against the square) stays on the record
+    <div className="w-full h-full flex items-center justify-center" style={{ containerType: 'size' }}>
+      <div className="relative" data-tour="vinyl-disc" style={{ width: '100cqmin', height: '100cqmin' }}>
+        <VinylDisc
+          track={currentTrack}
+          isPlaying={isPlaying}
+          progress={progress}
+          onPlayPause={isPlaying ? pause : play}
+        />
+        <ToneArm isPlaying={isPlaying} progress={progress} />
+      </div>
     </div>
   );
 

@@ -20,6 +20,8 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { LocalFilePicker } from "@/components/music/LocalFilePicker";
+import { SOUNDCLOUD_AVAILABLE, SOUNDCLOUD_UNAVAILABLE_MESSAGE } from "@/lib/runtime";
 import type { Album, ProviderId } from "@/lib/providers/types";
 import { providerManager } from "@/lib/providers/provider-manager";
 import type { SearchResult } from "@/lib/providers/provider-manager";
@@ -179,6 +181,13 @@ export function AlbumSearchModal({ isOpen, onClose, onSelectAlbum }: AlbumSearch
           </DialogDescription>
         </DialogHeader>
 
+        {!SOUNDCLOUD_AVAILABLE && !providerManager.isProviderAvailable('spotify') ? (
+          <div className="flex flex-col items-center gap-4 px-6 pb-8 pt-4 text-center">
+            <Music className="h-10 w-10 opacity-50" />
+            <p className="max-w-md text-sm text-muted-foreground">{SOUNDCLOUD_UNAVAILABLE_MESSAGE}</p>
+            <LocalFilePicker onLoaded={onClose} />
+          </div>
+        ) : (
         <div className="flex flex-col h-full">
           {/* Provider Filter */}
           <div className="flex gap-2 px-6 pt-4">
@@ -212,7 +221,7 @@ export function AlbumSearchModal({ isOpen, onClose, onSelectAlbum }: AlbumSearch
           </div>
 
           {/* Command Palette */}
-          <Command className="rounded-none border-0 mt-4">
+          <Command shouldFilter={false} className="rounded-none border-0 mt-4">
             <CommandInput
               placeholder="Search for albums, artists, or playlists..."
               value={query}
@@ -285,6 +294,7 @@ export function AlbumSearchModal({ isOpen, onClose, onSelectAlbum }: AlbumSearch
             </CommandList>
           </Command>
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );
