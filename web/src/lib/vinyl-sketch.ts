@@ -10,7 +10,7 @@
 import type p5 from 'p5';
 import { getAudioAnalyzer } from './audio-analyzer';
 
-interface VinylSketchParams {
+export interface VinylSketchParams {
   trackId: string;
   albumColor: string;
   artworkUrl?: string;
@@ -69,7 +69,7 @@ export function createVinylSketch(
   const sketch = (p: p5) => {
     console.log("[vinyl-sketch] Sketch function called, p5 instance:", p);
 
-    let params: VinylSketchParams = {
+    const params: VinylSketchParams = {
       trackId,
       albumColor,
       artworkUrl,
@@ -81,8 +81,10 @@ export function createVinylSketch(
     let seed: number;
     let grooves: GrooveRing[] = [];
     let rotation = 0;
+    let rotationStartTime = 0;
     let centerRadius: number;
     let vinylRadius: number;
+    let artworkImage: p5.Image | null = null;
 
     // Cached values for performance (computed once, reused every frame)
     let baseHue: number;
@@ -117,7 +119,8 @@ export function createVinylSketch(
       b /= 255;
       const max = Math.max(r, g, b);
       const min = Math.min(r, g, b);
-      let h = 0, s = 0, l = (max + min) / 2;
+      let h = 0, s = 0;
+      const l = (max + min) / 2;
 
       if (max !== min) {
         const d = max - min;
@@ -148,9 +151,8 @@ export function createVinylSketch(
         canvasStyle: canvas.elt.style.cssText
       });
 
-      // Ensure canvas is visible with explicit styles
+      // Ensure canvas is visible with explicit styles (centered by parent flex container)
       canvas.elt.style.display = 'block';
-      canvas.elt.style.position = 'relative';
       canvas.elt.style.zIndex = '2';
 
       initializeVinyl();
@@ -178,12 +180,26 @@ export function createVinylSketch(
       paletteHue = p.random(0, 360);
       hueVariation = p.random(40, 100);
 
+      // Load artwork image if provided
+      if (params.artworkUrl) {
+        p.loadImage(params.artworkUrl, (img) => {
+          artworkImage = img;
+          console.log("[vinyl-sketch] Artwork loaded");
+        }, () => {
+          console.error("[vinyl-sketch] Failed to load artwork");
+          artworkImage = null;
+        });
+      } else {
+        artworkImage = null;
+      }
+
       console.log("[vinyl-sketch] initializeVinyl:", {
         seed,
         vinylRadius,
         centerRadius,
         baseHue,
         paletteHue,
+        hasArtwork: !!params.artworkUrl,
         canvasSize: { width: p.width, height: p.height }
       });
 
@@ -232,16 +248,18 @@ export function createVinylSketch(
     };
 
     p.draw = () => {
-      // ALWAYS loop when playing for smooth 60fps
-      if (params.isPlaying) {
-        p.loop();
-      } else {
-        p.noLoop();
-      }
+      // Always keep looping for smooth animations
+      p.loop();
 
-      // Update rotation (33⅓ RPM = 0.556 rev/sec = ~0.0349 rad/frame at 60fps)
+      // Update rotation using time-based calculation (matches CSS animation exactly)
       if (params.isPlaying) {
-        rotation += (2 * Math.PI) / (60 * 60 / 33.33); // 33⅓ RPM at 60fps
+        if (rotationStartTime === 0) {
+          rotationStartTime = p.millis();
+        }
+        const elapsed = (p.millis() - rotationStartTime) / 1000; // seconds
+        rotation = (elapsed / 1.8) * (2 * Math.PI); // 1.8s per rotation = 33⅓ RPM
+      } else {
+        rotationStartTime = 0; // Reset when paused
       }
 
       // Get REAL audio energy from analyzer - separate frequency bands
@@ -380,11 +398,28 @@ export function createVinylSketch(
     };
 
     const drawCenterLabel = () => {
-      // Center label area - artwork will be overlaid via React component
-      // Just draw a subtle background
+      // Center label background
       p.noStroke();
       p.fill(30, 30, 35);
       p.circle(0, 0, centerRadius * 2);
+
+      // Draw artwork if loaded
+      if (artworkImage) {
+        p.push();
+        // Clip to circle
+        p.drawingContext.save();
+        p.drawingContext.beginPath();
+        p.drawingContext.arc(0, 0, centerRadius, 0, Math.PI * 2);
+        p.drawingContext.clip();
+
+        // Draw image centered and scaled
+        const imgSize = centerRadius * 2;
+        p.imageMode(p.CENTER);
+        p.image(artworkImage, 0, 0, imgSize, imgSize);
+
+        p.drawingContext.restore();
+        p.pop();
+      }
 
       // Inner spindle hole
       p.fill(20, 20, 25);
@@ -415,7 +450,7 @@ export function createVinylSketch(
     };
 
     // Public update method
-    (p as any).updateParams = (newParams: Partial<VinylSketchParams>) => {
+    (p as p5 & { updateParams?: (params: Partial<VinylSketchParams>) => void }).updateParams = (newParams: Partial<VinylSketchParams>) => {
       console.log("[vinyl-sketch] updateParams called with:", newParams);
 
       let shouldReinitialize = false;
@@ -431,8 +466,20 @@ export function createVinylSketch(
         params.albumColor = newParams.albumColor;
       }
 
-      if (newParams.artworkUrl !== undefined) {
+      if (newParams.artworkUrl !== undefined && newParams.artworkUrl !== params.artworkUrl) {
         params.artworkUrl = newParams.artworkUrl;
+        // Reload artwork image
+        if (params.artworkUrl) {
+          p.loadImage(params.artworkUrl, (img) => {
+            artworkImage = img;
+            console.log("[vinyl-sketch] Artwork updated");
+          }, () => {
+            console.error("[vinyl-sketch] Failed to load new artwork");
+            artworkImage = null;
+          });
+        } else {
+          artworkImage = null;
+        }
       }
 
       if (newParams.isPlaying !== undefined) {
@@ -457,15 +504,15 @@ export function createVinylSketch(
 
   // Create p5 instance
   // Note: Assumes p5 is available globally or imported
-  if (typeof window !== 'undefined' && (window as any).p5) {
-    const P5 = (window as any).p5;
+  const P5 = typeof window !== 'undefined' ? (window as Window & { p5?: new (sketch: (p: p5) => void) => p5 }).p5 : undefined;
+  if (P5) {
     console.log("[vinyl-sketch] Creating p5 instance with P5 constructor:", P5);
     p5Instance = new P5(sketch);
     console.log("[vinyl-sketch] p5 instance created:", p5Instance);
   } else {
     console.error("[vinyl-sketch] p5 is not available on window!", {
       hasWindow: typeof window !== 'undefined',
-      windowP5: (window as any)?.p5
+      windowP5: P5
     });
   }
 

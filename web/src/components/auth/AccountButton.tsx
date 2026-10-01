@@ -3,13 +3,19 @@
 import { useState } from 'react';
 import { User, LogOut, UserCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { isFirebaseConfigured } from '@/lib/firebase';
 import { AuthModal } from './AuthModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function AccountButton() {
-  const { user, isAnonymous, signOutUser } = useAuth();
+  const { user, isAnonymous: anonymous, signOutUser } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  // Treat "no user yet" like an anonymous user: offer sign-in
+  const isAnonymous = anonymous || !user;
+
+  // No Firebase config in this build: sign-in isn't available at all
+  if (!isFirebaseConfigured) return null;
 
   const handleSignOut = async () => {
     setShowMenu(false);

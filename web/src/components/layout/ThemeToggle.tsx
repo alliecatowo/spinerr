@@ -14,6 +14,8 @@ export function ThemeToggle() {
       document.documentElement.classList.contains("dark") ||
       window.matchMedia("(prefers-color-scheme: dark)").matches;
     const initialTheme = isDark ? "dark" : "light";
+    // Sync from the DOM after mount (the pre-rendered HTML can't know it)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(initialTheme);
 
     // Apply initial theme

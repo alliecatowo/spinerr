@@ -1,74 +1,73 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useCalendarStore } from "@/lib/store";
-import { InfoToggle } from "./InfoToggle";
-import { ThemeToggle } from "./ThemeToggle";
-import { Navigation } from "./Navigation";
-import { Sidebar } from "./Sidebar";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { useViewModeStore } from "@/lib/store";
+import { useFullscreen } from "@/hooks/useFullscreen";
+import { AppSidebar } from "./AppSidebar";
+import { AtAGlance } from "./AtAGlance";
+import { HelpButton } from "@/components/tours/HelpButton";
+import { PlaybackNotice } from "@/components/music/PlaybackNotice";
 
 interface DashboardProps {
   musicSection: React.ReactNode;
-  calendarSection: React.ReactNode;
 }
 
-export function Dashboard({ musicSection, calendarSection }: DashboardProps) {
-  const showCalendar = useCalendarStore((state) => state.showCalendar);
+export function Dashboard({ musicSection }: DashboardProps) {
+  const { showInfo, isTheaterMode } = useViewModeStore();
+  const { isFullscreen } = useFullscreen();
+
+  // Collapse sidebar in theater mode or fullscreen
+  const sidebarOpen = !isTheaterMode && !isFullscreen;
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950 overflow-x-hidden">
-      {/* Minimal Navigation - top left */}
-      <div className="fixed top-6 left-6 z-50">
-        <Navigation />
-      </div>
+    <SidebarProvider open={sidebarOpen} onOpenChange={() => {}}>
+      <div className="flex h-screen w-full overflow-hidden bg-neutral-50 dark:bg-neutral-950">
+        {/* Left Sidebar - collapsed in theater/fullscreen */}
+        <AppSidebar />
 
-      {/* Theme Toggle - top left, below nav with consistent spacing */}
-      <div className="fixed top-[60px] left-6 z-50">
-        <ThemeToggle />
-      </div>
+        {/* Main Content Area */}
+        <SidebarInset className="flex-1 flex flex-col relative overflow-hidden">
+          {/* Floating Sidebar Toggle - only show when sidebar is collapsed */}
+          {/* (on phones the sidebar is an off-canvas sheet, so always offer the toggle) */}
+          <div className={`fixed top-4 left-4 z-50 ${sidebarOpen ? "md:hidden" : ""}`}>
+            <SidebarTrigger />
+          </div>
 
-      {/* Info Toggle - top right, aligned with navigation */}
-      <div className="fixed top-6 right-6 z-50">
-        <InfoToggle />
-      </div>
+          {/* Main Content - Two halves, vinyl dominates */}
+          <main className="flex-1 w-full overflow-auto flex items-center justify-center">
+            {showInfo && !isTheaterMode ? (
+              // Two column layout when showing info
+              <div className="w-full h-full flex flex-col lg:flex-row overflow-auto">
+                {/* Left Half - Vinyl Player */}
+                <div className="flex-1 flex items-center justify-center p-4 min-w-0 min-h-0">
+                  <div className="w-full h-full max-w-3xl max-h-3xl">
+                    {musicSection}
+                  </div>
+                </div>
 
-      {/* Sidebar - left side, below theme toggle with consistent spacing */}
-      <Sidebar />
-
-      {/* Main Content - floating, zen layout with flex, no scroll */}
-      {/* On large screens: offset left margin to optically center vinyl player, accounting for fixed sidebar */}
-      {/* When calendar is hidden: add right margin to truly center the vinyl */}
-      <div className={`h-screen flex items-center justify-center px-12 py-8 overflow-hidden transition-all duration-500 ${
-        showCalendar ? 'lg:ml-[140px]' : 'lg:ml-[140px] lg:mr-[140px]'
-      }`}>
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-16 w-full max-w-[1600px]">
-          {/* Music Section - always visible */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 flex items-center justify-center w-full"
-          >
-            {musicSection}
-          </motion.div>
-
-          {/* Calendar Section - toggleable */}
-          <AnimatePresence mode="sync">
-            {showCalendar && (
-              <motion.div
-                key="calendar"
-                initial={{ opacity: 0, x: 100 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 100 }}
-                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full lg:w-auto lg:min-w-[420px] lg:max-w-[480px]"
-              >
-                {calendarSection}
-              </motion.div>
+                {/* Right Half - At a Glance */}
+                <div className="hidden lg:flex flex-1 items-center justify-center p-8 min-w-0 min-h-0 overflow-auto">
+                  <div className="w-full max-w-2xl">
+                    <AtAGlance />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // Single column centered when no info (theater/fullscreen)
+              <div className="w-full h-full flex items-center justify-center p-4 sm:p-8">
+                <div className="w-full h-full max-w-4xl max-h-4xl">
+                  {musicSection}
+                </div>
+              </div>
             )}
-          </AnimatePresence>
-        </div>
+          </main>
+
+          {/* Help Button - Hidden in fullscreen */}
+          {!isFullscreen && <HelpButton />}
+
+          <PlaybackNotice />
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

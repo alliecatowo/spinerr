@@ -22,7 +22,8 @@ export function LocalFilesSettings() {
   const [scanProgress, setScanProgress] = useState("");
 
   useEffect(() => {
-    // Check for File System Access API support
+    // Feature-detect after mount so server and client HTML match
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSupportsFileSystem(supportsFileSystemAccess());
   }, []);
 
@@ -108,7 +109,7 @@ export function LocalFilesSettings() {
           <Alert className="bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900">
             <AlertDescription className="text-yellow-900 dark:text-yellow-100 text-sm">
               <p className="font-medium mb-1">Limited Browser Support</p>
-              <p>Your browser doesn't support the File System Access API. You can still upload files individually.</p>
+              <p>Your browser doesn&apos;t support the File System Access API. You can still upload files individually.</p>
             </AlertDescription>
           </Alert>
         )}

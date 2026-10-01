@@ -123,12 +123,44 @@ pnpm dev
 ### Build
 
 ```bash
-# Create production build
+# Server build (includes the SoundCloud proxy routes)
 pnpm build
-
-# Start production server
 pnpm start
+
+# Static export for Firebase Hosting (writes web/out)
+pnpm build:static
 ```
+
+The static build has no server, so SoundCloud search is switched off there
+(SoundCloud's API doesn't allow browser requests). Playing files from your
+computer works in both builds and needs no keys.
+
+### Configuration
+
+Copy the Firebase web config into `web/.env.local` (never committed) to enable
+sign-in and cross-device tour state. Without it the app runs in local-only mode.
+
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=...
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+```
+
+`firebase apps:sdkconfig WEB --project spinerr-app` prints these values. Spotify
+is optional: each user enters their own Spotify client ID in Settings.
+
+### Deploy
+
+```bash
+cd web && pnpm build:static && cd ..
+pnpm dlx firebase-tools deploy --only hosting,firestore:rules --project spinerr-app
+```
+
+The `NEXT_PUBLIC_*` values are baked in at build time, so deploy from a
+checkout that has `web/.env.local`.
 
 ### Linting
 

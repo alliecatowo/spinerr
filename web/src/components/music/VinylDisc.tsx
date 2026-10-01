@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import type { Track } from "@/lib/store";
-import { createVinylSketch } from "@/lib/vinyl-sketch";
+import { vinylRenderer } from "@/lib/vinyl-renderer";
 
 interface VinylDiscProps {
   track: Track;
@@ -19,109 +19,61 @@ export function VinylDisc({
   onPlayPause,
 }: VinylDiscProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const p5InstanceRef = useRef<any>(null);
-  const cleanupRef = useRef<(() => void) | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Store frequently-changing values in refs to avoid stale closures
-  const progressRef = useRef(progress);
-
-  // Update refs when props change (but don't trigger re-renders)
+  // INITIALIZATION: Initialize or reuse existing renderer
   useEffect(() => {
-    progressRef.current = progress;
-  }, [progress]);
+    const initializeRenderer = async () => {
+      if (!containerRef.current) {
+        console.error("[VinylDisc] No container ref available");
+        return;
+      }
 
-  // INITIALIZATION: Create p5 sketch once on mount
-  useEffect(() => {
-    console.log("[VinylDisc] Mount effect - initializing p5 sketch");
+      console.log("[VinylDisc] Initializing vinyl renderer");
 
-    if (!containerRef.current) {
-      console.error("[VinylDisc] No container ref available");
-      return;
-    }
-
-    // Load p5.js dynamically
-    const initializeP5 = async () => {
       try {
-        // Check if p5 is already loaded
-        if (!(window as any).p5) {
-          console.log("[VinylDisc] Loading p5.js module...");
-          const p5Module = await import("p5");
-          (window as any).p5 = p5Module.default;
-          console.log("[VinylDisc] p5.js loaded successfully");
-        }
-
-        // Wait a frame to ensure container has dimensions
-        await new Promise(resolve => requestAnimationFrame(resolve));
-
-        // Create the sketch
-        if (containerRef.current) {
-          console.log("[VinylDisc] Creating vinyl sketch...");
-          const sketchInstance = createVinylSketch(
-            containerRef.current,
-            track.id, // Use track ID for unique art
-            track.coverColor,
-            undefined, // Artwork will be overlaid via React
-            isPlaying,
-            progress,
-            undefined // No onSeek callback
-          );
-
-          // Store references
-          p5InstanceRef.current = sketchInstance.p5Instance;
-          cleanupRef.current = sketchInstance.cleanup;
-
-          console.log("[VinylDisc] Sketch created successfully, p5Instance:", p5InstanceRef.current);
-          setIsLoading(false);
-        }
+        await vinylRenderer.initialize(
+          containerRef.current,
+          track.id,
+          track.coverColor,
+          track.artworkUrl, // Pass artwork URL to p5
+          isPlaying,
+          progress
+        );
+        setIsLoading(false);
       } catch (error) {
-        console.error("[VinylDisc] Error creating sketch:", error);
+        console.error("[VinylDisc] Error initializing renderer:", error);
         setIsLoading(false);
       }
     };
 
-    initializeP5();
+    initializeRenderer();
 
-    // Cleanup on unmount
-    return () => {
-      console.log("[VinylDisc] Unmounting, cleaning up...");
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
-      p5InstanceRef.current = null;
-    };
+    // Don't cleanup on unmount - keep renderer alive for performance
+    // Container will be reused on next mount
   }, []); // Only run once on mount
 
   // UPDATE: Handle prop changes after initialization
   useEffect(() => {
-    if (!p5InstanceRef.current) {
-      console.log("[VinylDisc] Update effect - p5 instance not ready yet");
+    if (!vinylRenderer.isInitialized()) {
       return;
     }
 
-    console.log("[VinylDisc] Update effect - updating params:", {
+    console.log("[VinylDisc] Updating renderer params:", {
       trackId: track.id,
       albumColor: track.coverColor,
+      artworkUrl: track.artworkUrl,
       isPlaying,
-      hasUpdateParams: typeof (p5InstanceRef.current as any).updateParams === 'function'
     });
 
-    // Call updateParams on the p5 instance
-    if (typeof (p5InstanceRef.current as any).updateParams === 'function') {
-      (p5InstanceRef.current as any).updateParams({
-        trackId: track.id,
-        albumColor: track.coverColor,
-        artworkUrl: undefined,
-        isPlaying,
-        progress: progressRef.current,
-        onSeek: undefined, // No seek callback for performance
-      });
-      console.log("[VinylDisc] updateParams called successfully");
-    } else {
-      console.error("[VinylDisc] updateParams method not found on p5 instance!");
-    }
-  }, [track.id, track.coverColor, isPlaying]); // Trigger on track ID, color, or play state change
+    vinylRenderer.updateParams({
+      trackId: track.id,
+      albumColor: track.coverColor,
+      artworkUrl: track.artworkUrl, // Update artwork in p5
+      isPlaying,
+      progress,
+    });
+  }, [track.id, track.coverColor, track.artworkUrl, isPlaying, progress]); // Update on any prop change
 
   const [showPlayIcon, setShowPlayIcon] = useState(false);
 
@@ -141,9 +93,8 @@ export function VinylDisc({
       {/* P5 Canvas Container */}
       <div
         ref={containerRef}
-        className="w-full h-full min-h-[400px]"
+        className="absolute inset-0 flex items-center justify-center"
         style={{
-          position: 'relative',
           zIndex: 1
         }}
       >
@@ -154,52 +105,6 @@ export function VinylDisc({
           </div>
         )}
       </div>
-
-      {/* Album Art Overlay - Rotates at 33⅓ RPM when playing */}
-      <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden shadow-2xl pointer-events-none"
-        style={{
-          width: "30%",
-          height: "30%",
-          backgroundColor: track.coverColor,
-          zIndex: 10
-        }}
-        initial={{ opacity: 0, scale: 0, rotate: 0 }}
-        animate={{
-          opacity: 1,
-          scale: 1,
-          rotate: isPlaying ? 360 : undefined // When paused, freeze at current rotation
-        }}
-        transition={{
-          opacity: { delay: 0.4, duration: 0.5 },
-          scale: { delay: 0.4, duration: 0.5 },
-          rotate: isPlaying ? {
-            duration: 1.8, // 33⅓ RPM = 1.8 seconds per rotation
-            repeat: Infinity,
-            ease: "linear"
-          } : {
-            duration: 0 // Instant stop when pausing
-          }
-        }}
-      >
-        {track.artworkUrl ? (
-          <img
-            src={track.artworkUrl}
-            alt={track.album}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-white font-bold text-4xl">
-            {track.album.charAt(0)}
-          </div>
-        )}
-      </motion.div>
-
-      {/* Center Spindle */}
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-gray-800 rounded-full shadow-inner pointer-events-none"
-        style={{ zIndex: 11 }}
-      />
 
       {/* Play/Pause Overlay - shows on hover or when paused */}
       <motion.div

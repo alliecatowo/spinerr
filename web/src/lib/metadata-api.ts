@@ -2,6 +2,15 @@
  * Music Metadata APIs - MusicBrainz, Last.fm, Cover Art Archive
  */
 
+interface MusicBrainzApiRecording {
+  id: string;
+  title: string;
+  length?: number;
+  score?: number;
+  'artist-credit'?: { name: string }[];
+  releases?: { title?: string; date?: string }[];
+}
+
 const MUSICBRAINZ_API = 'https://musicbrainz.org/ws/2';
 const COVERART_API = 'https://coverartarchive.org';
 const LASTFM_API = 'https://ws.audioscrobbler.com/2.0';
@@ -63,7 +72,7 @@ export async function searchMusicBrainz(
 
     const data = await response.json();
 
-    return data.recordings?.map((rec: any) => ({
+    return (data.recordings as MusicBrainzApiRecording[] | undefined)?.map((rec) => ({
       id: rec.id,
       title: rec.title,
       artist: rec['artist-credit']?.[0]?.name || 'Unknown Artist',
@@ -96,7 +105,7 @@ export async function getAlbumArt(releaseId: string): Promise<AlbumArt | null> {
 
     const data = await response.json();
 
-    const frontCover = data.images?.find((img: any) => img.front);
+    const frontCover = (data.images as { front?: boolean; image: string; thumbnails?: Record<string, string> }[] | undefined)?.find((img) => img.front);
     if (!frontCover) return null;
 
     return {

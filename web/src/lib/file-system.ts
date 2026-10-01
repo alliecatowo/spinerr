@@ -19,6 +19,39 @@ export interface AudioFileMetadata {
   };
 }
 
+// Minimal typings for the File System Access API (not in TS's DOM lib yet)
+interface PickerFileHandle {
+  kind: 'file';
+  getFile(): Promise<File>;
+  queryPermission(options: { mode: 'read' }): Promise<PermissionState>;
+  requestPermission(options: { mode: 'read' }): Promise<PermissionState>;
+}
+
+interface PickerDirectoryHandle {
+  kind: 'directory';
+  values(): AsyncIterable<PickerFileHandle | PickerDirectoryHandle>;
+}
+
+interface FileSystemAccessWindow {
+  showOpenFilePicker(options: {
+    types?: { description: string; accept: Record<string, string[]> }[];
+    multiple?: boolean;
+  }): Promise<PickerFileHandle[]>;
+  showDirectoryPicker(): Promise<PickerDirectoryHandle>;
+}
+
+// Shape of what jsmediatags hands back
+interface MediaTags {
+  tags: {
+    title?: string;
+    artist?: string;
+    album?: string;
+    year?: string;
+    genre?: string;
+    picture?: { data: number[]; format: string };
+  };
+}
+
 export interface StoredFileHandle {
   id: string;
   name: string;
@@ -45,8 +78,7 @@ export async function pickAudioFiles(multiple = true): Promise<File[]> {
   }
 
   try {
-    // @ts-ignore - File System Access API
-    const handles = await window.showOpenFilePicker({
+    const handles = await (window as unknown as FileSystemAccessWindow).showOpenFilePicker({
       types: [{
         description: 'Audio Files',
         accept: {
@@ -80,8 +112,7 @@ export async function pickAudioDirectory(): Promise<File[]> {
   }
 
   try {
-    // @ts-ignore - File System Access API
-    const dirHandle = await window.showDirectoryPicker();
+    const dirHandle = await (window as unknown as FileSystemAccessWindow).showDirectoryPicker();
 
     const audioFiles: File[] = [];
     await scanDirectory(dirHandle, audioFiles);
@@ -98,7 +129,7 @@ export async function pickAudioDirectory(): Promise<File[]> {
 /**
  * Recursively scan directory for audio files
  */
-async function scanDirectory(dirHandle: any, audioFiles: File[], depth = 0): Promise<void> {
+async function scanDirectory(dirHandle: PickerDirectoryHandle, audioFiles: File[], depth = 0): Promise<void> {
   // Limit recursion depth to avoid infinite loops
   if (depth > 5) return;
 
@@ -120,7 +151,7 @@ async function scanDirectory(dirHandle: any, audioFiles: File[], depth = 0): Pro
 export async function extractMetadata(file: File): Promise<AudioFileMetadata> {
   return new Promise((resolve, reject) => {
     jsmediatags.read(file, {
-      onSuccess: (tag: any) => {
+      onSuccess: (tag: MediaTags) => {
         const tags = tag.tags;
 
         const metadata: AudioFileMetadata = {
@@ -141,7 +172,7 @@ export async function extractMetadata(file: File): Promise<AudioFileMetadata> {
 
         resolve(metadata);
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         console.error('Error reading metadata:', error);
         // Return basic metadata from filename
         resolve({
@@ -172,7 +203,7 @@ export async function extractMetadataFromFiles(files: File[]): Promise<Map<strin
 /**
  * Store file handles in IndexedDB for later access
  */
-export async function storeFileHandle(handle: any, metadata?: AudioFileMetadata): Promise<string> {
+export async function storeFileHandle(handle: PickerFileHandle, metadata?: AudioFileMetadata): Promise<string> {
   const file = await handle.getFile();
   const id = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -195,9 +226,9 @@ export async function storeFileHandle(handle: any, metadata?: AudioFileMetadata)
 /**
  * Retrieve stored file handle from IndexedDB
  */
-export async function getFileHandle(id: string): Promise<any | null> {
+export async function getFileHandle(id: string): Promise<PickerFileHandle | null> {
   try {
-    const handle = await get(`handle-${id}`);
+    const handle = await get<PickerFileHandle>(`handle-${id}`);
     if (!handle) return null;
 
     // Check if permission is still granted

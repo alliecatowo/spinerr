@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Album, Track as ProviderTrack, PlaylistRecord, UserLibrary } from './providers/types';
+import { getCurrentUser } from './auth';
+import { syncTourStateToFirebase } from './tour-firebase';
 
 // Types
-export type ViewMode = 'music' | 'both' | 'calendar';
+export type ViewMode = 'full' | 'ambient' | 'minimal';
 
 export interface Track {
   id: string;
@@ -25,6 +27,10 @@ export interface CalendarEvent {
   description: string;
 }
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'This track could not be played.';
+}
+
 // Player Store
 interface PlayerState {
   currentTrack: Track | null;
@@ -32,8 +38,10 @@ interface PlayerState {
   progress: number; // 0-1
   volume: number; // 0-1
   playlist: Track[];
+  playbackError: string | null; // user-facing message when a track can't be played
 
   // Actions
+  setPlaybackError: (message: string | null) => void;
   play: () => void;
   pause: () => void;
   setTrack: (track: Track) => void;
@@ -51,6 +59,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   progress: 0,
   volume: 0.7,
   playlist: [],
+  playbackError: null,
+
+  setPlaybackError: (message: string | null) => set({ playbackError: message }),
 
   play: () => {
     set({ isPlaying: true });
@@ -61,6 +72,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
           console.error('[Store] Play error, reverting state:', error);
           set({ isPlaying: false });
         });
+        set({ playbackError: null });
       });
     }
   },
@@ -118,9 +130,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         const audioPlayer = getAudioPlayer();
         audioPlayer.loadTrack(nextTrack.id).then(() => {
           if (isPlaying) {
-            audioPlayer.play();
+            return audioPlayer.play();
           }
-        });
+        }).catch((error) => set({ isPlaying: false, playbackError: errorMessage(error) }));
       });
     }
   },
@@ -145,9 +157,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         const audioPlayer = getAudioPlayer();
         audioPlayer.loadTrack(prevTrack.id).then(() => {
           if (isPlaying) {
-            audioPlayer.play();
+            return audioPlayer.play();
           }
-        });
+        }).catch((error) => set({ isPlaying: false, playbackError: errorMessage(error) }));
       });
     }
   },
@@ -173,6 +185,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       currentTrack: playerTracks[0] || null,
       progress: 0,
       isPlaying: true,
+      playbackError: null,
     });
 
     // Load and play first track via audio player (client-side only)
@@ -180,9 +193,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       import('./audio-player').then(({ getAudioPlayer }) => {
         const audioPlayer = getAudioPlayer();
         audioPlayer.initialize();
-        audioPlayer.loadTrack(playerTracks[0].id).then(() => {
-          audioPlayer.play();
-        });
+        audioPlayer.loadTrack(playerTracks[0].id)
+          .then(() => audioPlayer.play())
+          .catch((error) => set({ isPlaying: false, playbackError: errorMessage(error) }));
       });
     }
   },
@@ -223,6 +236,86 @@ export const useCalendarStore = create<CalendarState>((set) => ({
   })),
 
   setEvents: (events: CalendarEvent[]) => set({ events }),
+}));
+
+// View Mode Store - Ambient/Fullscreen view controls
+interface ViewModeState {
+  viewMode: ViewMode;
+  showSidebar: boolean;
+  showControls: boolean;
+  showInfo: boolean;
+  isTheaterMode: boolean;
+
+  setViewMode: (mode: ViewMode) => void;
+  toggleSidebar: () => void;
+  toggleControls: () => void;
+  toggleInfo: () => void;
+  enterAmbientMode: () => void;
+  exitAmbientMode: () => void;
+  enterTheaterMode: () => void;
+  exitTheaterMode: () => void;
+  toggleTheaterMode: () => void;
+}
+
+export const useViewModeStore = create<ViewModeState>((set) => ({
+  viewMode: 'full',
+  showSidebar: true,
+  showControls: true,
+  showInfo: true,
+  isTheaterMode: false,
+
+  setViewMode: (mode: ViewMode) => {
+    set({ viewMode: mode });
+    // Auto-configure visibility based on mode
+    if (mode === 'minimal') {
+      set({ showSidebar: false, showControls: false, showInfo: false });
+    } else if (mode === 'ambient') {
+      set({ showSidebar: false, showControls: true, showInfo: true });
+    } else {
+      set({ showSidebar: true, showControls: true, showInfo: true });
+    }
+  },
+
+  toggleSidebar: () => set((state) => ({ showSidebar: !state.showSidebar })),
+  toggleControls: () => set((state) => ({ showControls: !state.showControls })),
+  toggleInfo: () => set((state) => ({ showInfo: !state.showInfo })),
+
+  enterAmbientMode: () => set({
+    viewMode: 'ambient',
+    showSidebar: false,
+    showControls: true,
+    showInfo: true,
+    isTheaterMode: false
+  }),
+
+  exitAmbientMode: () => set({
+    viewMode: 'full',
+    showSidebar: true,
+    showControls: true,
+    showInfo: true,
+    isTheaterMode: false
+  }),
+
+  enterTheaterMode: () => set({
+    isTheaterMode: true,
+    showSidebar: false,
+    showInfo: false
+  }),
+
+  exitTheaterMode: () => set({
+    isTheaterMode: false,
+    showSidebar: true,
+    showInfo: true
+  }),
+
+  toggleTheaterMode: () => set((state) => {
+    const newTheaterMode = !state.isTheaterMode;
+    return {
+      isTheaterMode: newTheaterMode,
+      showSidebar: !newTheaterMode,
+      showInfo: !newTheaterMode
+    };
+  }),
 }));
 
 // Library Store - Album-focused music library management
@@ -349,6 +442,195 @@ export const useLibraryStore = create<LibraryState>()(
     {
       name: 'spinerr-library',
       version: 1,
+      // Local files play from object URLs that die with the page, so they
+      // are never persisted; everything else is.
+      partialize: (state) => ({
+        ...state,
+        albums: state.albums.filter((a) => a.provider !== 'local'),
+        recentlyPlayed: state.recentlyPlayed.filter((a) => a.provider !== 'local'),
+      }),
+    }
+  )
+);
+
+// Tour Store - Guided tour state management
+interface TourState {
+  // Completion tracking
+  hasSeenOnboarding: boolean;
+  hasSeenLibraryTour: boolean;
+  hasSeenPlayerTour: boolean;
+  hasSeenSettingsTour: boolean;
+
+  // Active tour management
+  activeTour: string | null;
+  tourStepIndex: number;
+  runTour: boolean;
+
+  // Actions
+  startTour: (tourId: string) => void;
+  completeTour: (tourId: string) => void;
+  skipTour: (tourId: string) => void;
+  resetAllTours: () => void;
+  setStepIndex: (index: number) => void;
+  stopTour: () => void;
+}
+
+export const useTourStore = create<TourState>()(
+  persist(
+    (set) => ({
+      // Initial state
+      hasSeenOnboarding: false,
+      hasSeenLibraryTour: false,
+      hasSeenPlayerTour: false,
+      hasSeenSettingsTour: false,
+      activeTour: null,
+      tourStepIndex: 0,
+      runTour: false,
+
+      startTour: (tourId: string) => {
+        console.log('[Tour] Starting:', tourId);
+        set({
+          activeTour: tourId,
+          tourStepIndex: 0,
+          runTour: true,
+        });
+      },
+
+      completeTour: (tourId: string) => {
+        console.log('[Tour] Completed:', tourId);
+
+        // Map tour IDs to state keys
+        const tourStateKeys: Record<string, keyof TourState> = {
+          'onboarding': 'hasSeenOnboarding',
+          'library': 'hasSeenLibraryTour',
+          'player': 'hasSeenPlayerTour',
+          'settings': 'hasSeenSettingsTour',
+        };
+
+        const completionKey = tourStateKeys[tourId];
+        if (!completionKey) {
+          console.error('[Tour] Unknown tour ID:', tourId);
+          return;
+        }
+
+        // Update state
+        set({
+          [completionKey]: true,
+          activeTour: null,
+          runTour: false,
+          tourStepIndex: 0,
+        });
+
+        console.log('[Tour] State updated, new state:', useTourStore.getState());
+
+        // Sync to Firebase after state update
+        setTimeout(async () => {
+          const currentState = useTourStore.getState();
+          const user = getCurrentUser();
+          console.log('[Tour] Syncing to Firebase:', { user: user?.uid, state: currentState });
+          if (user) {
+            try {
+              await syncTourStateToFirebase(user, {
+                hasSeenOnboarding: currentState.hasSeenOnboarding,
+                hasSeenLibraryTour: currentState.hasSeenLibraryTour,
+                hasSeenPlayerTour: currentState.hasSeenPlayerTour,
+                hasSeenSettingsTour: currentState.hasSeenSettingsTour,
+              });
+              console.log('[Tour] ✓ Successfully synced to Firebase');
+            } catch (error) {
+              console.error('[Tour] ✗ Failed to sync to Firebase:', error);
+            }
+          } else {
+            console.warn('[Tour] No user found, cannot sync to Firebase');
+          }
+        }, 100);
+      },
+
+      skipTour: (tourId: string) => {
+        console.log('[Tour] Skipped:', tourId);
+
+        // Map tour IDs to state keys
+        const tourStateKeys: Record<string, keyof TourState> = {
+          'onboarding': 'hasSeenOnboarding',
+          'library': 'hasSeenLibraryTour',
+          'player': 'hasSeenPlayerTour',
+          'settings': 'hasSeenSettingsTour',
+        };
+
+        const completionKey = tourStateKeys[tourId];
+        if (!completionKey) {
+          console.error('[Tour] Unknown tour ID:', tourId);
+          return;
+        }
+
+        // Update state and get latest for Firebase sync
+        const newState = {
+          [completionKey]: true,
+          activeTour: null,
+          runTour: false,
+          tourStepIndex: 0,
+        };
+        set(newState);
+
+        // Sync to Firebase after state update
+        setTimeout(() => {
+          const currentState = useTourStore.getState();
+          const user = getCurrentUser();
+          if (user) {
+            syncTourStateToFirebase(user, {
+              hasSeenOnboarding: currentState.hasSeenOnboarding,
+              hasSeenLibraryTour: currentState.hasSeenLibraryTour,
+              hasSeenPlayerTour: currentState.hasSeenPlayerTour,
+              hasSeenSettingsTour: currentState.hasSeenSettingsTour,
+            });
+          }
+        }, 0);
+      },
+
+      resetAllTours: () => {
+        console.log('[Tour] Resetting all tours');
+        set({
+          hasSeenOnboarding: false,
+          hasSeenLibraryTour: false,
+          hasSeenPlayerTour: false,
+          hasSeenSettingsTour: false,
+          activeTour: null,
+          runTour: false,
+          tourStepIndex: 0,
+        });
+
+        // Sync to Firebase
+        setTimeout(() => {
+          const user = getCurrentUser();
+          if (user) {
+            syncTourStateToFirebase(user, {
+              hasSeenOnboarding: false,
+              hasSeenLibraryTour: false,
+              hasSeenPlayerTour: false,
+              hasSeenSettingsTour: false,
+            });
+          }
+        }, 0);
+      },
+
+      setStepIndex: (index: number) => set({ tourStepIndex: index }),
+
+      stopTour: () => set({
+        activeTour: null,
+        runTour: false,
+        tourStepIndex: 0,
+      }),
+    }),
+    {
+      name: 'spinerr-tours',
+      version: 1,
+      // Only persist completion state, not runtime state (activeTour, runTour, tourStepIndex)
+      partialize: (state) => ({
+        hasSeenOnboarding: state.hasSeenOnboarding,
+        hasSeenLibraryTour: state.hasSeenLibraryTour,
+        hasSeenPlayerTour: state.hasSeenPlayerTour,
+        hasSeenSettingsTour: state.hasSeenSettingsTour,
+      }),
     }
   )
 );

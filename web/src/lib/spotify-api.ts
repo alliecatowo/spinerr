@@ -4,6 +4,7 @@
  */
 
 import { SpotifyApi } from '@spotify/web-api-ts-sdk';
+import type { MaxInt } from '@spotify/web-api-ts-sdk';
 
 // Spotify OAuth endpoints
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
@@ -234,7 +235,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    return await this.sdk.currentUser.tracks.savedTracks(limit as any, offset);
+    return await this.sdk.currentUser.tracks.savedTracks(limit as MaxInt<50>, offset);
   }
 
   /**
@@ -244,7 +245,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    return await this.sdk.currentUser.playlists.playlists(limit as any, offset);
+    return await this.sdk.currentUser.playlists.playlists(limit as MaxInt<50>, offset);
   }
 
   /**
@@ -264,7 +265,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    await this.sdk.player.startResumePlayback(undefined as any, contextUri, uris);
+    await this.sdk.player.startResumePlayback(undefined as unknown as string, contextUri, uris);
   }
 
   /**
@@ -274,7 +275,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    await this.sdk.player.pausePlayback(undefined as any);
+    await this.sdk.player.pausePlayback(undefined as unknown as string);
   }
 
   /**
@@ -284,7 +285,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    await this.sdk.player.skipToNext(undefined as any);
+    await this.sdk.player.skipToNext(undefined as unknown as string);
   }
 
   /**
@@ -294,7 +295,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    await this.sdk.player.skipToPrevious(undefined as any);
+    await this.sdk.player.skipToPrevious(undefined as unknown as string);
   }
 
   /**
@@ -304,7 +305,7 @@ export class SpotifyClient {
     await this.ensureValidToken();
     if (!this.sdk) throw new Error('Not authenticated');
 
-    return await this.sdk.search(query, types, undefined, limit as any);
+    return await this.sdk.search(query, types, undefined, limit as MaxInt<50>);
   }
 
   /**
@@ -320,6 +321,10 @@ export class SpotifyClient {
   /**
    * Check if user is authenticated
    */
+  getAccessToken(): string | null {
+    return this.accessToken;
+  }
+
   isAuthenticated(): boolean {
     return this.accessToken !== null && this.sdk !== null;
   }

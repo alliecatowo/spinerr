@@ -13,14 +13,21 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+/**
+ * True when the NEXT_PUBLIC_FIREBASE_* values were provided at build time.
+ * Without them the app still works (local playback, localStorage library);
+ * only sign-in and cross-device sync are unavailable.
+ */
+export const isFirebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
+
 // Initialize Firebase (singleton pattern)
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
 
 export function initializeFirebase() {
-  if (typeof window === 'undefined') {
-    // Don't initialize on server
+  if (typeof window === 'undefined' || !isFirebaseConfigured) {
+    // Don't initialize on the server, or when no config was provided
     return { app: null, auth: null, db: null };
   }
 
@@ -31,36 +38,26 @@ export function initializeFirebase() {
 
     // Connect to emulators in development
     if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === 'true') {
-      console.log('[Firebase] Connecting to emulators...');
       connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
       connectFirestoreEmulator(db, 'localhost', 8080);
-      console.log('[Firebase] Connected to emulators');
     }
-
-    console.log('[Firebase] Initialized with project:', firebaseConfig.projectId);
   }
 
   return { app, auth, db };
 }
 
-// Export getters for easy access
-export function getFirebaseApp(): FirebaseApp {
-  if (!app && typeof window !== 'undefined') {
-    initializeFirebase();
-  }
+// Getters return null when Firebase is not configured
+export function getFirebaseApp(): FirebaseApp | null {
+  if (!app) initializeFirebase();
   return app;
 }
 
-export function getFirebaseAuth(): Auth {
-  if (!auth && typeof window !== 'undefined') {
-    initializeFirebase();
-  }
+export function getFirebaseAuth(): Auth | null {
+  if (!auth) initializeFirebase();
   return auth;
 }
 
-export function getFirebaseDb(): Firestore {
-  if (!db && typeof window !== 'undefined') {
-    initializeFirebase();
-  }
+export function getFirebaseDb(): Firestore | null {
+  if (!db) initializeFirebase();
   return db;
 }

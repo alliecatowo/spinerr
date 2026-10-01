@@ -2,8 +2,10 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { User } from 'firebase/auth';
-import { initializeFirebase } from '@/lib/firebase';
+import { initializeFirebase, isFirebaseConfigured } from '@/lib/firebase';
 import { signInAnonymous, onAuthChange, createAccount, signIn, signInWithGoogle, signOut } from '@/lib/auth';
+import { loadTourStateFromFirebase, syncTourStateToFirebase } from '@/lib/tour-firebase';
+import { useTourStore } from '@/lib/store';
 
 interface AuthContextType {
   user: User | null;
@@ -20,10 +22,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Without Firebase config there is nothing to wait for: run local-only
+  const [loading, setLoading] = useState(isFirebaseConfigured);
 
   useEffect(() => {
+    if (!isFirebaseConfigured) {
+      console.info('[AuthProvider] Firebase not configured; running in local-only mode');
+      return;
+    }
+
     // Initialize Firebase
     initializeFirebase();
 
@@ -38,25 +45,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(firebaseUser);
       setLoading(false);
 
+      // Load tour state from Firebase for this user
+      if (firebaseUser) {
+        const tourState = await loadTourStateFromFirebase(firebaseUser);
+        if (tourState) {
+          // Update Zustand store with Firebase state
+          const { hasSeenOnboarding, hasSeenLibraryTour, hasSeenPlayerTour, hasSeenSettingsTour } = tourState;
+          // Batch update to prevent multiple re-renders
+          useTourStore.setState({
+            hasSeenOnboarding,
+            hasSeenLibraryTour,
+            hasSeenPlayerTour,
+            hasSeenSettingsTour,
+          });
+          console.log('[AuthProvider] Loaded tour state from Firebase');
+        }
+      }
+
       // If no user, auto-sign in anonymously for seamless experience
       if (!firebaseUser) {
         console.log('[AuthProvider] No user detected, signing in anonymously...');
         try {
           await signInAnonymous();
-          setError(null); // Clear any previous errors
-        } catch (error: any) {
-          console.error('[AuthProvider] Anonymous sign-in failed:', error);
-
-          // Handle configuration not found error
-          if (error?.code === 'auth/configuration-not-found') {
-            const msg = 'Firebase Authentication not enabled. Running in localStorage-only mode. See FIREBASE_SETUP.md';
-            console.warn('[AuthProvider]', msg);
-            setError(msg);
-            setLoading(false);
-            // Don't block the app - it will work with localStorage only
-          } else {
-            setError(error?.message || 'Authentication error');
-          }
+        } catch (error: unknown) {
+          // Don't block the app: it works with localStorage only
+          const code = (error as { code?: string } | null)?.code;
+          console.warn('[AuthProvider] Anonymous sign-in unavailable, running in local-only mode:', code ?? error);
         }
       }
     });
