@@ -11,3 +11,6 @@ firebase-debug.log
 # build output
 dist/
 .firebase/
+
+# local tool config
+.mcp.json
