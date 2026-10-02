@@ -31,7 +31,7 @@
 - Animated tone arm with spring physics
 - Full playback controls (play/pause, skip, volume)
 - Progress tracking and seeking
-- Mock music library (ready for Spotify/local files integration)
+- Music via SoundCloud search (a mock library is also included for development)
 
 ### 📅 Calendar Integration
 - Clean month view with event indicators
@@ -49,7 +49,7 @@
 
 ### 🎮 Interactive Features
 - Touch and mouse interactions on vinyl
-- Keyboard shortcuts (coming soon)
+- Keyboard shortcuts
 - View mode toggle (music only, both, calendar only)
 - Smooth page transitions
 - Accessibility-first design
@@ -95,7 +95,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/spinerr.git
+git clone https://github.com/alliecatowo/spinerr.git
 cd spinerr
 
 # Install mise if not already installed
