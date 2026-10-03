@@ -10,12 +10,8 @@ export const onboardingSteps: Step[] = [
       </div>
     ),
     placement: 'center',
-    disableBeacon: true,
-    styles: {
-      options: {
-        width: 400,
-      },
-    },
+    skipBeacon: true,
+    width: 400,
   },
   {
     target: '[data-tour="vinyl-disc"]',
@@ -26,7 +22,7 @@ export const onboardingSteps: Step[] = [
       </div>
     ),
     placement: 'right',
-    spotlightClicks: true,
+    blockTargetInteraction: false,
   },
   {
     target: '[data-tour="player-controls"]',
