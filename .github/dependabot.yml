@@ -23,3 +23,12 @@ updates:
       update-types:
       - minor
       - patch
+  ignore:
+  # Blocked upstream: eslint-plugin-react (pulled in by eslint-config-next)
+  # crashes on ESLint 10 (jsx-eslint/eslint-plugin-react#3977). Remove once released.
+  - dependency-name: eslint
+    update-types: ["version-update:semver-major"]
+  # Blocked upstream: typescript-eslint supports TypeScript <6.1 only
+  # (typescript-eslint/typescript-eslint#10940). Remove once TS 7 is supported.
+  - dependency-name: typescript
+    update-types: ["version-update:semver-major"]
