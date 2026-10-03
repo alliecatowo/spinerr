@@ -4,10 +4,10 @@ import dynamic from 'next/dynamic';
 import { createContext, useContext, useCallback, type ReactNode } from 'react';
 import { useTourStore } from '@/lib/store';
 import { getTourById } from '@/lib/tours/tour-config';
-import type { CallBackProps, Step } from 'react-joyride';
+import type { EventData, Step } from 'react-joyride';
 
 // Dynamic import to avoid SSR issues
-const JoyrideNoSSR = dynamic(() => import('react-joyride'), { ssr: false });
+const JoyrideNoSSR = dynamic(() => import('react-joyride').then((m) => m.Joyride), { ssr: false });
 
 interface TourContextType {
   startTour: (tourId: string) => void;
@@ -32,7 +32,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const tourConfig = activeTour ? getTourById(activeTour) : null;
   const steps: Step[] = tourConfig?.steps || [];
 
-  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
+  const handleJoyrideCallback = useCallback((data: EventData) => {
     const { status, index, type, action, lifecycle } = data;
 
     console.log('[TourContext] Joyride callback:', { status, type, action, lifecycle, index, activeTour, totalSteps: steps.length });
@@ -66,21 +66,23 @@ export function TourProvider({ children }: { children: ReactNode }) {
         steps={steps}
         run={runTour}
         stepIndex={tourStepIndex}
-        callback={handleJoyrideCallback}
+        onEvent={handleJoyrideCallback}
         continuous
-        showProgress
-        showSkipButton
-        disableScrolling={false}
-        disableOverlayClose={false}
-        spotlightClicks={true}
+        locale={{ nextWithProgress: 'Next ({current} of {total})' }}
+        options={{
+          buttons: ['back', 'close', 'primary', 'skip'],
+          showProgress: true,
+          skipScroll: false,
+          overlayClickAction: 'close',
+          blockTargetInteraction: false,
+          primaryColor: '#8b5cf6', // Purple to match app theme
+          zIndex: 10000,
+          textColor: '#1f2937',
+          arrowColor: '#fff',
+          overlayColor: 'rgba(0, 0, 0, 0.4)', // Lighter overlay
+          spotlightRadius: 8,
+        }}
         styles={{
-          options: {
-            primaryColor: '#8b5cf6', // Purple to match app theme
-            zIndex: 10000,
-            textColor: '#1f2937',
-            arrowColor: '#fff',
-            overlayColor: 'rgba(0, 0, 0, 0.4)', // Lighter overlay
-          },
           tooltip: {
             borderRadius: 12,
             padding: 20,
@@ -91,7 +93,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
           tooltipContent: {
             padding: '8px 0',
           },
-          buttonNext: {
+          buttonPrimary: {
             borderRadius: 8,
             padding: '8px 16px',
             fontSize: 14,
@@ -103,10 +105,6 @@ export function TourProvider({ children }: { children: ReactNode }) {
           },
           buttonSkip: {
             color: '#9ca3af',
-          },
-          spotlight: {
-            borderRadius: 8,
-            backgroundColor: 'transparent', // Make spotlight transparent so content shows through
           },
           overlay: {
             mixBlendMode: 'normal',

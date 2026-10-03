@@ -10,7 +10,7 @@ export const librarySteps: Step[] = [
       </div>
     ),
     placement: 'bottom',
-    disableBeacon: true,
+    skipBeacon: true,
   },
   {
     target: '[data-tour="grid-size"]',
