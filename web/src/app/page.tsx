@@ -15,13 +15,8 @@ export default function Home() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const progress = usePlayerStore((state) => state.progress);
-  const volume = usePlayerStore((state) => state.volume);
   const play = usePlayerStore((state) => state.play);
   const pause = usePlayerStore((state) => state.pause);
-  const nextTrack = usePlayerStore((state) => state.nextTrack);
-  const prevTrack = usePlayerStore((state) => state.prevTrack);
-  const updateProgress = usePlayerStore((state) => state.updateProgress);
-  const setVolume = usePlayerStore((state) => state.setVolume);
   const loadAlbum = usePlayerStore((state) => state.loadAlbum);
 
   // Library store
@@ -29,9 +24,6 @@ export default function Home() {
   const recentlyPlayed = useLibraryStore((state) => state.recentlyPlayed);
 
   // Calendar store
-  const selectedDate = useCalendarStore((state) => state.selectedDate);
-  const events = useCalendarStore((state) => state.events);
-  const selectDate = useCalendarStore((state) => state.selectDate);
   const setEvents = useCalendarStore((state) => state.setEvents);
 
   // Custom hooks for player functionality
@@ -66,17 +58,6 @@ export default function Home() {
       console.warn('[Home] No albums found in library to auto-load');
     }
   }, [recentlyPlayed, albums, currentTrack]); // Re-run when store rehydrates
-
-  // Seek handler for PlayerControls
-  const handleSeek = (newProgress: number) => {
-    updateProgress(newProgress);
-    // Also seek the audio player
-    if (typeof window !== 'undefined') {
-      import('@/lib/audio-player').then(({ getAudioPlayer }) => {
-        getAudioPlayer().seek(newProgress);
-      });
-    }
-  };
 
   // If no track loaded yet, show empty state
   if (!currentTrack) {

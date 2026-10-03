@@ -81,33 +81,6 @@ export class SoundCloudClient {
   }
 
   /**
-   * Get track by URL or ID
-   * Note: This would require a separate API route - not implemented yet
-   */
-  async getTrack(urlOrId: string | number): Promise<SoundCloudTrack | null> {
-    console.warn('getTrack not yet implemented - requires API route');
-    return null;
-  }
-
-  /**
-   * Get stream URL for track
-   * Note: This would require a separate API route - not implemented yet
-   */
-  async getStreamUrl(trackId: number): Promise<string | null> {
-    console.warn('getStreamUrl not yet implemented - requires API route');
-    return null;
-  }
-
-  /**
-   * Get user's liked tracks (requires authentication)
-   * Note: This would require a separate API route - not implemented yet
-   */
-  async getLikedTracks(limit = 50): Promise<SoundCloudTrack[]> {
-    console.warn('getLikedTracks not yet implemented - requires API route');
-    return [];
-  }
-
-  /**
    * Get user's playlists (requires authentication)
    * Note: This would require a separate API route - not implemented yet
    */

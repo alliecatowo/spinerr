@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSoundCloudServerClient, SoundCloudSearchOptions } from '@/lib/soundcloud-server';
+import { clampLimit } from '@/lib/clamp-limit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
     // Build search options
     const options: SoundCloudSearchOptions = {
       query,
-      limit: parseInt(searchParams.get('limit') || '25'),
+      limit: clampLimit(searchParams.get('limit'), 25),
     };
 
     // Add optional filters
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
     console.error('SoundCloud search proxy error:', error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'Internal server error',
+        error: 'Internal server error',
         tracks: [],
         count: 0,
       },

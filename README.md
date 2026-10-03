@@ -1,144 +1,28 @@
-# 🎵 Spinerr
+# Spinerr
 
-<div align="center">
+An ambient music player for a second screen. A generative vinyl record spins with the album you are playing, drawn in real time with p5.js from the audio itself, next to a clock and your upcoming events.
 
-![Next.js](https://img.shields.io/badge/Next.js-16.0.1-black?style=for-the-badge&logo=next.js&logoColor=white)
-![React](https://img.shields.io/badge/React-19.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.x-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Framer Motion](https://img.shields.io/badge/Framer_Motion-12.23-FF0055?style=for-the-badge&logo=framer&logoColor=white)
-![pnpm](https://img.shields.io/badge/pnpm-10.18-F69220?style=for-the-badge&logo=pnpm&logoColor=white)
+Live: [spinerr-app.web.app](https://spinerr-app.web.app)
 
-**An ambient dashboard music visualizer with stunning generative vinyl disc art**
+![Spinerr with a record loaded: generative vinyl, tone arm, now playing and the clock](docs/screenshot.png)
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Architecture](#-architecture) • [Development](#-development)
+- **Generative vinyl.** Groove rings are displaced by seeded Perlin noise per album and by live FFT bands (bass moves amplitude, mids shift colour, highs shimmer). The tone arm follows playback and you can seek by dragging the grooves. The idea is written up in [docs/SONIC_GROOVES_PHILOSOPHY.md](docs/SONIC_GROOVES_PHILOSOPHY.md).
+- **Plays your files.** Pick audio files from your computer and they play locally, with ID3 tags and artwork read in the browser. No account or key needed.
+- **SoundCloud search** in the server build (the static build has no server, so it is switched off there). Spotify is optional: each user supplies their own client ID in Settings.
+- **Dashboard around it.** Clock, upcoming events (sample data for now) and a guided tour. Light and dark themes, a layout that collapses on small screens, theater and fullscreen modes.
 
-</div>
+## Run it
 
----
-
-## ✨ Features
-
-### 🎨 Generative Vinyl Visualization
-- **Algorithmic art** using p5.js with "Sonic Grooves" aesthetic
-- **Unique patterns** per album using seeded Perlin noise
-- **Interactive seeking** via touch/mouse on vinyl grooves
-- **Realistic animations** with physics-based tone arm movement
-- **60fps smooth rotation** with performance optimization
-
-### 🎵 Music Player
-- Beautiful vinyl record player interface
-- Animated tone arm with spring physics
-- Full playback controls (play/pause, skip, volume)
-- Progress tracking and seeking
-- Music via SoundCloud search (a mock library is also included for development)
-
-### 📅 Calendar Integration
-- Clean month view with event indicators
-- Upcoming events list
-- Multiple event types (meetings, appointments, birthdays, reminders)
-- Date selection and filtering
-- Mock Google Calendar data (ready for real API integration)
-
-### 🎭 Responsive Design
-- **Desktop**: 60/40 split layout (music | calendar)
-- **Tablet**: Stacked responsive layout
-- **Mobile**: Swipeable views with toggle
-- Glass-morphism UI with dark mode
-- Smooth Framer Motion animations
-
-### 🎮 Interactive Features
-- Touch and mouse interactions on vinyl
-- Keyboard shortcuts
-- View mode toggle (music only, both, calendar only)
-- Smooth page transitions
-- Accessibility-first design
-
----
-
-## 🛠️ Tech Stack
-
-### Core Framework
-- **[Next.js 16](https://nextjs.org/)** - React framework with App Router
-- **[React 19](https://react.dev/)** - Latest React with server components
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe development
-
-### Styling & UI
-- **[Tailwind CSS v4](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[shadcn/ui](https://ui.shadcn.com/)** - Radix UI-based component library
-- **[Framer Motion](https://www.framer.com/motion/)** - Production-ready animations
-
-### State & Data
-- **[Zustand](https://zustand-demo.pmnd.rs/)** - Lightweight state management
-- **[date-fns](https://date-fns.org/)** - Modern date utilities
-
-### Visualization
-- **[p5.js](https://p5js.org/)** - Creative coding and generative art
-- **[Lucide Icons](https://lucide.dev/)** - Beautiful icon library
-
-### Tooling
-- **[mise](https://mise.jdx.dev/)** - Development environment management
-- **[pnpm](https://pnpm.io/)** - Fast, disk space efficient package manager
-- **[ESLint 9](https://eslint.org/)** - Code linting and formatting
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Node.js 20+** (managed via mise)
-- **pnpm 10+**
-- **mise** for tooling management
-
-### Installation
+You need [mise](https://mise.jdx.dev) (it installs Node and pnpm) or Node 24 and pnpm 12.
 
 ```bash
-# Clone the repository
-git clone https://github.com/alliecatowo/spinerr.git
-cd spinerr
-
-# Install mise if not already installed
-curl https://mise.run | sh
-
-# Install project dependencies
+git clone https://github.com/alliecatowo/spinerr && cd spinerr
 mise install
-
-# Navigate to web directory
-cd web
-
-# Install Node.js packages
-pnpm install
+cd web && pnpm install
+pnpm dev            # http://localhost:3000
 ```
 
-### Development
-
-```bash
-# Start the development server
-pnpm dev
-
-# Open http://localhost:3000 in your browser
-```
-
-### Build
-
-```bash
-# Server build (includes the SoundCloud proxy routes)
-pnpm build
-pnpm start
-
-# Static export for Firebase Hosting (writes web/out)
-pnpm build:static
-```
-
-The static build has no server, so SoundCloud search is switched off there
-(SoundCloud's API doesn't allow browser requests). Playing files from your
-computer works in both builds and needs no keys.
-
-### Configuration
-
-Copy the Firebase web config into `web/.env.local` (never committed) to enable
-sign-in and cross-device tour state. Without it the app runs in local-only mode.
+Sign-in and cross-device tour state use Firebase. Without a config the app runs in local-only mode. To enable it, put the web config in `web/.env.local` (never committed; `firebase apps:sdkconfig WEB --project spinerr-app` prints it):
 
 ```bash
 NEXT_PUBLIC_FIREBASE_API_KEY=...
@@ -149,215 +33,37 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=...
 NEXT_PUBLIC_FIREBASE_APP_ID=...
 ```
 
-`firebase apps:sdkconfig WEB --project spinerr-app` prints these values. Spotify
-is optional: each user enters their own Spotify client ID in Settings.
+## Develop
 
-### Deploy
+```bash
+cd web
+pnpm lint         # ESLint (next/core-web-vitals + typescript)
+pnpm typecheck
+pnpm test         # Vitest
+pnpm build        # server build, includes the SoundCloud proxy routes
+pnpm build:static # static export to web/out for Firebase Hosting
+```
+
+CI runs all of the above on every push and pull request. Dependabot keeps `web/` and the workflows current and auto-merges patch and minor updates once CI is green.
+
+## Deploy
+
+Hosting is Firebase, from the static export. `NEXT_PUBLIC_*` values are baked in at build time, so deploy from a checkout that has `web/.env.local`:
 
 ```bash
 cd web && pnpm build:static && cd ..
 pnpm dlx firebase-tools deploy --only hosting,firestore:rules --project spinerr-app
 ```
 
-The `NEXT_PUBLIC_*` values are baked in at build time, so deploy from a
-checkout that has `web/.env.local`.
+## Layout
 
-### Linting
+| Path | What |
+| --- | --- |
+| `web/src/app` | Next.js App Router pages and the SoundCloud proxy routes (`app/api/soundcloud`) |
+| `web/src/components` | `music/` (vinyl, tone arm, controls), `calendar/`, `library/`, `settings/`, `layout/`, shadcn `ui/` |
+| `web/src/lib` | Zustand stores, the p5 vinyl sketch, audio player and analyzer, providers (local, SoundCloud, Spotify) |
+| `firestore.rules`, `firebase.json` | Firebase Hosting and security rules |
 
-```bash
-# Run ESLint
-pnpm lint
-```
+## License
 
----
-
-## 🏗️ Architecture
-
-### Project Structure
-
-```
-spinerr/
-├── web/                          # Next.js application
-│   ├── src/
-│   │   ├── app/                  # Next.js App Router
-│   │   │   ├── layout.tsx        # Root layout
-│   │   │   ├── page.tsx          # Main dashboard page
-│   │   │   └── globals.css       # Global styles + Tailwind
-│   │   ├── components/
-│   │   │   ├── ui/               # shadcn/ui components
-│   │   │   ├── music/            # Music player components
-│   │   │   │   ├── VinylDisc.tsx
-│   │   │   │   ├── ToneArm.tsx
-│   │   │   │   ├── PlayerControls.tsx
-│   │   │   │   └── NowPlaying.tsx
-│   │   │   ├── calendar/         # Calendar components
-│   │   │   │   ├── Calendar.tsx
-│   │   │   │   ├── UpcomingEvents.tsx
-│   │   │   │   └── EventCard.tsx
-│   │   │   └── layout/           # Layout components
-│   │   │       ├── Dashboard.tsx
-│   │   │       └── ViewToggle.tsx
-│   │   ├── lib/
-│   │   │   ├── store.ts          # Zustand state management
-│   │   │   ├── mock-data.ts      # Mock albums & events
-│   │   │   ├── vinyl-sketch.ts   # p5.js visualization
-│   │   │   └── utils.ts          # Utility functions
-│   │   └── hooks/                # Custom React hooks
-│   ├── public/                   # Static assets
-│   ├── package.json
-│   └── next.config.ts
-├── .mise.toml                    # Tool versions
-└── README.md
-```
-
-### Component Hierarchy
-
-```
-Dashboard (layout/Dashboard.tsx)
-├── ViewToggle (layout/ViewToggle.tsx)
-├── Music Section
-│   ├── VinylDisc (music/VinylDisc.tsx)
-│   │   └── p5.js Canvas (lib/vinyl-sketch.ts)
-│   ├── ToneArm (music/ToneArm.tsx)
-│   ├── NowPlaying (music/NowPlaying.tsx)
-│   └── PlayerControls (music/PlayerControls.tsx)
-└── Calendar Section
-    ├── Calendar (calendar/Calendar.tsx)
-    └── UpcomingEvents (calendar/UpcomingEvents.tsx)
-        └── EventCard[] (calendar/EventCard.tsx)
-```
-
-### State Management
-
-**Zustand Stores** (`lib/store.ts`):
-
-```typescript
-// Player Store
-usePlayerStore()
-  - currentTrack: Track | null
-  - isPlaying: boolean
-  - progress: number (0-1)
-  - volume: number (0-1)
-  - playlist: Track[]
-  - Actions: play(), pause(), setTrack(), nextTrack(), prevTrack()
-
-// Calendar Store
-useCalendarStore()
-  - selectedDate: Date
-  - events: CalendarEvent[]
-  - viewMode: 'music' | 'calendar' | 'both'
-  - Actions: selectDate(), setViewMode(), addEvent()
-```
-
----
-
-## 🎨 Design Philosophy
-
-### Generative Art - "Sonic Grooves"
-
-The vinyl visualization embodies computational beauty through:
-
-- **Seeded Randomness**: Each album generates unique, reproducible patterns
-- **Perlin Noise**: Organic groove displacement mimicking vinyl imperfections
-- **Layered Transparency**: Triple-layer shimmer creating optical depth
-- **Mathematical Harmony**: Trigonometric functions producing emergent patterns
-- **Temporal Evolution**: Living, breathing grooves that evolve over time
-
-### UI/UX Principles
-
-- **Glass-morphism**: Subtle backdrop blur with gradient overlays
-- **Ambient Aesthetic**: Low-opacity borders and muted colors
-- **Smooth Animations**: Spring physics and natural easing
-- **Responsive First**: Mobile to desktop, touch to mouse
-- **Accessible**: ARIA labels, keyboard navigation, screen reader support
-
----
-
-## 🔮 Roadmap
-
-### Phase 1: Core Architecture ✅
-- [x] Project setup with Next.js 16 + React 19
-- [x] Tailwind CSS v4 + shadcn/ui integration
-- [x] Component architecture (music, calendar, layout)
-- [x] Zustand state management
-- [x] p5.js generative vinyl visualization
-- [x] Mock data (albums, events)
-
-### Phase 2: Integration & Polish 🚧
-- [ ] Wire Dashboard to main page
-- [ ] Implement playback state synchronization
-- [ ] Add keyboard shortcuts
-- [ ] Touch gesture support (swipe, pinch)
-- [ ] Accessibility improvements
-- [ ] Performance optimization
-
-### Phase 3: Real Data Integration 🔜
-- [ ] Spotify Web API integration
-- [ ] Google Calendar API integration
-- [ ] Local file support
-- [ ] Playlist management
-- [ ] Event creation/editing
-
-### Phase 4: Advanced Features 💡
-- [ ] Audio visualization (waveform, frequency bars)
-- [ ] Vinyl collection browsing
-- [ ] Custom vinyl disc designs
-- [ ] Social sharing
-- [ ] PWA support (offline mode)
-- [ ] Multi-room audio sync
-
----
-
-## 🧑‍💻 Development
-
-### Code Style
-
-This project follows:
-- **TypeScript strict mode** for type safety
-- **ESLint** with Next.js config for linting
-- **Prettier** for code formatting (via ESLint)
-- **Component-driven architecture** with single responsibility
-
-### Best Practices
-
-- Use `"use client"` directive for client components
-- Import from `@/` path alias (e.g., `@/lib/store`)
-- Keep components small and focused
-- Use Zustand for global state, React state for local
-- Leverage shadcn/ui components for consistency
-- Framer Motion for all animations
-- TypeScript types over `any`
-
-### Performance
-
-- **Dynamic imports** for p5.js (avoid SSR issues)
-- **Conditional rendering** for performance-heavy components
-- **Debounced updates** for seek interactions
-- **Memoization** for expensive calculations
-- **Lazy loading** for off-screen content
-
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details
-
----
-
-## 🙏 Acknowledgments
-
-- **Next.js Team** for the amazing framework
-- **shadcn** for the beautiful component library
-- **Framer** for Framer Motion
-- **p5.js Community** for creative coding inspiration
-- **Radix UI** for accessible primitives
-
----
-
-<div align="center">
-
-**Built with ❤️ using Next.js, React, and p5.js**
-
-*Spinerr - Where music meets generative art*
-
-</div>
+[MIT](LICENSE)

@@ -5,7 +5,6 @@ import { motion } from "framer-motion"
 import { format } from "date-fns"
 import {
   Calendar,
-  Clock,
   Users,
   Gift,
   Bell,

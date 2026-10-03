@@ -17,7 +17,6 @@ interface UpcomingEventsProps {
 
 export function UpcomingEvents({
   events = [],
-  selectedDate,
   maxEvents = 7,
   className,
 }: UpcomingEventsProps) {
@@ -52,9 +51,6 @@ export function UpcomingEvents({
     }))
   }, [upcomingEvents])
 
-  // Highlight selected date events
-  const highlightDate = selectedDate ? format(selectedDate, "yyyy-MM-dd") : null
-
   return (
     <div
       className={cn(
@@ -74,7 +70,6 @@ export function UpcomingEvents({
             <>
               {groupedEvents.map((group) => {
                 const dateKey = format(group.date, "yyyy-MM-dd")
-                const isHighlighted = dateKey === highlightDate
 
                 return (
                   <motion.div

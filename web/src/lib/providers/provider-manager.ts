@@ -3,7 +3,7 @@
  * Handles multiple music providers with smart prioritization
  */
 
-import type { Album, ProviderId, SearchResults, SearchOptions } from './types';
+import type { Album, ProviderId } from './types';
 import { createSpotifyClient, SpotifyClient } from '../spotify-api';
 import { SoundCloudClient } from '../soundcloud-api';
 import type { SoundCloudPlaylist } from '../soundcloud-server';

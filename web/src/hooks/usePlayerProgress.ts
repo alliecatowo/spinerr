@@ -12,7 +12,7 @@ import { usePlayerStore } from '@/lib/store';
  * @returns current progress (0-1)
  */
 export function usePlayerProgress(): number {
-  const { progress, currentTrack } = usePlayerStore();
+  const { progress } = usePlayerStore();
 
   useEffect(() => {
     // Initialize audio player on mount (client-side only)

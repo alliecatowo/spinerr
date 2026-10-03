@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 
 export function CalendarSettings() {
-  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleConnected] = useState(false);
   const [icalFile, setIcalFile] = useState<File | null>(null);
 
   const handleGoogleConnect = () => {

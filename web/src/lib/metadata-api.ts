@@ -13,7 +13,6 @@ interface MusicBrainzApiRecording {
 
 const MUSICBRAINZ_API = 'https://musicbrainz.org/ws/2';
 const COVERART_API = 'https://coverartarchive.org';
-const LASTFM_API = 'https://ws.audioscrobbler.com/2.0';
 
 // User agent is required by MusicBrainz API
 const USER_AGENT = 'Spinerr/1.0.0 (https://github.com/spinerr/app)';

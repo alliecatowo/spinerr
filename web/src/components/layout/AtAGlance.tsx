@@ -11,14 +11,10 @@ function getEventDateLabel(date: Date): string {
   return format(date, "MMM d");
 }
 
-interface AtAGlanceProps {
-  onSeek?: (progress: number) => void;
-}
-
 /**
  * At A Glance - Minimal display with integrated controls
  */
-export function AtAGlance({ onSeek }: AtAGlanceProps) {
+export function AtAGlance() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const progress = usePlayerStore((state) => state.progress);

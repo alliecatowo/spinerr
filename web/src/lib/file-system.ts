@@ -149,7 +149,7 @@ async function scanDirectory(dirHandle: PickerDirectoryHandle, audioFiles: File[
  * Extract metadata from audio file using ID3 tags
  */
 export async function extractMetadata(file: File): Promise<AudioFileMetadata> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     jsmediatags.read(file, {
       onSuccess: (tag: MediaTags) => {
         const tags = tag.tags;
