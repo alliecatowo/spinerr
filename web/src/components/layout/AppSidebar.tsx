@@ -14,12 +14,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLibraryStore, usePlayerStore, useViewModeStore } from "@/lib/store";
 import { AlbumSearchModal } from "@/components/library/AlbumSearchModal";
 import type { Album } from "@/lib/providers/types";
-import { cn } from "@/lib/utils";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { AccountButton } from "@/components/auth/AccountButton";
 import { ThemeToggle } from "./ThemeToggle";
@@ -36,7 +34,7 @@ export function AppSidebar() {
   const addAlbum = useLibraryStore((state) => state.addAlbum);
   const addToRecentlyPlayed = useLibraryStore((state) => state.addToRecentlyPlayed);
 
-  const { toggleTheaterMode, isTheaterMode, toggleInfo } = useViewModeStore();
+  const { toggleTheaterMode, toggleInfo } = useViewModeStore();
   const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   const handleFullscreenToggle = async () => {

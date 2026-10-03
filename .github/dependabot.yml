@@ -13,9 +13,7 @@ updates:
       - minor
       - patch
 - package-ecosystem: npm
-  directories:
-  - /
-  - /web
+  directory: /web
   schedule:
     interval: weekly
   groups:

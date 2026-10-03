@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     console.error('SoundCloud stream URL error:', error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'Failed to fetch stream URL',
+        error: 'Failed to fetch stream URL',
         success: false,
       },
       { status: 500 }

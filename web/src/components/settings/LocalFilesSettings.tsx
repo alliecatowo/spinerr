@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   supportsFileSystemAccess,
-  pickAudioFiles,
   pickAudioDirectory,
   extractMetadataFromFiles,
   AudioFileMetadata,

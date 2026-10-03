@@ -337,7 +337,7 @@ const MAX_PLAYLIST_TRACKS = 100;
 
 export const useLibraryStore = create<LibraryState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       // Initial state
       albums: [],
       playlists: [],

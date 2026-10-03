@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { User } from 'firebase/auth';
 import { initializeFirebase, isFirebaseConfigured } from '@/lib/firebase';
 import { signInAnonymous, onAuthChange, createAccount, signIn, signInWithGoogle, signOut } from '@/lib/auth';
-import { loadTourStateFromFirebase, syncTourStateToFirebase } from '@/lib/tour-firebase';
+import { loadTourStateFromFirebase } from '@/lib/tour-firebase';
 import { useTourStore } from '@/lib/store';
 
 interface AuthContextType {

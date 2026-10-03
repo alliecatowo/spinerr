@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     rules: {
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/immutability": "warn",
+      // The static export (Firebase Hosting) runs with unoptimized images and
+      // artwork comes from arbitrary remote hosts, so next/image adds nothing.
+      "@next/next/no-img-element": "off",
     },
   },
   // Override default ignores of eslint-config-next.

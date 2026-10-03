@@ -1,2 +1,7 @@
 overrides:
   "@grpc/grpc-js@<1.13.6": "^1.13.6"
+# None of these need their install scripts (postinstall telemetry / optional native builds).
+allowBuilds:
+  "@firebase/util": false
+  protobufjs: false
+  unrs-resolver: false
