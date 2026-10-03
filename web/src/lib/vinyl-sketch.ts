@@ -407,17 +407,17 @@ export function createVinylSketch(
       if (artworkImage) {
         p.push();
         // Clip to circle
-        p.drawingContext.save();
-        p.drawingContext.beginPath();
-        p.drawingContext.arc(0, 0, centerRadius, 0, Math.PI * 2);
-        p.drawingContext.clip();
+        (p.drawingContext as CanvasRenderingContext2D).save();
+        (p.drawingContext as CanvasRenderingContext2D).beginPath();
+        (p.drawingContext as CanvasRenderingContext2D).arc(0, 0, centerRadius, 0, Math.PI * 2);
+        (p.drawingContext as CanvasRenderingContext2D).clip();
 
         // Draw image centered and scaled
         const imgSize = centerRadius * 2;
         p.imageMode(p.CENTER);
         p.image(artworkImage, 0, 0, imgSize, imgSize);
 
-        p.drawingContext.restore();
+        (p.drawingContext as CanvasRenderingContext2D).restore();
         p.pop();
       }
 
@@ -431,17 +431,17 @@ export function createVinylSketch(
       p.noStroke();
 
       // Top-left highlight
-      const highlightGradient = p.drawingContext.createRadialGradient(
+      const highlightGradient = (p.drawingContext as CanvasRenderingContext2D).createRadialGradient(
         -vinylRadius * 0.3, -vinylRadius * 0.3, 0,
         -vinylRadius * 0.3, -vinylRadius * 0.3, vinylRadius * 0.8
       );
       highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
       highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
-      p.drawingContext.fillStyle = highlightGradient;
-      p.drawingContext.beginPath();
-      p.drawingContext.arc(0, 0, vinylRadius, 0, Math.PI * 2);
-      p.drawingContext.fill();
+      (p.drawingContext as CanvasRenderingContext2D).fillStyle = highlightGradient;
+      (p.drawingContext as CanvasRenderingContext2D).beginPath();
+      (p.drawingContext as CanvasRenderingContext2D).arc(0, 0, vinylRadius, 0, Math.PI * 2);
+      (p.drawingContext as CanvasRenderingContext2D).fill();
     };
 
     p.windowResized = () => {
@@ -504,7 +504,7 @@ export function createVinylSketch(
 
   // Create p5 instance
   // Note: Assumes p5 is available globally or imported
-  const P5 = typeof window !== 'undefined' ? (window as Window & { p5?: new (sketch: (p: p5) => void) => p5 }).p5 : undefined;
+  const P5 = typeof window !== 'undefined' ? (window as unknown as { p5?: new (sketch: (p: p5) => void) => p5 }).p5 : undefined;
   if (P5) {
     console.log("[vinyl-sketch] Creating p5 instance with P5 constructor:", P5);
     p5Instance = new P5(sketch);

@@ -50,9 +50,6 @@ importers:
       '@spotify/web-api-ts-sdk':
         specifier: ^1.2.0
         version: 1.2.0
-      '@types/p5':
-        specifier: ^1.7.7
-        version: 1.7.7
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -1509,9 +1506,6 @@ packages:
 
   '@types/node@20.19.24':
     resolution: {integrity: sha512-FE5u0ezmi6y9OZEzlJfg37mqqf6ZDSF2V/NLjUyGrR9uTZ7Sb9F7bLNZ03S4XVUNRWGA7Ck4c1kK+YnuWjl+DA==}
-
-  '@types/p5@1.7.7':
-    resolution: {integrity: sha512-WFuP7jqc5CkkMtCK/NphgvMnJz1Qi9CMuK7t6xLu/tuXkRdGQA4q4AD0dUYcChC0Oibe8PE8gbKSFPNF0BqVNw==}
 
   '@types/react-dom@19.3.0':
     resolution: {integrity: sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q==}
@@ -4577,8 +4571,6 @@ snapshots:
   '@types/node@20.19.24':
     dependencies:
       undici-types: 6.21.0
-
-  '@types/p5@1.7.7': {}
 
   '@types/react-dom@19.3.0(@types/react@19.3.0)':
     dependencies:
