@@ -36,5 +36,17 @@
       "port": 4000
     },
     "singleProjectMode": true
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "*.test.js",
+        "firebase-debug.log"
+      ]
+    }
+  ]
 }
