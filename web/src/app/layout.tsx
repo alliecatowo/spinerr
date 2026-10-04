@@ -15,8 +15,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Spinerr | Ambient Music Visualizer",
+  title: "Spinnerr | Ambient Music Visualizer",
   description: "An ambient dashboard music player with stunning generative vinyl disc art",
+  applicationName: "Spinnerr",
+  metadataBase: new URL("https://spinnerr-app.web.app"),
+  openGraph: {
+    title: "Spinnerr | Ambient Music Visualizer",
+    description: "Open it and a record starts spinning. Browse stations, radio and archives.",
+    url: "https://spinnerr-app.web.app",
+    siteName: "Spinnerr",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

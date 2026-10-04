@@ -33,7 +33,7 @@ export async function resolveTrackSource(id: string): Promise<ResolvedSource> {
     return { url, cors: false };
   }
   if (id.startsWith('spotify-') || /^[0-9A-Za-z]{22}$/.test(id)) {
-    throw new Error('Spotify tracks can be browsed but not streamed in Spinerr.');
+    throw new Error('Spotify tracks can be browsed but not streamed in Spinnerr.');
   }
   if (id.startsWith('sc-') || id.startsWith('soundcloud-')) {
     const { resolveSoundCloud } = await import('./soundcloud');

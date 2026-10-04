@@ -5,7 +5,7 @@ export const onboardingSteps: Step[] = [
     target: 'body',
     content: (
       <div>
-        <h2 className="text-xl font-bold mb-2">Welcome to Spinerr 🎵</h2>
+        <h2 className="text-xl font-bold mb-2">Welcome to Spinnerr 🎵</h2>
         <p>A zen music player with beautiful generative vinyl visualizations. Let&apos;s take a quick tour!</p>
       </div>
     ),

@@ -13,7 +13,7 @@ export const tours: Record<string, TourConfig> = {
   onboarding: {
     id: 'onboarding',
     name: 'Welcome Tour',
-    description: 'Get started with Spinerr',
+    description: 'Get started with Spinnerr',
     steps: onboardingSteps,
   },
   library: {

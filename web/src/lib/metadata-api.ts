@@ -15,7 +15,7 @@ const MUSICBRAINZ_API = 'https://musicbrainz.org/ws/2';
 const COVERART_API = 'https://coverartarchive.org';
 
 // User agent is required by MusicBrainz API
-const USER_AGENT = 'Spinerr/1.0.0 (https://github.com/spinerr/app)';
+const USER_AGENT = 'Spinnerr/1.0.0 (https://github.com/alliecatowo/spinnerr)';
 
 export interface MusicBrainzRecording {
   id: string;
