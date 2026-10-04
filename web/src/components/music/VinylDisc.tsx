@@ -29,7 +29,6 @@ export function VinylDisc({
         return;
       }
 
-      console.log("[VinylDisc] Initializing vinyl renderer");
 
       try {
         await vinylRenderer.initialize(
@@ -59,12 +58,6 @@ export function VinylDisc({
       return;
     }
 
-    console.log("[VinylDisc] Updating renderer params:", {
-      trackId: track.id,
-      albumColor: track.coverColor,
-      artworkUrl: track.artworkUrl,
-      isPlaying,
-    });
 
     vinylRenderer.updateParams({
       trackId: track.id,

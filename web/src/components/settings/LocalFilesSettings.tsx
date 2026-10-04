@@ -83,7 +83,6 @@ export function LocalFilesSettings() {
       setIsScanning(false);
 
       // TODO: Update metadata with enriched data and store
-      console.log("Enriched metadata:", enrichedData);
     } catch (err) {
       console.error('Error enriching metadata:', err);
       setIsScanning(false);

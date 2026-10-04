@@ -1,316 +1,234 @@
 /**
- * HTML5 Audio Player Singleton
- * Manages audio playback (local files and SoundCloud streams) with store integration
- * Includes real-time audio analysis
+ * Audio player singleton.
+ *
+ * Two <audio> elements share one set of controls:
+ *  - `cors`  : crossOrigin="anonymous", routed through the Web Audio analyser
+ *              so the vinyl reacts to the real signal (Audius, Internet Archive, local files).
+ *  - `plain` : no CORS, not in the audio graph (internet radio, proxied streams).
+ *              Such a host would otherwise play silence or fail to load, so the
+ *              visualizer uses a synthetic signal for these.
+ *
+ * Failures never dead-end the listener: a track that errors, or stalls before
+ * it can play, silently falls back to an equivalent copy on another source and
+ * then to the next track in the queue.
  */
 
 import { usePlayerStore } from './store';
 import { getAudioAnalyzer } from './audio-analyzer';
-import { getLocalTrackUrl, isLocalTrackId } from './local-files';
-import { SOUNDCLOUD_AVAILABLE, SOUNDCLOUD_UNAVAILABLE_MESSAGE } from './runtime';
+import { resolveTrackSource } from './sources/resolve';
+import { getTrackHint } from './sources/registry';
+
+const STALL_TIMEOUT_MS = 12000;
+const MAX_CONSECUTIVE_FAILURES = 5;
+
+type Kind = 'cors' | 'plain';
 
 export class AudioPlayer {
   private static instance: AudioPlayer | null = null;
-  private audio: HTMLAudioElement | null = null;
+  private elements: Partial<Record<Kind, HTMLAudioElement>> = {};
+  private active: Kind = 'cors';
   private currentTrackId: string | null = null;
   private isInitialized = false;
+  private stallTimer: ReturnType<typeof setTimeout> | null = null;
+  private failures = 0;
+  private triedAlternates = new Set<string>();
 
-  private constructor() {
-    // Private constructor for singleton
-  }
+  private constructor() {}
 
-  /**
-   * Get singleton instance
-   */
   static getInstance(): AudioPlayer {
-    if (!AudioPlayer.instance) {
-      AudioPlayer.instance = new AudioPlayer();
-    }
+    if (!AudioPlayer.instance) AudioPlayer.instance = new AudioPlayer();
     return AudioPlayer.instance;
   }
 
-  /**
-   * Initialize audio player (client-side only)
-   */
-  initialize() {
-    if (this.isInitialized || typeof window === 'undefined') {
-      return;
-    }
-
-    this.audio = new Audio();
-    this.audio.preload = 'auto';
-
-    // CRITICAL: Enable CORS for Web Audio API to work with cross-origin streams
-    // Without this, createMediaElementSource will output silence
-    this.audio.crossOrigin = 'anonymous';
-    console.log('[AudioPlayer] Set crossOrigin=anonymous for Web Audio API');
-
-    // Set initial volume from store
-    const volume = usePlayerStore.getState().volume;
-    this.audio.volume = volume;
-
-    // Connect audio analyzer for real-time visualization
-    console.log('[AudioPlayer] Connecting audio analyzer to audio element');
-    const analyzer = getAudioAnalyzer();
-    analyzer.connect(this.audio);
-    console.log('[AudioPlayer] Audio analyzer connected');
-
-    // Listen for time updates to sync progress
-    this.audio.addEventListener('timeupdate', this.handleTimeUpdate);
-
-    // Listen for track end to auto-advance
-    this.audio.addEventListener('ended', this.handleTrackEnded);
-
-    // Listen for errors
-    this.audio.addEventListener('error', this.handleError);
-
-    // Listen for loading events
-    this.audio.addEventListener('canplay', this.handleCanPlay);
-    this.audio.addEventListener('waiting', this.handleWaiting);
-
-    this.isInitialized = true;
-    console.log('[AudioPlayer] Initialized with audio analyzer');
+  private get audio(): HTMLAudioElement | null {
+    return this.elements[this.active] ?? null;
   }
 
-  /**
-   * Load and play a track by ID
-   */
+  private createElement(kind: Kind): HTMLAudioElement {
+    const el = new Audio();
+    el.preload = 'auto';
+    if (kind === 'cors') el.crossOrigin = 'anonymous';
+    el.volume = usePlayerStore.getState().volume;
+    el.addEventListener('timeupdate', () => this.handleTimeUpdate(el));
+    el.addEventListener('ended', this.handleTrackEnded);
+    el.addEventListener('error', () => this.handleError(el));
+    el.addEventListener('playing', this.handlePlaying);
+    return el;
+  }
+
+  initialize() {
+    if (this.isInitialized || typeof window === 'undefined') return;
+    this.elements.cors = this.createElement('cors');
+    this.elements.plain = this.createElement('plain');
+    this.isInitialized = true;
+  }
+
+  /** Connect the analyser the first time we are allowed to make sound. */
+  private ensureAnalyser() {
+    const cors = this.elements.cors;
+    const analyzer = getAudioAnalyzer();
+    if (!cors || analyzer.isConnected()) return;
+    // Creating an AudioContext before any user gesture only logs a warning, so wait.
+    if (typeof navigator !== 'undefined' && navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
+    analyzer.connect(cors);
+  }
+
   async loadTrack(trackId: string): Promise<void> {
-    if (!this.audio) {
-      this.initialize();
-    }
+    if (!this.isInitialized) this.initialize();
+    if (this.currentTrackId === trackId && this.audio?.src) return;
 
-    if (!this.audio) {
-      console.error('Audio player not initialized');
-      return;
-    }
-
+    this.clearStallTimer();
     try {
-      // Don't reload if it's the same track
-      if (this.currentTrackId === trackId) {
-        return;
-      }
+      const { url, cors } = await resolveTrackSource(trackId);
+      const kind: Kind = cors ? 'cors' : 'plain';
 
-      const src = await this.resolveSource(trackId);
+      // Silence whichever element was playing before switching.
+      this.audio?.pause();
+      this.active = kind;
+      getAudioAnalyzer().setSynthetic(kind === 'plain');
 
-      // Load new audio source
-      this.audio.src = src;
+      const el = this.audio!;
+      el.src = url;
       this.currentTrackId = trackId;
-
-      // Reset progress in store
       usePlayerStore.getState().updateProgress(0);
-
-      // Start loading the audio
-      await this.audio.load();
+      el.load();
+      this.armStallTimer(trackId);
     } catch (error) {
-      console.error('Error loading track:', error);
-      // Reset state gracefully without crashing
       this.currentTrackId = null;
-      usePlayerStore.getState().pause();
       usePlayerStore.getState().updateProgress(0);
-      // Re-throw so caller knows it failed, but player state is stable
+      // Resolution failed (dead source): move on silently.
+      if (await this.fallback(trackId)) return;
       throw error;
     }
   }
 
-  /**
-   * Work out a playable URL for a track: local files come from the in-memory
-   * object URL registry, SoundCloud tracks from the server-side stream proxy.
-   */
-  private async resolveSource(trackId: string): Promise<string> {
-    if (isLocalTrackId(trackId)) {
-      const url = getLocalTrackUrl(trackId);
-      if (!url) {
-        throw new Error('This local file is no longer available. Pick it again to play it.');
-      }
-      return url;
-    }
-
-    if (trackId.startsWith('spotify-') || /^[0-9A-Za-z]{22}$/.test(trackId)) {
-      throw new Error('Spotify tracks can be browsed but not streamed in Spinerr yet.');
-    }
-
-    if (!SOUNDCLOUD_AVAILABLE) {
-      throw new Error(SOUNDCLOUD_UNAVAILABLE_MESSAGE);
-    }
-
-    const response = await fetch(`/api/soundcloud/stream?trackId=${encodeURIComponent(trackId)}`);
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(`Failed to fetch stream URL: ${response.status} - ${errorData.error || 'Unknown error'}`);
-    }
-
-    const data = await response.json();
-    if (!data.streamUrl) {
-      throw new Error('No stream URL available');
-    }
-    return data.streamUrl;
-  }
-
-  /**
-   * Play current track
-   * NOTE: Does NOT update store - store calls this method
-   */
   async play(): Promise<void> {
-    if (!this.audio) {
-      this.initialize();
-    }
-
-    if (!this.audio) {
-      console.error('[AudioPlayer] Audio player not initialized');
-      return;
-    }
-
-    try {
-      // Resume audio context (needed for autoplay restrictions)
-      const analyzer = getAudioAnalyzer();
-      await analyzer.resume();
-
-      await this.audio.play();
-      console.log('[AudioPlayer] Playing successfully');
-    } catch (error) {
-      console.error('[AudioPlayer] Error playing track:', error);
-      // On error, pause the store state
-      usePlayerStore.getState().updateProgress(0);
-      throw error; // Let store handle the state
-    }
+    if (!this.isInitialized) this.initialize();
+    const el = this.audio;
+    if (!el) return;
+    this.ensureAnalyser();
+    if (this.active === 'cors') await getAudioAnalyzer().resume().catch(() => undefined);
+    await el.play();
   }
 
-  /**
-   * Pause current track
-   * NOTE: Does NOT update store - store calls this method
-   */
   pause(): void {
-    if (!this.audio) {
-      console.log('[AudioPlayer] Cannot pause - no audio instance');
-      return;
-    }
-
-    try {
-      this.audio.pause();
-      console.log('[AudioPlayer] Paused successfully');
-    } catch (error) {
-      console.error('[AudioPlayer] Error pausing:', error);
-    }
+    this.audio?.pause();
   }
 
-  /**
-   * Seek to position (0-1)
-   */
   seek(progress: number): void {
-    if (!this.audio) return;
-    const time = progress * this.audio.duration;
-    if (!isNaN(time)) {
-      this.audio.currentTime = time;
-      usePlayerStore.getState().updateProgress(progress);
-    }
+    const el = this.audio;
+    if (!el || !Number.isFinite(el.duration) || el.duration <= 0) return; // live streams cannot seek
+    el.currentTime = progress * el.duration;
+    usePlayerStore.getState().updateProgress(progress);
   }
 
-  /**
-   * Set volume (0-1)
-   */
   setVolume(volume: number): void {
-    if (!this.audio) return;
-    this.audio.volume = Math.max(0, Math.min(1, volume));
-    usePlayerStore.getState().setVolume(volume);
+    const v = Math.max(0, Math.min(1, volume));
+    for (const el of Object.values(this.elements)) if (el) el.volume = v;
+    usePlayerStore.getState().setVolume(v);
   }
 
-  /**
-   * Stop playback and clear current track
-   */
   stop(): void {
-    if (!this.audio) return;
-    this.audio.pause();
-    this.audio.currentTime = 0;
+    this.clearStallTimer();
+    for (const el of Object.values(this.elements)) el?.pause();
+    if (this.audio) this.audio.currentTime = 0;
     this.currentTrackId = null;
     usePlayerStore.getState().pause();
     usePlayerStore.getState().updateProgress(0);
   }
 
-  /**
-   * Get current playback state
-   */
   getState() {
-    if (!this.audio) {
-      return {
-        currentTime: 0,
-        duration: 0,
-        paused: true,
-        volume: 0.7,
-      };
-    }
+    const el = this.audio;
+    if (!el) return { currentTime: 0, duration: 0, paused: true, volume: 0.7 };
+    return { currentTime: el.currentTime, duration: el.duration || 0, paused: el.paused, volume: el.volume };
+  }
 
-    return {
-      currentTime: this.audio.currentTime,
-      duration: this.audio.duration || 0,
-      paused: this.audio.paused,
-      volume: this.audio.volume,
-    };
+  // --- fallback -----------------------------------------------------------
+
+  private armStallTimer(trackId: string) {
+    this.stallTimer = setTimeout(() => {
+      if (this.currentTrackId === trackId && usePlayerStore.getState().isPlaying) void this.fallback(trackId);
+    }, STALL_TIMEOUT_MS);
+  }
+
+  private clearStallTimer() {
+    if (this.stallTimer) clearTimeout(this.stallTimer);
+    this.stallTimer = null;
   }
 
   /**
-   * Handle time update event
+   * Try an equivalent copy of the failed track on another source, then skip to
+   * the next track. Returns false when nothing is left to try.
    */
-  private handleTimeUpdate = () => {
-    if (!this.audio) return;
+  private async fallback(failedId: string): Promise<boolean> {
+    this.clearStallTimer();
+    const store = usePlayerStore.getState();
+    this.failures += 1;
+    if (this.failures > MAX_CONSECUTIVE_FAILURES) return false;
 
-    const duration = this.audio.duration || 0;
-    if (duration > 0) {
-      const progress = this.audio.currentTime / duration;
-      usePlayerStore.getState().updateProgress(progress);
+    const alternates = getTrackHint(failedId)?.alternates ?? [];
+    const next = alternates.find((t) => !this.triedAlternates.has(t.id));
+    this.triedAlternates.add(failedId);
+    if (next) {
+      this.triedAlternates.add(next.id);
+      try {
+        await this.loadTrack(next.id);
+        if (store.isPlaying) await this.play();
+        return true;
+      } catch {
+        return this.fallback(next.id);
+      }
+    }
+    if (store.playlist.length > 1) {
+      store.nextTrack();
+      return true;
+    }
+    return false;
+  }
+
+  // --- element events -----------------------------------------------------
+
+  private handleTimeUpdate = (el: HTMLAudioElement) => {
+    if (el !== this.audio) return;
+    const duration = el.duration;
+    if (Number.isFinite(duration) && duration > 0) {
+      usePlayerStore.getState().updateProgress(el.currentTime / duration);
     }
   };
 
-  /**
-   * Handle track ended event
-   */
+  private handlePlaying = () => {
+    this.clearStallTimer();
+    this.failures = 0;
+    this.triedAlternates.clear();
+  };
+
   private handleTrackEnded = () => {
-    console.log('Track ended, advancing to next track');
     usePlayerStore.getState().updateProgress(1);
     usePlayerStore.getState().nextTrack();
   };
 
-  /**
-   * Handle error event
-   */
-  private handleError = (event: Event) => {
-    console.error('Audio playback error:', event);
-    usePlayerStore.getState().pause();
+  private handleError = (el: HTMLAudioElement) => {
+    if (el !== this.audio || !el.src || !this.currentTrackId) return;
+    const id = this.currentTrackId;
+    void this.fallback(id).then((recovered) => {
+      if (!recovered) {
+        const store = usePlayerStore.getState();
+        store.pause();
+        store.setPlaybackError("Couldn't play this track. Try another one or search for something else.");
+      }
+    });
   };
 
-  /**
-   * Handle can play event
-   */
-  private handleCanPlay = () => {
-    console.log('Audio ready to play');
-  };
-
-  /**
-   * Handle waiting/buffering event
-   */
-  private handleWaiting = () => {
-    console.log('Audio buffering...');
-  };
-
-  /**
-   * Clean up resources
-   */
   destroy(): void {
-    if (!this.audio) return;
-
-    this.audio.removeEventListener('timeupdate', this.handleTimeUpdate);
-    this.audio.removeEventListener('ended', this.handleTrackEnded);
-    this.audio.removeEventListener('error', this.handleError);
-    this.audio.removeEventListener('canplay', this.handleCanPlay);
-    this.audio.removeEventListener('waiting', this.handleWaiting);
-
-    this.audio.pause();
-    this.audio.src = '';
-    this.audio = null;
+    this.clearStallTimer();
+    for (const el of Object.values(this.elements)) {
+      el?.pause();
+      if (el) el.src = '';
+    }
+    this.elements = {};
     this.currentTrackId = null;
     this.isInitialized = false;
   }
 }
 
-// Export singleton instance getter
 export const getAudioPlayer = () => AudioPlayer.getInstance();

@@ -35,20 +35,16 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const handleJoyrideCallback = useCallback((data: EventData) => {
     const { status, index, type, action, lifecycle } = data;
 
-    console.log('[TourContext] Joyride callback:', { status, type, action, lifecycle, index, activeTour, totalSteps: steps.length });
 
     // Check if we're on the last step and user clicked next/close
     const isLastStep = index === steps.length - 1;
     const completedLastStep = isLastStep && (action === 'close' || action === 'next') && lifecycle === 'complete';
 
     if (status === 'finished' || status === 'skipped' || completedLastStep) {
-      console.log('[TourContext] Tour ending:', { status, completedLastStep });
       if (activeTour) {
         if (status === 'finished' || completedLastStep) {
-          console.log('[TourContext] Calling completeTour for:', activeTour);
           completeTour(activeTour);
         } else {
-          console.log('[TourContext] Calling skipTour for:', activeTour);
           skipTour(activeTour);
         }
       }

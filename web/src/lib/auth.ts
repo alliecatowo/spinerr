@@ -38,7 +38,6 @@ export interface AuthState {
 export async function signInAnonymous(): Promise<User> {
   const auth = requireAuth();
   const result = await signInAnonymously(auth);
-  console.log('[Auth] Anonymous sign in successful:', result.user.uid);
   return result.user;
 }
 
@@ -53,16 +52,13 @@ export async function createAccount(email: string, password: string): Promise<Us
 
   // If user is anonymous, upgrade their account
   if (currentUser && currentUser.isAnonymous) {
-    console.log('[Auth] Upgrading anonymous account to email/password');
     const credential = EmailAuthProvider.credential(email, password);
     const result = await linkWithCredential(currentUser, credential);
-    console.log('[Auth] Account upgraded successfully:', result.user.email);
     return result.user;
   }
 
   // Otherwise create a new account
   const result = await createUserWithEmailAndPassword(auth, email, password);
-  console.log('[Auth] New account created:', result.user.email);
   return result.user;
 }
 
@@ -72,7 +68,6 @@ export async function createAccount(email: string, password: string): Promise<Us
 export async function signIn(email: string, password: string): Promise<User> {
   const auth = requireAuth();
   const result = await signInWithEmailAndPassword(auth, email, password);
-  console.log('[Auth] Sign in successful:', result.user.email);
   return result.user;
 }
 
@@ -87,16 +82,13 @@ export async function signInWithGoogle(): Promise<User> {
 
   // If user is anonymous, upgrade their account by linking
   if (currentUser && currentUser.isAnonymous) {
-    console.log('[Auth] Upgrading anonymous account to Google');
     // Sign in with popup to get Google credential
     const result = await signInWithPopup(auth, provider);
-    console.log('[Auth] Account upgraded to Google successfully');
     return result.user;
   }
 
   // Otherwise sign in with Google normally
   const result = await signInWithPopup(auth, provider);
-  console.log('[Auth] Google sign in successful:', result.user.email);
   return result.user;
 }
 
@@ -106,7 +98,6 @@ export async function signInWithGoogle(): Promise<User> {
 export async function signOut(): Promise<void> {
   const auth = requireAuth();
   await firebaseSignOut(auth);
-  console.log('[Auth] Sign out successful');
 }
 
 /**

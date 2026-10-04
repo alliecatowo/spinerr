@@ -16,7 +16,6 @@ class VinylRenderer {
   private currentContainer: HTMLElement | null = null;
 
   private constructor() {
-    console.log('[VinylRenderer] Singleton instance created');
   }
 
   static getInstance(): VinylRenderer {
@@ -36,7 +35,6 @@ class VinylRenderer {
   ): Promise<void> {
     // If already initialized with same container, just update params
     if (this.p5Instance && this.currentContainer === container) {
-      console.log('[VinylRenderer] Reusing existing p5 instance, updating params');
       this.updateParams({
         trackId,
         albumColor,
@@ -49,23 +47,19 @@ class VinylRenderer {
 
     // Clean up old instance if container changed
     if (this.p5Instance && this.currentContainer !== container) {
-      console.log('[VinylRenderer] Container changed, recreating sketch');
       this.cleanup();
     }
 
     // Load p5.js if not already loaded
     if (!(window as WindowWithP5).p5) {
-      console.log('[VinylRenderer] Loading p5.js module...');
       const p5Module = await import('p5');
       (window as WindowWithP5).p5 = p5Module.default;
-      console.log('[VinylRenderer] p5.js loaded');
     }
 
     // Wait a frame for container dimensions
     await new Promise(resolve => requestAnimationFrame(resolve));
 
     // Create sketch
-    console.log('[VinylRenderer] Creating vinyl sketch');
     this.sketchInstance = createVinylSketch(
       container,
       trackId,
@@ -78,7 +72,6 @@ class VinylRenderer {
 
     this.p5Instance = this.sketchInstance.p5Instance;
     this.currentContainer = container;
-    console.log('[VinylRenderer] Sketch created successfully');
   }
 
   updateParams(params: {
@@ -116,7 +109,6 @@ class VinylRenderer {
   }
 
   cleanup(): void {
-    console.log('[VinylRenderer] Cleaning up sketch');
     if (this.sketchInstance?.cleanup) {
       this.sketchInstance.cleanup();
     }

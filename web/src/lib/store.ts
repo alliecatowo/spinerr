@@ -16,6 +16,7 @@ export interface Track {
   duration: number; // in seconds
   coverColor: string; // hex color
   genre?: string; // optional genre field
+  provider?: string; // which source it came from (audius, radio, ...)
 }
 
 export interface CalendarEvent {
@@ -25,6 +26,18 @@ export interface CalendarEvent {
   time: string;
   type: 'meeting' | 'appointment' | 'birthday' | 'reminder';
   description: string;
+}
+
+/** Browsers refuse to start audio before the visitor interacts with the page. */
+function isAutoplayBlock(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'NotAllowedError';
+}
+
+function playFailure(error: unknown): Partial<PlayerState> {
+  if (isAutoplayBlock(error)) return { isPlaying: false, needsGesture: true };
+  // A newer load interrupted this one (fast skipping): not a failure.
+  if (error instanceof DOMException && error.name === 'AbortError') return {};
+  return { isPlaying: false, playbackError: errorMessage(error) };
 }
 
 function errorMessage(error: unknown): string {
@@ -39,6 +52,7 @@ interface PlayerState {
   volume: number; // 0-1
   playlist: Track[];
   playbackError: string | null; // user-facing message when a track can't be played
+  needsGesture: boolean; // autoplay was blocked: show a "tap to play" prompt
 
   // Actions
   setPlaybackError: (message: string | null) => void;
@@ -50,7 +64,7 @@ interface PlayerState {
   nextTrack: () => void;
   prevTrack: () => void;
   setPlaylist: (playlist: Track[]) => void;
-  loadAlbum: (album: Album) => void;
+  loadAlbum: (album: Album, startIndex?: number) => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -60,17 +74,17 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   volume: 0.7,
   playlist: [],
   playbackError: null,
+  needsGesture: false,
 
   setPlaybackError: (message: string | null) => set({ playbackError: message }),
 
   play: () => {
-    set({ isPlaying: true });
+    set({ isPlaying: true, needsGesture: false });
     // Trigger audio player
     if (typeof window !== 'undefined') {
       import('./audio-player').then(({ getAudioPlayer }) => {
         getAudioPlayer().play().catch((error) => {
-          console.error('[Store] Play error, reverting state:', error);
-          set({ isPlaying: false });
+          set(playFailure(error));
         });
         set({ playbackError: null });
       });
@@ -132,7 +146,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
           if (isPlaying) {
             return audioPlayer.play();
           }
-        }).catch((error) => set({ isPlaying: false, playbackError: errorMessage(error) }));
+        }).catch((error) => set(playFailure(error)));
       });
     }
   },
@@ -159,14 +173,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
           if (isPlaying) {
             return audioPlayer.play();
           }
-        }).catch((error) => set({ isPlaying: false, playbackError: errorMessage(error) }));
+        }).catch((error) => set(playFailure(error)));
       });
     }
   },
 
   setPlaylist: (playlist: Track[]) => set({ playlist }),
 
-  loadAlbum: (album: Album) => {
+  loadAlbum: (album: Album, startIndex = 0) => {
     // Convert album tracks to player track format
     const playerTracks: Track[] = album.tracks.map((track) => ({
       id: track.id,
@@ -177,25 +191,28 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       duration: track.duration,
       coverColor: '#8b5cf6', // Purple for albums
       genre: track.metadata?.genre,
+      provider: track.provider,
     }));
+    const first = playerTracks[Math.min(Math.max(startIndex, 0), Math.max(playerTracks.length - 1, 0))] ?? null;
 
     // Update store state
     set({
       playlist: playerTracks,
-      currentTrack: playerTracks[0] || null,
+      currentTrack: first,
       progress: 0,
       isPlaying: true,
       playbackError: null,
+      needsGesture: false,
     });
 
-    // Load and play first track via audio player (client-side only)
-    if (typeof window !== 'undefined' && playerTracks.length > 0) {
+    // Load and play the chosen track via audio player (client-side only)
+    if (typeof window !== 'undefined' && first) {
       import('./audio-player').then(({ getAudioPlayer }) => {
         const audioPlayer = getAudioPlayer();
         audioPlayer.initialize();
-        audioPlayer.loadTrack(playerTracks[0].id)
+        audioPlayer.loadTrack(first.id)
           .then(() => audioPlayer.play())
-          .catch((error) => set({ isPlaying: false, playbackError: errorMessage(error) }));
+          .catch((error) => set(playFailure(error)));
       });
     }
   },
@@ -488,7 +505,6 @@ export const useTourStore = create<TourState>()(
       runTour: false,
 
       startTour: (tourId: string) => {
-        console.log('[Tour] Starting:', tourId);
         set({
           activeTour: tourId,
           tourStepIndex: 0,
@@ -497,7 +513,6 @@ export const useTourStore = create<TourState>()(
       },
 
       completeTour: (tourId: string) => {
-        console.log('[Tour] Completed:', tourId);
 
         // Map tour IDs to state keys
         const tourStateKeys: Record<string, keyof TourState> = {
@@ -521,13 +536,11 @@ export const useTourStore = create<TourState>()(
           tourStepIndex: 0,
         });
 
-        console.log('[Tour] State updated, new state:', useTourStore.getState());
 
         // Sync to Firebase after state update
         setTimeout(async () => {
           const currentState = useTourStore.getState();
           const user = getCurrentUser();
-          console.log('[Tour] Syncing to Firebase:', { user: user?.uid, state: currentState });
           if (user) {
             try {
               await syncTourStateToFirebase(user, {
@@ -536,7 +549,6 @@ export const useTourStore = create<TourState>()(
                 hasSeenPlayerTour: currentState.hasSeenPlayerTour,
                 hasSeenSettingsTour: currentState.hasSeenSettingsTour,
               });
-              console.log('[Tour] ✓ Successfully synced to Firebase');
             } catch (error) {
               console.error('[Tour] ✗ Failed to sync to Firebase:', error);
             }
@@ -547,7 +559,6 @@ export const useTourStore = create<TourState>()(
       },
 
       skipTour: (tourId: string) => {
-        console.log('[Tour] Skipped:', tourId);
 
         // Map tour IDs to state keys
         const tourStateKeys: Record<string, keyof TourState> = {
@@ -588,7 +599,6 @@ export const useTourStore = create<TourState>()(
       },
 
       resetAllTours: () => {
-        console.log('[Tour] Resetting all tours');
         set({
           hasSeenOnboarding: false,
           hasSeenLibraryTour: false,

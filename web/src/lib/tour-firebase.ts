@@ -15,7 +15,6 @@ export interface TourState {
  */
 export async function syncTourStateToFirebase(user: User | null, tourState: TourState): Promise<void> {
   if (!user) {
-    console.log('[tour-firebase] No user, skipping sync');
     return;
   }
 
@@ -28,7 +27,6 @@ export async function syncTourStateToFirebase(user: User | null, tourState: Tour
   try {
     const tourRef = doc(db, 'users', user.uid, 'preferences', 'tours');
     await setDoc(tourRef, tourState, { merge: true });
-    console.log('[tour-firebase] Tour state synced to Firebase');
   } catch (error) {
     console.error('[tour-firebase] Failed to sync tour state:', error);
   }
@@ -40,7 +38,6 @@ export async function syncTourStateToFirebase(user: User | null, tourState: Tour
  */
 export async function loadTourStateFromFirebase(user: User | null): Promise<TourState | null> {
   if (!user) {
-    console.log('[tour-firebase] No user, returning null state');
     return null;
   }
 
@@ -56,10 +53,8 @@ export async function loadTourStateFromFirebase(user: User | null): Promise<Tour
 
     if (tourDoc.exists()) {
       const data = tourDoc.data() as TourState;
-      console.log('[tour-firebase] Loaded tour state from Firebase:', data);
       return data;
     } else {
-      console.log('[tour-firebase] No tour state found, first-time user');
       return null;
     }
   } catch (error) {
