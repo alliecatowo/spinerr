@@ -33,6 +33,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* The landing station streams from Audius: open the connection early. */}
+        <link rel="preconnect" href="https://api.audius.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://api.audius.co" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Library, Music, Play, Settings, Maximize2, Minimize2, MonitorPlay } from "lucide-react";
+import { Search, Plus, Library, Compass, Music, Play, Settings, Maximize2, Minimize2, MonitorPlay } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -121,6 +121,12 @@ export function AppSidebar() {
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={() => router.push("/browse")}>
+                    <Compass className="h-4 w-4" />
+                    <span>Browse</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton onClick={() => router.push("/library")}>
                     <Library className="h-4 w-4" />

@@ -6,7 +6,7 @@ export const librarySteps: Step[] = [
     content: (
       <div>
         <h3 className="font-semibold mb-1">Add Albums</h3>
-        <p>Click here to search and add albums from SoundCloud to your library.</p>
+        <p>Click here to search every source and add albums to your library.</p>
       </div>
     ),
     placement: 'bottom',

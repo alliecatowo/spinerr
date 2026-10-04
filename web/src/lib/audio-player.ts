@@ -20,6 +20,19 @@ import { getTrackHint } from './sources/registry';
 
 const STALL_TIMEOUT_MS = 12000;
 const MAX_CONSECUTIVE_FAILURES = 5;
+// A fresh track starts only once this many seconds are buffered ahead (or the
+// wait times out). Starting on a thin buffer is what made first play stutter
+// until the listener paused and resumed.
+const PREBUFFER_SECONDS = 6;
+const PREBUFFER_TIMEOUT_MS = 3500;
+
+function bufferedAhead(el: HTMLAudioElement): number {
+  const t = el.currentTime;
+  for (let i = 0; i < el.buffered.length; i++) {
+    if (el.buffered.start(i) <= t + 0.25 && el.buffered.end(i) >= t) return el.buffered.end(i) - t;
+  }
+  return 0;
+}
 
 type Kind = 'cors' | 'plain';
 
@@ -53,6 +66,7 @@ export class AudioPlayer {
     el.addEventListener('ended', this.handleTrackEnded);
     el.addEventListener('error', () => this.handleError(el));
     el.addEventListener('playing', this.handlePlaying);
+    el.addEventListener('playing', () => this.prebufferGuard(el), { once: false });
     return el;
   }
 
@@ -90,6 +104,9 @@ export class AudioPlayer {
       const el = this.audio!;
       el.src = url;
       this.currentTrackId = trackId;
+      this.guardedTrack = null;
+      if (this.guardTimer) clearTimeout(this.guardTimer);
+      this.guardTimer = null;
       usePlayerStore.getState().updateProgress(0);
       el.load();
       this.armStallTimer(trackId);
@@ -130,6 +147,8 @@ export class AudioPlayer {
 
   stop(): void {
     this.clearStallTimer();
+    if (this.guardTimer) clearTimeout(this.guardTimer);
+    this.guardTimer = null;
     for (const el of Object.values(this.elements)) el?.pause();
     if (this.audio) this.audio.currentTime = 0;
     this.currentTrackId = null;
@@ -195,6 +214,40 @@ export class AudioPlayer {
       usePlayerStore.getState().updateProgress(el.currentTime / duration);
     }
   };
+
+  private guardedTrack: string | null = null;
+  private guardTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Playback just began on a track we have not guarded yet. If the buffer is
+   * thin (cold connection, redirect still streaming in), hold playback for a
+   * moment so it can fill, then resume. Runs after the user gesture, so it is
+   * safe on browsers that demand a synchronous play() call.
+   */
+  private prebufferGuard(el: HTMLAudioElement) {
+    const id = this.currentTrackId;
+    if (el !== this.audio || !id || this.guardedTrack === id) return;
+    this.guardedTrack = id;
+    // Live streams and unknown-length sources have no meaningful "ahead".
+    if (!Number.isFinite(el.duration) || el.duration <= PREBUFFER_SECONDS * 2) return;
+    if (bufferedAhead(el) >= PREBUFFER_SECONDS) return;
+
+    el.pause();
+    const resume = () => {
+      if (this.guardTimer) clearTimeout(this.guardTimer);
+      this.guardTimer = null;
+      el.removeEventListener('progress', check);
+      // The listener may have paused or skipped meanwhile.
+      if (el === this.audio && this.currentTrackId === id && usePlayerStore.getState().isPlaying) {
+        void el.play().catch(() => undefined);
+      }
+    };
+    const check = () => {
+      if (bufferedAhead(el) >= PREBUFFER_SECONDS) resume();
+    };
+    el.addEventListener('progress', check);
+    this.guardTimer = setTimeout(resume, PREBUFFER_TIMEOUT_MS);
+  }
 
   private handlePlaying = () => {
     this.clearStallTimer();

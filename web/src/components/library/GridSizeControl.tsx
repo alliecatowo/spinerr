@@ -10,7 +10,7 @@ interface GridSizeControlProps {
 
 export function GridSizeControl({ size, onChange }: GridSizeControlProps) {
   return (
-    <div className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+    <div className="flex min-w-0 items-center gap-3 px-3 py-2 sm:gap-4 sm:p-4 rounded-lg border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
       <Grid2X2 className="h-4 w-4 text-gray-600 dark:text-neutral-400" />
       <Slider
         value={[size]}
@@ -18,7 +18,7 @@ export function GridSizeControl({ size, onChange }: GridSizeControlProps) {
         min={2}
         max={6}
         step={1}
-        className="w-32"
+        className="w-24 sm:w-32"
       />
       <Grid3X3 className="h-4 w-4 text-gray-600 dark:text-neutral-400" />
       <span className="text-sm text-gray-600 dark:text-neutral-400 min-w-[3ch]">

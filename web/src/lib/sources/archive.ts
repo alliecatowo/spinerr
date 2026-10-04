@@ -14,6 +14,29 @@ interface IaMetadata {
   files?: { name: string; format?: string; length?: string }[];
 }
 
+function toTrack(d: IaDoc): Track {
+  return {
+    id: `${ARCHIVE_PREFIX}${d.identifier}`,
+    provider: 'archive',
+    title: d.title || d.identifier,
+    artist: (Array.isArray(d.creator) ? d.creator[0] : d.creator) || 'Internet Archive',
+    artworkUrl: `https://archive.org/services/img/${encodeURIComponent(d.identifier)}`,
+    duration: 0,
+    externalUrl: `https://archive.org/details/${encodeURIComponent(d.identifier)}`,
+    metadata: { popularity: d.downloads ?? 0 },
+  };
+}
+
+/** The most downloaded audio items of one Internet Archive collection. */
+export async function archiveCollection(collection: string, limit = 20, signal?: AbortSignal): Promise<Track[]> {
+  const q = encodeURIComponent(`collection:(${collection.replace(/[^\w-]/g, '')}) AND mediatype:audio`);
+  const url =
+    `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=downloads` +
+    `&sort[]=downloads+desc&rows=${limit}&output=json`;
+  const { response } = await fetchJson<{ response: { docs: IaDoc[] } }>(url, 6000, signal);
+  return response.docs.map(toTrack);
+}
+
 export async function searchArchive(query: string, limit = 10, signal?: AbortSignal): Promise<Track[]> {
   // Strip characters that have meaning in the Lucene query syntax.
   const safe = query.replace(/[^\p{L}\p{N}\s'-]/gu, ' ').trim();
@@ -23,16 +46,7 @@ export async function searchArchive(query: string, limit = 10, signal?: AbortSig
     `https://archive.org/advancedsearch.php?q=${q}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=downloads` +
     `&sort[]=downloads+desc&rows=${limit}&output=json`;
   const { response } = await fetchJson<{ response: { docs: IaDoc[] } }>(url, 6000, signal);
-  return response.docs.map((d) => ({
-    id: `${ARCHIVE_PREFIX}${d.identifier}`,
-    provider: 'archive' as const,
-    title: d.title || d.identifier,
-    artist: (Array.isArray(d.creator) ? d.creator[0] : d.creator) || 'Internet Archive',
-    artworkUrl: `https://archive.org/services/img/${encodeURIComponent(d.identifier)}`,
-    duration: 0,
-    externalUrl: `https://archive.org/details/${encodeURIComponent(d.identifier)}`,
-    metadata: { popularity: d.downloads ?? 0 },
-  }));
+  return response.docs.map(toTrack);
 }
 
 /** Pick the first MP3 file of an item and build its download URL. */

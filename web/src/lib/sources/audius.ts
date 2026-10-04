@@ -47,9 +47,15 @@ export async function searchAudius(query: string, limit = 20, signal?: AbortSign
   return data.filter(playable).map(toTrack);
 }
 
-/** Trending tracks for a genre, used for the default station. */
-export async function trendingAudius(genre: string, limit = 40, signal?: AbortSignal): Promise<Track[]> {
-  const url = `${API}/tracks/trending?genre=${encodeURIComponent(genre)}&time=month&limit=${limit}&${APP}`;
-  const { data } = await fetchJson<{ data: AudiusTrack[] }>(url, 2500, signal);
+/** Trending tracks, optionally for one genre (default station, Browse). */
+export async function trendingAudius(
+  genre: string,
+  limit = 40,
+  signal?: AbortSignal,
+  timeoutMs = 2500,
+): Promise<Track[]> {
+  const g = genre ? `genre=${encodeURIComponent(genre)}&` : '';
+  const url = `${API}/tracks/trending?${g}time=month&limit=${limit}&${APP}`;
+  const { data } = await fetchJson<{ data: AudiusTrack[] }>(url, timeoutMs, signal);
   return data.filter(playable).map(toTrack);
 }

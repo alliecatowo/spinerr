@@ -11,20 +11,27 @@ import type p5 from 'p5';
 import { getAudioAnalyzer } from './audio-analyzer';
 
 /**
- * Fetch artwork ourselves so a flaky image host (one retry, then give up) never
- * surfaces as a console error; the record simply spins without a label image.
+ * Load cover art through a plain <img> (no CORS request). Many hosts (radio
+ * favicons, archive.org) send no CORS headers, and a fetch() to them logs a
+ * console error. Drawing a cross-origin image to a canvas is allowed; only
+ * reading pixels back is blocked, and the sketch never does.
  */
-async function fetchArtwork(url: string): Promise<string | null> {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) return URL.createObjectURL(await response.blob());
-    } catch {
-      // fall through to retry
-    }
-    await new Promise((resolve) => setTimeout(resolve, 800));
-  }
-  return null;
+function loadArtwork(p: p5, url: string): Promise<p5.Image | null> {
+  return new Promise((resolve) => {
+    const el = new Image();
+    el.referrerPolicy = 'no-referrer';
+    el.onload = () => {
+      try {
+        const img = p.createImage(el.naturalWidth || 1, el.naturalHeight || 1);
+        ((img as unknown as { canvas: HTMLCanvasElement }).canvas).getContext('2d')?.drawImage(el, 0, 0);
+        resolve(img);
+      } catch {
+        resolve(null);
+      }
+    };
+    el.onerror = () => resolve(null);
+    el.src = url;
+  });
 }
 
 export interface VinylSketchParams {
@@ -62,6 +69,7 @@ export function createVinylSketch(
 ): VinylSketchInstance {
 
   let p5Instance: p5 | null = null;
+  let resizeObserver: ResizeObserver | null = null;
 
   // Generate seed from track ID for unique, consistent art per song
   const generateSeed = (id: string): number => {
@@ -114,8 +122,13 @@ export function createVinylSketch(
     p.setup = () => {
       const width = containerRef.offsetWidth || 400;
       const height = containerRef.offsetHeight || 400;
+      lastW = containerRef.offsetWidth;
+      lastH = containerRef.offsetHeight;
 
 
+      // Phones report a pixel ratio of 3 or more; a full-resolution canvas of
+      // grooves starves the main thread (and the audio) for no visible gain.
+      p.pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
       const canvas = p.createCanvas(width, height);
       canvas.parent(containerRef);
 
@@ -138,7 +151,7 @@ export function createVinylSketch(
       p.noiseSeed(seed);
 
       // Calculate dimensions
-      vinylRadius = Math.min(p.width, p.height) * 0.45;
+      vinylRadius = Math.min(p.width, p.height) * 0.42;
       centerRadius = vinylRadius * 0.3; // Album art area
 
       // PRE-COMPUTE colors once (never changes, eliminates pause/play visual jump)
@@ -151,13 +164,8 @@ export function createVinylSketch(
       // Load artwork image if provided
       if (params.artworkUrl) {
         const requested = params.artworkUrl;
-        fetchArtwork(requested).then((objectUrl) => {
-          if (!objectUrl || requested !== params.artworkUrl) return;
-          p.loadImage(objectUrl, (img) => {
-            artworkImage = img;
-          }, () => {
-            artworkImage = null;
-          });
+        loadArtwork(p, requested).then((img) => {
+          if (requested === params.artworkUrl) artworkImage = img;
         });
       } else {
         artworkImage = null;
@@ -392,10 +400,25 @@ export function createVinylSketch(
       (p.drawingContext as CanvasRenderingContext2D).fill();
     };
 
-    p.windowResized = () => {
-      p.resizeCanvas(containerRef.offsetWidth, containerRef.offsetHeight);
+    // Keep the canvas matched to its container at every size. The container
+    // starts small (before the record appears) and grows when playing starts,
+    // so a window-resize hook alone leaves a stale, clipped canvas.
+    let lastW = 0;
+    let lastH = 0;
+    const fit = () => {
+      const w = Math.floor(containerRef.offsetWidth);
+      const h = Math.floor(containerRef.offsetHeight);
+      if (!w || !h || (w === lastW && h === lastH)) return;
+      lastW = w;
+      lastH = h;
+      p.resizeCanvas(w, h);
       initializeVinyl();
     };
+    p.windowResized = fit;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(fit);
+      resizeObserver.observe(containerRef);
+    }
 
     // Public update method
     (p as p5 & { updateParams?: (params: Partial<VinylSketchParams>) => void }).updateParams = (newParams: Partial<VinylSketchParams>) => {
@@ -418,13 +441,8 @@ export function createVinylSketch(
         if (params.artworkUrl) {
           const requested = params.artworkUrl;
           artworkImage = null;
-          fetchArtwork(requested).then((objectUrl) => {
-            if (!objectUrl || requested !== params.artworkUrl) return;
-            p.loadImage(objectUrl, (img) => {
-              artworkImage = img;
-            }, () => {
-              artworkImage = null;
-            });
+          loadArtwork(p, requested).then((img) => {
+            if (requested === params.artworkUrl) artworkImage = img;
           });
         } else {
           artworkImage = null;
@@ -465,6 +483,8 @@ export function createVinylSketch(
   // Return both cleanup function and p5 instance reference
   return {
     cleanup: () => {
+      resizeObserver?.disconnect();
+      resizeObserver = null;
       if (p5Instance) {
         p5Instance.remove();
         p5Instance = null;

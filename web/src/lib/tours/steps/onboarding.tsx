@@ -44,7 +44,7 @@ export const onboardingSteps: Step[] = [
     content: (
       <div>
         <h3 className="font-semibold mb-1">Navigation</h3>
-        <p>Access your library and settings from here. Add albums from SoundCloud to get started!</p>
+        <p>Access your library and settings from here. Browse stations or search any source to get started!</p>
       </div>
     ),
     placement: 'bottom',

@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { Compass } from "lucide-react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { useViewModeStore } from "@/lib/store";
 import { useFullscreen } from "@/hooks/useFullscreen";
@@ -61,6 +63,17 @@ export function Dashboard({ musicSection }: DashboardProps) {
               </div>
             )}
           </main>
+
+          {/* Browse: one tap from the player to pick a different station */}
+          {!isFullscreen && (
+            <Link
+              href="/browse"
+              className="fixed bottom-6 left-4 z-40 flex h-14 items-center gap-2 rounded-full bg-purple-600 px-5 text-base font-semibold text-white shadow-lg transition hover:bg-purple-700 active:scale-95"
+            >
+              <Compass className="h-5 w-5" aria-hidden="true" />
+              Browse
+            </Link>
+          )}
 
           {/* Help Button - Hidden in fullscreen */}
           {!isFullscreen && <HelpButton />}
