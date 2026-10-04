@@ -49,7 +49,7 @@ export async function loadDefaultStation(): Promise<Album> {
   return {
     id: DEFAULT_STATION_ID,
     provider: 'audius',
-    title: 'Spinerr Radio',
+    title: 'Spinnerr Radio',
     artist: 'Trending lo-fi on Audius',
     artworkUrl: queue[0]?.artworkUrl,
     trackCount: queue.length,

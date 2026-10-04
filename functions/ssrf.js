@@ -99,7 +99,7 @@ function requestOnce(url, target) {
       {
         method: 'GET',
         timeout: TIMEOUT_MS,
-        headers: { 'user-agent': 'spinerr-calendar-fetch/1.0', accept: 'text/calendar, text/plain;q=0.8, */*;q=0.5' },
+        headers: { 'user-agent': 'spinnerr-calendar-fetch/1.0', accept: 'text/calendar, text/plain;q=0.8, */*;q=0.5' },
         // Pin the socket to the address we validated.
         lookup: (_host, opts, cb) => (opts && opts.all ? cb(null, [{ address: target.address, family: target.family }]) : cb(null, target.address, target.family)),
       },

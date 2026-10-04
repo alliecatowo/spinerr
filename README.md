@@ -1,10 +1,10 @@
-# Spinerr
+# Spinnerr
 
 An ambient music player for a second screen. A generative vinyl record spins with the album you are playing, drawn in real time with p5.js from the audio itself, next to a clock and your upcoming events.
 
-Live: [spinerr-app.web.app](https://spinerr-app.web.app)
+Live: [spinnerr-app.web.app](https://spinnerr-app.web.app)
 
-![Spinerr with a record loaded: generative vinyl, tone arm, now playing and the clock](docs/screenshot.png)
+![Spinnerr with a record loaded: generative vinyl, tone arm, now playing and the clock](docs/screenshot.png)
 
 - **Generative vinyl.** Groove rings are displaced by seeded Perlin noise per album and by live FFT bands (bass moves amplitude, mids shift colour, highs shimmer). The tone arm follows playback and you can seek by dragging the grooves. The idea is written up in [docs/SONIC_GROOVES_PHILOSOPHY.md](docs/SONIC_GROOVES_PHILOSOPHY.md).
 - **Plays your files.** Pick audio files from your computer and they play locally, with ID3 tags and artwork read in the browser. No account or key needed.
@@ -16,7 +16,7 @@ Live: [spinerr-app.web.app](https://spinerr-app.web.app)
 You need [mise](https://mise.jdx.dev) (it installs Node and pnpm) or Node 24 and pnpm 12.
 
 ```bash
-git clone https://github.com/alliecatowo/spinerr && cd spinerr
+git clone https://github.com/alliecatowo/spinnerr && cd spinnerr
 mise install
 cd web && pnpm install
 pnpm dev            # http://localhost:3000

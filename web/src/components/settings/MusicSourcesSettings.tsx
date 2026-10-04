@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const SOURCES = [
   { name: "Audius", detail: "Independent artists, full tracks, no account needed." },
-  { name: "SoundCloud", detail: "Search and play through Spinerr's own proxy, no account needed." },
+  { name: "SoundCloud", detail: "Search and play through Spinnerr's own proxy, no account needed." },
   { name: "Internet Archive", detail: "Live recordings, public-domain and Creative Commons audio." },
   { name: "Live radio", detail: "Internet radio stations from radio-browser.info." },
   { name: "Your files", detail: "Play audio from your computer. Files never leave your browser." },

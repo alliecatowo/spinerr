@@ -1,7 +1,7 @@
 import path from "node:path";
 import type { NextConfig } from "next";
 
-// Spinerr is a static export served by Firebase Hosting. Server-side work
+// Spinnerr is a static export served by Firebase Hosting. Server-side work
 // (SoundCloud and calendar proxies, billing cap) lives in ../functions.
 const nextConfig: NextConfig = {
   reactStrictMode: false, // Disable to prevent double-mounting in dev

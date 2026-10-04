@@ -100,7 +100,7 @@ export function CalendarSettings() {
 
           <TabsContent value="url" className="mt-4 space-y-4">
             <p className="text-sm text-gray-600 dark:text-neutral-400">
-              Paste an iCal / ICS link from Google, Apple, Outlook or any calendar. Spinerr fetches it through its own
+              Paste an iCal / ICS link from Google, Apple, Outlook or any calendar. Spinnerr fetches it through its own
               server because browsers can&apos;t read it directly; the link is never logged.
             </p>
             <form onSubmit={handleAddUrl} className="space-y-2">
@@ -144,7 +144,7 @@ export function CalendarSettings() {
 
           <TabsContent value="google" className="mt-4 space-y-4">
             <p className="text-sm text-gray-600 dark:text-neutral-400">
-              Sign in with Google to show your primary calendar. Spinerr asks for read-only access, keeps the token in
+              Sign in with Google to show your primary calendar. Spinnerr asks for read-only access, keeps the token in
               memory for this visit only, and never changes your calendar.
             </p>
             {googleCount !== null ? (
