@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Play } from "lucide-react";
 import { Dashboard } from "@/components/layout/Dashboard";
 import { VinylDisc } from "@/components/music/VinylDisc";
 import { ToneArm } from "@/components/music/ToneArm";
 import { LocalFilePicker } from "@/components/music/LocalFilePicker";
-import { SOUNDCLOUD_AVAILABLE } from "@/lib/runtime";
-import { usePlayerStore, useCalendarStore, useLibraryStore } from "@/lib/store";
-import { mockEvents } from "@/lib/mock-data";
+import { Button } from "@/components/ui/button";
+import { usePlayerStore, useLibraryStore } from "@/lib/store";
 import { usePlayerProgress, useKeyboardShortcuts, useFirstVisit } from "@/hooks";
 
 export default function Home() {
@@ -15,6 +15,7 @@ export default function Home() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const progress = usePlayerStore((state) => state.progress);
+  const needsGesture = usePlayerStore((state) => state.needsGesture);
   const play = usePlayerStore((state) => state.play);
   const pause = usePlayerStore((state) => state.pause);
   const loadAlbum = usePlayerStore((state) => state.loadAlbum);
@@ -23,59 +24,87 @@ export default function Home() {
   const albums = useLibraryStore((state) => state.albums);
   const recentlyPlayed = useLibraryStore((state) => state.recentlyPlayed);
 
-  // Calendar store
-  const setEvents = useCalendarStore((state) => state.setEvents);
-
   // Custom hooks for player functionality
   usePlayerProgress(); // Auto-updates progress and handles track advancement
   useKeyboardShortcuts(); // Enables keyboard controls
   useFirstVisit(); // Auto-start onboarding tour on first visit
 
-  // Initialize calendar events
+  const hydrated = useSyncExternalStore(
+    (onChange) => useLibraryStore.persist.onFinishHydration(onChange),
+    () => useLibraryStore.persist.hasHydrated(),
+    () => false,
+  );
+  const [stationFailed, setStationFailed] = useState(false);
+  const started = useRef(false);
+
+  const startStation = useCallback(async () => {
+    setStationFailed(false);
+    try {
+      const { loadDefaultStation } = await import("@/lib/sources/default-station");
+      loadAlbum(await loadDefaultStation());
+    } catch {
+      setStationFailed(true);
+    }
+  }, [loadAlbum]);
+
+  // Landing: once saved state has loaded, resume the last record, or tune the
+  // default station for first-time visitors (and anyone whose saved record was
+  // local files, which cannot survive a reload).
   useEffect(() => {
-    setEvents(mockEvents);
-  }, []);
+    if (!hydrated || currentTrack || started.current) return;
+    started.current = true;
+    const saved = recentlyPlayed[0] || albums[0];
+    const resumable =
+      saved &&
+      saved.tracks.length > 0 &&
+      saved.provider !== "local" &&
+      saved.provider !== "spotify" &&
+      !saved.tracks.some((t) => t.id.startsWith("local-"));
+    if (resumable) loadAlbum(saved);
+    else void startStation();
+  }, [hydrated, currentTrack, albums, recentlyPlayed, loadAlbum, startStation]);
 
-  // Auto-load most recent album after store rehydration
+  // Browsers block audio until the visitor interacts. If autoplay was refused,
+  // the first tap or key press anywhere starts the music.
   useEffect(() => {
-    // Only auto-load if no track is currently loaded
-    if (currentTrack) {
-      console.log('[Home] Track already loaded, skipping auto-load');
-      return;
-    }
+    if (!needsGesture) return;
+    const go = () => play();
+    window.addEventListener("pointerdown", go, { once: true, capture: true });
+    window.addEventListener("keydown", go, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", go, { capture: true });
+      window.removeEventListener("keydown", go);
+    };
+  }, [needsGesture, play]);
 
-    // Wait for store rehydration (albums/recentlyPlayed populated)
-    if (recentlyPlayed.length === 0 && albums.length === 0) {
-      console.log('[Home] Waiting for store rehydration...');
-      return;
-    }
-
-    const albumToLoad = recentlyPlayed[0] || albums[0];
-    if (albumToLoad && albumToLoad.tracks.length > 0) {
-      console.log('[Home] Auto-loading most recent album:', albumToLoad.title);
-      loadAlbum(albumToLoad);
-    } else {
-      console.warn('[Home] No albums found in library to auto-load');
-    }
-  }, [recentlyPlayed, albums, currentTrack]); // Re-run when store rehydrates
-
-  // If no track loaded yet, show empty state
+  // No record yet: tuning in to the default station, or it could not be reached.
   if (!currentTrack) {
     return (
       <Dashboard
         musicSection={
           <div className="flex flex-col items-center justify-center gap-4 w-full max-w-3xl mx-auto min-h-screen">
-            <div className="text-center px-6">
-              <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                No music playing
-              </p>
-              <p className="text-sm text-gray-600 dark:text-neutral-400 max-w-sm mx-auto">
-                {SOUNDCLOUD_AVAILABLE
-                  ? "Pick some audio files from your computer, or use Add Album to search SoundCloud."
-                  : "Pick some audio files from your computer. They play right here in your browser and are never uploaded."}
-              </p>
-            </div>
-            <LocalFilePicker size="lg" />
+            {stationFailed ? (
+              <>
+                <div className="text-center px-6">
+                  <p className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    Couldn&apos;t tune in
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-neutral-400 max-w-sm mx-auto">
+                    The music sources aren&apos;t answering right now. Try again, or play files from your computer.
+                  </p>
+                </div>
+                <Button onClick={() => void startStation()}>Try again</Button>
+                <LocalFilePicker size="lg" />
+              </>
+            ) : (
+              <div role="status" className="flex flex-col items-center gap-4 text-gray-600 dark:text-neutral-400">
+                <div
+                  className="h-24 w-24 animate-spin rounded-full border-4 border-gray-300 border-t-purple-500 dark:border-neutral-700"
+                  style={{ animationDuration: "1.8s" }}
+                />
+                <p className="text-sm">Tuning in&hellip;</p>
+              </div>
+            )}
           </div>
         }
       />
@@ -95,6 +124,16 @@ export default function Home() {
           onPlayPause={isPlaying ? pause : play}
         />
         <ToneArm isPlaying={isPlaying} progress={progress} />
+        {needsGesture && !isPlaying && (
+          <button
+            type="button"
+            onClick={play}
+            className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-white/90 px-6 py-3 text-base font-semibold text-gray-900 shadow-xl backdrop-blur transition hover:scale-105 dark:bg-neutral-900/90 dark:text-white"
+          >
+            <Play className="h-5 w-5 fill-current" aria-hidden="true" />
+            Tap to play
+          </button>
+        )}
       </div>
     </div>
   );

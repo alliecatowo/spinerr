@@ -3,7 +3,7 @@
  * Common interfaces for all music providers (SoundCloud, YouTube, Spotify, Local)
  */
 
-export type ProviderId = 'soundcloud' | 'youtube' | 'spotify' | 'local';
+export type ProviderId = 'soundcloud' | 'youtube' | 'spotify' | 'local' | 'audius' | 'radio' | 'archive';
 
 /**
  * Common track interface

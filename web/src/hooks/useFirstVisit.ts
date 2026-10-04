@@ -20,7 +20,6 @@ export function useFirstVisit() {
     if (!hasSeenOnboarding && !runTour && currentTrack) {
       hasCheckedRef.current = true;
       const timer = setTimeout(() => {
-        console.log('[useFirstVisit] Starting onboarding tour');
         startTour('onboarding');
       }, 2000); // 2 second delay for animations
 

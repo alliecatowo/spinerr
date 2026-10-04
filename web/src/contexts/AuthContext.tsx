@@ -36,11 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Subscribe to auth changes
     const unsubscribe = onAuthChange(async (firebaseUser) => {
-      console.log('[AuthProvider] Auth state changed:', {
-        uid: firebaseUser?.uid,
-        isAnonymous: firebaseUser?.isAnonymous,
-        email: firebaseUser?.email,
-      });
 
       setUser(firebaseUser);
       setLoading(false);
@@ -58,13 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             hasSeenPlayerTour,
             hasSeenSettingsTour,
           });
-          console.log('[AuthProvider] Loaded tour state from Firebase');
         }
       }
 
       // If no user, auto-sign in anonymously for seamless experience
       if (!firebaseUser) {
-        console.log('[AuthProvider] No user detected, signing in anonymously...');
         try {
           await signInAnonymous();
         } catch (error: unknown) {
@@ -96,7 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Create account (will upgrade anonymous user via linkWithCredential)
       // Firebase automatically preserves the user's data when upgrading
       await createAccount(email, password);
-      console.log('[AuthProvider] ✓ Account created! Your library is preserved.');
     } catch (error) {
       console.error('[AuthProvider] Sign-up error:', error);
       throw error;
@@ -121,7 +113,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       await signInWithGoogle();
-      console.log('[AuthProvider] ✓ Signed in with Google! Your library is preserved.');
     } catch (error) {
       console.error('[AuthProvider] Google sign-in error:', error);
       throw error;

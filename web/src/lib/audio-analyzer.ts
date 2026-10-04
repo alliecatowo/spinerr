@@ -10,45 +10,38 @@ export class AudioAnalyzer {
   private dataArray: Uint8Array<ArrayBuffer> | null = null;
   private source: MediaElementAudioSourceNode | null = null;
   private connected = false;
+  private synthetic = false;
 
   /**
    * Connect to an HTML5 Audio element
    */
   connect(audioElement: HTMLAudioElement): void {
     if (this.connected) {
-      console.log('[AudioAnalyzer] Already connected, skipping');
       return;
     }
 
     try {
-      console.log('[AudioAnalyzer] Connecting to audio element...');
 
       // Create AudioContext
       this.audioContext = new AudioContext();
-      console.log('[AudioAnalyzer] AudioContext created, state:', this.audioContext.state);
 
       // Create analyser node
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 256; // Small FFT for performance (128 frequency bins)
       this.analyser.smoothingTimeConstant = 0.75; // Less smoothing for more responsiveness
 
-      console.log('[AudioAnalyzer] Analyser created, bins:', this.analyser.frequencyBinCount);
-
       // Create source from audio element
       this.source = this.audioContext.createMediaElementSource(audioElement);
-      console.log('[AudioAnalyzer] Media source created from audio element');
 
       // Connect: source -> analyser -> destination
       this.source.connect(this.analyser);
       this.analyser.connect(this.audioContext.destination);
-      console.log('[AudioAnalyzer] Audio graph connected: source -> analyser -> destination');
 
       // Create data array for frequency data
       const bufferLength = this.analyser.frequencyBinCount;
       this.dataArray = new Uint8Array(bufferLength) as Uint8Array<ArrayBuffer>;
 
       this.connected = true;
-      console.log('[AudioAnalyzer] ✓ Successfully connected to audio element');
     } catch (error) {
       console.error('[AudioAnalyzer] ✗ Failed to connect:', error);
       if (error instanceof Error) {
@@ -63,11 +56,6 @@ export class AudioAnalyzer {
    */
   getEnergy(): number {
     if (!this.analyser || !this.dataArray) {
-      console.warn('[AudioAnalyzer] getEnergy called but not ready:', {
-        hasAnalyser: !!this.analyser,
-        hasDataArray: !!this.dataArray,
-        connected: this.connected
-      });
       return 0;
     }
 
@@ -82,14 +70,6 @@ export class AudioAnalyzer {
       maxVal = Math.max(maxVal, this.dataArray[i]);
     }
 
-    // Log raw data occasionally for debugging
-    if (Math.random() < 0.01) {
-      console.log('[AudioAnalyzer] Raw FFT data:', {
-        avgValue: (sum / this.dataArray.length).toFixed(1),
-        maxValue: maxVal,
-        sampleValues: Array.from(this.dataArray.slice(0, 10))
-      });
-    }
 
     // Normalize to 0-1 range (byte values are 0-255)
     const energy = (sum / this.dataArray.length) / 255;
@@ -99,11 +79,34 @@ export class AudioAnalyzer {
   }
 
   /**
+   * Use a time-based energy signal instead of real FFT data. Needed for
+   * streams whose host sends no CORS headers (the analyser would read silence).
+   */
+  setSynthetic(on: boolean): void {
+    this.synthetic = on;
+  }
+
+  isConnected(): boolean {
+    return this.connected;
+  }
+
+  /** A pulse-like pseudo signal so the vinyl art still moves with the music. */
+  private syntheticBand(band: 0 | 1 | 2): number {
+    const t = performance.now() / 1000;
+    const beat = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2 * 1.4)), 6); // ~84 bpm kick
+    const sway = 0.5 + 0.5 * Math.sin(t * (0.9 + band * 0.7) + band * 2);
+    const shimmer = 0.5 + 0.5 * Math.sin(t * (5.3 + band * 3.1));
+    if (band === 0) return 0.25 + 0.6 * beat;
+    if (band === 1) return 0.2 + 0.35 * sway * (0.6 + 0.4 * beat);
+    return 0.12 + 0.3 * shimmer * sway;
+  }
+
+  /**
    * Get bass energy (0-1)
    * Low frequencies (roughly 20-250 Hz)
    */
   getBass(): number {
-    if (!this.analyser || !this.dataArray) return 0;
+    if (this.synthetic || !this.analyser || !this.dataArray) return this.syntheticBand(0);
 
     this.analyser.getByteFrequencyData(this.dataArray);
 
@@ -124,7 +127,7 @@ export class AudioAnalyzer {
    * Mid frequencies (roughly 250-2000 Hz)
    */
   getMid(): number {
-    if (!this.analyser || !this.dataArray) return 0;
+    if (this.synthetic || !this.analyser || !this.dataArray) return this.syntheticBand(1);
 
     this.analyser.getByteFrequencyData(this.dataArray);
 
@@ -145,7 +148,7 @@ export class AudioAnalyzer {
    * High frequencies (roughly 2000+ Hz)
    */
   getTreble(): number {
-    if (!this.analyser || !this.dataArray) return 0;
+    if (this.synthetic || !this.analyser || !this.dataArray) return this.syntheticBand(2);
 
     this.analyser.getByteFrequencyData(this.dataArray);
 
@@ -176,7 +179,6 @@ export class AudioAnalyzer {
   async resume(): Promise<void> {
     if (this.audioContext?.state === 'suspended') {
       await this.audioContext.resume();
-      console.log('[AudioAnalyzer] AudioContext resumed');
     }
   }
 
@@ -201,7 +203,6 @@ export class AudioAnalyzer {
 
     this.dataArray = null;
     this.connected = false;
-    console.log('[AudioAnalyzer] Disconnected');
   }
 }
 

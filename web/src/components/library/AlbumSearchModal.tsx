@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Music, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { Music, Loader2, Radio } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -11,29 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LocalFilePicker } from "@/components/music/LocalFilePicker";
-import { SOUNDCLOUD_AVAILABLE, SOUNDCLOUD_UNAVAILABLE_MESSAGE } from "@/lib/runtime";
-import type { Album, ProviderId } from "@/lib/providers/types";
-import type { SoundCloudPlaylist } from "@/lib/soundcloud-server";
-
-interface SpotifyAlbumTrack {
-  id: string;
-  name: string;
-  artists: { name: string }[];
-  duration_ms: number;
-  external_urls: { spotify: string };
-}
-import { providerManager } from "@/lib/providers/provider-manager";
-import type { SearchResult } from "@/lib/providers/provider-manager";
+import type { Album, Track } from "@/lib/providers/types";
+import { SOURCE_LABEL } from "@/lib/sources/rank";
+import type { SourceStatus } from "@/lib/sources/search";
 
 interface AlbumSearchModalProps {
   isOpen: boolean;
@@ -41,269 +23,145 @@ interface AlbumSearchModalProps {
   onSelectAlbum: (album: Album) => void;
 }
 
+const QUEUE_LENGTH = 12;
+
+/** Build a playable record from one chosen result plus the results after it. */
+function queueFrom(results: Track[], index: number): Album {
+  const chosen = results[index];
+  const rest = [...results.slice(index + 1), ...results.slice(0, index)].slice(0, QUEUE_LENGTH - 1);
+  const tracks = [chosen, ...rest];
+  return {
+    id: `q-${chosen.id}`,
+    provider: chosen.provider,
+    title: chosen.title,
+    artist: chosen.artist,
+    artworkUrl: chosen.artworkUrl,
+    trackCount: tracks.length,
+    tracks,
+    duration: tracks.reduce((sum, t) => sum + t.duration, 0),
+    externalUrl: chosen.externalUrl,
+  };
+}
+
 export function AlbumSearchModal({ isOpen, onClose, onSelectAlbum }: AlbumSearchModalProps) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<Track[]>([]);
+  const [statuses, setStatuses] = useState<SourceStatus[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [filterProvider, setFilterProvider] = useState<ProviderId | undefined>(undefined);
 
-  // Search function with provider manager
-  const searchAlbums = useCallback(async (searchQuery: string, provider?: ProviderId) => {
-    if (!searchQuery.trim()) {
-      setResults([]);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const searchResults = await providerManager.searchAlbums(searchQuery, provider);
-      setResults(searchResults);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Search failed");
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Debounced search effect
+  // Debounced search across every source at once
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (query.trim()) {
-        searchAlbums(query, filterProvider);
+    const q = query.trim();
+    if (!q) return;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const { unifiedSearch } = await import("@/lib/sources/search");
+        const found = await unifiedSearch(q, controller.signal);
+        if (controller.signal.aborted) return;
+        setResults(found.tracks);
+        setStatuses(found.statuses);
+      } catch {
+        if (!controller.signal.aborted) {
+          setResults([]);
+          setStatuses([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
-    }, 500);
+    }, 350);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query]);
 
-    return () => clearTimeout(timer);
-  }, [query, filterProvider, searchAlbums]);
-
-  // Reset on close
-  useEffect(() => {
-    if (!isOpen) {
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
       setQuery("");
       setResults([]);
-      setError(null);
-    }
-  }, [isOpen]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
-  const handleAlbumClick = async (result: SearchResult) => {
-    try {
-      // If album already has tracks, use it directly
-      if (result.album.tracks.length > 0) {
-        onSelectAlbum(result.album);
-        onClose();
-        return;
-      }
-
-      // For SoundCloud, fetch full playlist details
-      if (result.provider === 'soundcloud') {
-        const id = result.album.id.replace('soundcloud-', '');
-        const response = await fetch(`/api/soundcloud/playlist?id=${id}`);
-        if (!response.ok) throw new Error("Failed to fetch album details");
-
-        const data: { playlist: SoundCloudPlaylist } = await response.json();
-        const fullPlaylist = data.playlist;
-
-        // Update album with full track list
-        result.album.tracks = (fullPlaylist.tracks || []).map((track) => ({
-          id: `soundcloud-${track.id}`,
-          provider: "soundcloud" as const,
-          title: track.title,
-          artist: track.artist,
-          album: fullPlaylist.title,
-          artworkUrl: track.artworkUrl || fullPlaylist.artworkUrl,
-          duration: Math.floor(track.duration / 1000),
-          externalUrl: track.permalinkUrl,
-          streamUrl: track.streamUrl,
-        }));
-      }
-
-      // For Spotify, fetch album tracks
-      else if (result.provider === 'spotify') {
-        const spotifyClient = providerManager.getSpotifyClient();
-        if (spotifyClient) {
-          // Fetch album tracks from Spotify API
-          const albumData = await fetch(`https://api.spotify.com/v1/albums/${result.album.id}/tracks`, {
-            headers: {
-              'Authorization': `Bearer ${spotifyClient.getAccessToken()}`
-            }
-          });
-
-          if (albumData.ok) {
-            const tracksData: { items: SpotifyAlbumTrack[] } = await albumData.json();
-            result.album.tracks = tracksData.items.map((track) => ({
-              id: track.id,
-              provider: "spotify" as const,
-              title: track.name,
-              artist: track.artists[0]?.name || 'Unknown',
-              album: result.album.title,
-              artworkUrl: result.album.artworkUrl,
-              duration: Math.floor(track.duration_ms / 1000),
-              externalUrl: track.external_urls.spotify,
-            }));
-          }
-        }
-      }
-
-      onSelectAlbum(result.album);
+      setStatuses([]);
+      setLoading(false);
       onClose();
-    } catch (err) {
-      console.error("Failed to fetch album details:", err);
-      setError("Failed to load album details");
     }
   };
 
-  // Provider badge helper
-  const getProviderBadge = (provider: ProviderId) => {
-    switch (provider) {
-      case 'spotify':
-        return <Badge className="bg-green-600 hover:bg-green-700">Spotify</Badge>;
-      case 'soundcloud':
-        return <Badge className="bg-orange-600 hover:bg-orange-700">SoundCloud</Badge>;
-      default:
-        return null;
-    }
-  };
+  const visible = query.trim() ? results : [];
+  const allFailed = statuses.length > 0 && statuses.every((s) => !s.ok);
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[85vh] p-0">
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[85vh] p-0">
         <DialogHeader className="p-6 pb-0">
-          <DialogTitle>Search Albums</DialogTitle>
+          <DialogTitle>Search music</DialogTitle>
           <DialogDescription>
-            Search across all your connected music sources
+            One search across Audius, the Internet Archive and live radio. Pick a result to spin it.
           </DialogDescription>
         </DialogHeader>
 
-        {!SOUNDCLOUD_AVAILABLE && !providerManager.isProviderAvailable('spotify') ? (
-          <div className="flex flex-col items-center gap-4 px-6 pb-8 pt-4 text-center">
-            <Music className="h-10 w-10 opacity-50" />
-            <p className="max-w-md text-sm text-muted-foreground">{SOUNDCLOUD_UNAVAILABLE_MESSAGE}</p>
-            <LocalFilePicker onLoaded={onClose} />
-          </div>
-        ) : (
-        <div className="flex flex-col h-full">
-          {/* Provider Filter */}
-          <div className="flex gap-2 px-6 pt-4">
-            <Button
-              size="sm"
-              variant={filterProvider === undefined ? "default" : "outline"}
-              onClick={() => setFilterProvider(undefined)}
-            >
-              All Sources
-            </Button>
-            {providerManager.isProviderAvailable('spotify') && (
-              <Button
-                size="sm"
-                variant={filterProvider === 'spotify' ? "default" : "outline"}
-                onClick={() => setFilterProvider('spotify')}
-                className={filterProvider === 'spotify' ? "bg-green-600 hover:bg-green-700" : ""}
-              >
-                Spotify
-              </Button>
-            )}
-            {providerManager.isProviderAvailable('soundcloud') && (
-              <Button
-                size="sm"
-                variant={filterProvider === 'soundcloud' ? "default" : "outline"}
-                onClick={() => setFilterProvider('soundcloud')}
-                className={filterProvider === 'soundcloud' ? "bg-orange-600 hover:bg-orange-700" : ""}
-              >
-                SoundCloud
-              </Button>
-            )}
-          </div>
-
-          {/* Command Palette */}
-          <Command shouldFilter={false} className="rounded-none border-0 mt-4">
-            <CommandInput
-              placeholder="Search for albums, artists, or playlists..."
-              value={query}
-              onValueChange={setQuery}
-            />
-            <CommandList>
-              <CommandEmpty>
-                {loading ? (
-                  <div className="flex items-center justify-center py-6">
-                    <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
-                  </div>
-                ) : error ? (
-                  <div className="text-center py-6 text-red-500">
-                    {error}
-                  </div>
-                ) : query ? (
-                  <div className="text-center py-8">
-                    <Music className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No albums found for &ldquo;{query}&rdquo;</p>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p>Start typing to search for albums</p>
-                  </div>
-                )}
-              </CommandEmpty>
-
-              {results.length > 0 && (
-                <ScrollArea className="h-[50vh]">
-                  <CommandGroup heading="Search Results" className="p-2">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-2">
-                      {results.map((result) => (
-                        <CommandItem
-                          key={`${result.provider}-${result.album.id}`}
-                          onSelect={() => handleAlbumClick(result)}
-                          className="cursor-pointer group p-0 h-auto rounded-lg flex-col items-start"
-                        >
-                          <div className="relative aspect-square w-full mb-2 rounded-lg overflow-hidden bg-gray-200 dark:bg-neutral-800 shadow-lg group-hover:shadow-xl transition-shadow">
-                            {result.album.artworkUrl ? (
-                              <img
-                                src={result.album.artworkUrl}
-                                alt={result.album.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Music className="h-12 w-12 text-gray-400 dark:text-neutral-600" />
-                              </div>
-                            )}
-                            {/* Provider Badge */}
-                            <div className="absolute top-2 right-2">
-                              {getProviderBadge(result.provider)}
-                            </div>
-                          </div>
-                          <h3 className="font-semibold text-sm line-clamp-1 w-full px-1">
-                            {result.album.title}
-                          </h3>
-                          <p className="text-xs text-muted-foreground line-clamp-1 w-full px-1">
-                            {result.album.artist}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1 px-1">
-                            {result.album.trackCount} tracks
-                          </p>
-                        </CommandItem>
-                      ))}
-                    </div>
-                  </CommandGroup>
-                </ScrollArea>
+        <Command shouldFilter={false} className="rounded-none border-0 mt-4">
+          <CommandInput placeholder="Search for a song, artist or station..." value={query} onValueChange={setQuery} />
+          <CommandList className="max-h-none">
+            <CommandEmpty>
+              {loading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
+                </div>
+              ) : allFailed ? (
+                <div className="px-6 py-8 text-center">
+                  <p className="mb-3 text-sm text-muted-foreground">
+                    The music sources aren&apos;t answering. Check your connection, or play your own files.
+                  </p>
+                  <LocalFilePicker onLoaded={onClose} />
+                </div>
+              ) : query.trim() ? (
+                <div className="py-8 text-center">
+                  <Music className="mx-auto mb-3 h-12 w-12 opacity-50" />
+                  <p>No music found for &ldquo;{query}&rdquo;</p>
+                </div>
+              ) : (
+                <div className="py-8 text-center text-sm text-muted-foreground">Start typing to search</div>
               )}
-            </CommandList>
-          </Command>
-        </div>
-        )}
+            </CommandEmpty>
+
+            {visible.length > 0 && (
+              <ScrollArea className="h-[50vh]">
+                <div className="p-2">
+                  {visible.map((track, i) => (
+                    <CommandItem
+                      key={track.id}
+                      value={track.id}
+                      onSelect={() => {
+                        onSelectAlbum(queueFrom(visible, i));
+                        onClose();
+                      }}
+                      className="cursor-pointer gap-3 rounded-lg p-2"
+                    >
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-200 dark:bg-neutral-800">
+                        {track.artworkUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={track.artworkUrl} alt="" className="h-full w-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                        ) : track.provider === "radio" ? (
+                          <Radio className="h-5 w-5 text-gray-400" />
+                        ) : (
+                          <Music className="h-5 w-5 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-1 text-sm font-medium">{track.title}</p>
+                        <p className="line-clamp-1 text-xs text-muted-foreground">{track.artist}</p>
+                      </div>
+                      <Badge variant="secondary" className="shrink-0">
+                        {SOURCE_LABEL[track.provider] ?? track.provider}
+                      </Badge>
+                    </CommandItem>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+          </CommandList>
+        </Command>
       </DialogContent>
     </Dialog>
   );
