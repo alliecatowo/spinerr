@@ -3,6 +3,7 @@
 import { format, isToday, isTomorrow } from "date-fns";
 import { usePlayerStore, useCalendarStore } from "@/lib/store";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { PlayerControls } from "@/components/music/PlayerControls";
 
 function getEventDateLabel(date: Date): string {
@@ -117,6 +118,16 @@ export function AtAGlance() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Empty state: no calendar connected yet */}
+      {events.length === 0 && (
+        <Link
+          href="/settings/"
+          className="inline-block text-sm text-gray-500 underline-offset-4 transition hover:text-gray-900 hover:underline dark:text-neutral-500 dark:hover:text-white"
+        >
+          Add your calendar to see what&apos;s coming up
+        </Link>
       )}
     </div>
   );

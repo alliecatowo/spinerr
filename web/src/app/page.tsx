@@ -47,6 +47,15 @@ export default function Home() {
     }
   }, [loadAlbum]);
 
+  // Reload saved calendar subscriptions (quietly; failures just leave it empty).
+  useEffect(() => {
+    void import("@/lib/calendar/sources").then(({ useCalendarSources, refreshSavedCalendars }) => {
+      const run = () => void refreshSavedCalendars();
+      if (useCalendarSources.persist.hasHydrated()) run();
+      else useCalendarSources.persist.onFinishHydration(run);
+    });
+  }, []);
+
   // Landing: once saved state has loaded, resume the last record, or tune the
   // default station for first-time visitors (and anyone whose saved record was
   // local files, which cannot survive a reload).

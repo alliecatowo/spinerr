@@ -3,6 +3,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithCredential,
+  linkWithPopup,
+  reauthenticateWithPopup,
+  type UserCredential,
   GoogleAuthProvider,
   signOut as firebaseSignOut,
   linkWithCredential,
@@ -11,6 +15,7 @@ import {
   type User,
 } from 'firebase/auth';
 import type { Auth } from 'firebase/auth';
+import type { FirebaseError } from 'firebase/app';
 import { getFirebaseAuth } from './firebase';
 
 /**
@@ -80,16 +85,62 @@ export async function signInWithGoogle(): Promise<User> {
   const currentUser = auth.currentUser;
   const provider = new GoogleAuthProvider();
 
-  // If user is anonymous, upgrade their account by linking
+  // Anonymous visitors: link Google to the same uid so their library and tour
+  // state follow them. If that Google account already exists, sign into it.
   if (currentUser && currentUser.isAnonymous) {
-    // Sign in with popup to get Google credential
-    const result = await signInWithPopup(auth, provider);
-    return result.user;
+    try {
+      const result = await linkWithPopup(currentUser, provider);
+      return result.user;
+    } catch (error) {
+      if ((error as { code?: string }).code === 'auth/credential-already-in-use') {
+        const credential = GoogleAuthProvider.credentialFromError(error as FirebaseError);
+        if (credential) return (await signInWithCredential(auth, credential)).user;
+      }
+      throw error;
+    }
   }
 
-  // Otherwise sign in with Google normally
   const result = await signInWithPopup(auth, provider);
   return result.user;
+}
+
+const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+
+/**
+ * Ask for read-only Google Calendar access. Only called from an explicit
+ * "Connect Google Calendar" button, never on plain sign-in. Returns a
+ * short-lived (about 1 hour) access token; it is kept in memory only.
+ */
+export async function connectGoogleCalendar(): Promise<string> {
+  const auth = requireAuth();
+  const currentUser = auth.currentUser;
+  const provider = new GoogleAuthProvider();
+  provider.addScope(CALENDAR_SCOPE);
+
+  let result: UserCredential;
+  try {
+    if (currentUser && currentUser.isAnonymous) {
+      result = await linkWithPopup(currentUser, provider);
+    } else if (currentUser && currentUser.providerData.some((p) => p.providerId === 'google.com')) {
+      result = await reauthenticateWithPopup(currentUser, provider);
+    } else if (currentUser) {
+      result = await linkWithPopup(currentUser, provider);
+    } else {
+      result = await signInWithPopup(auth, provider);
+    }
+  } catch (error) {
+    if ((error as { code?: string }).code === 'auth/credential-already-in-use') {
+      const credential = GoogleAuthProvider.credentialFromError(error as FirebaseError);
+      if (credential?.accessToken) {
+        await signInWithCredential(auth, credential);
+        return credential.accessToken;
+      }
+    }
+    throw error;
+  }
+  const token = GoogleAuthProvider.credentialFromResult(result)?.accessToken;
+  if (!token) throw new Error('Google did not return calendar access.');
+  return token;
 }
 
 /**
