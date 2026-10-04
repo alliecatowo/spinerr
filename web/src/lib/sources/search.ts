@@ -2,6 +2,7 @@ import type { Track } from '../providers/types';
 import { searchAudius } from './audius';
 import { searchRadio } from './radio';
 import { searchArchive } from './archive';
+import { searchSoundCloud } from './soundcloud';
 import { rankAndDedupe } from './rank';
 import { setTrackHint } from './registry';
 
@@ -20,6 +21,7 @@ type SourceSearch = (query: string, limit: number, signal?: AbortSignal) => Prom
 
 const SOURCES: { id: string; search: SourceSearch }[] = [
   { id: 'audius', search: searchAudius },
+  { id: 'soundcloud', search: searchSoundCloud },
   { id: 'archive', search: searchArchive },
   { id: 'radio', search: searchRadio },
 ];

@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { SpotifySettings } from "@/components/settings/SpotifySettings";
-import { SoundCloudSettings } from "@/components/settings/SoundCloudSettings";
+import { MusicSourcesSettings } from "@/components/settings/MusicSourcesSettings";
 import { CalendarSettings } from "@/components/settings/CalendarSettings";
 import { LocalFilesSettings } from "@/components/settings/LocalFilesSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
@@ -60,13 +60,13 @@ export default function SettingsPage() {
             <GeneralSettings />
           </motion.div>
 
-          {/* SoundCloud Integration */}
+          {/* Music sources */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <SoundCloudSettings />
+            <MusicSourcesSettings />
           </motion.div>
 
           {/* Spotify Integration */}
