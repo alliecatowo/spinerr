@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Search, Music2 } from "lucide-react";
+import { ArrowLeft, Compass, Plus, Search, Music2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlbumCard } from "@/components/library/AlbumCard";
 import { AlbumSearchModal } from "@/components/library/AlbumSearchModal";
@@ -29,9 +29,7 @@ export default function LibraryPage() {
   const addToRecentlyPlayed = useLibraryStore((state) => state.addToRecentlyPlayed);
 
   // Player store
-  const setPlaylist = usePlayerStore((state) => state.setPlaylist);
-  const setTrack = usePlayerStore((state) => state.setTrack);
-  const play = usePlayerStore((state) => state.play);
+  const loadAlbum = usePlayerStore((state) => state.loadAlbum);
 
   // Filter albums by search query
   const filteredAlbums = albums.filter(
@@ -41,22 +39,7 @@ export default function LibraryPage() {
   );
 
   const handleAlbumClick = (album: Album) => {
-    // Convert Album tracks to player Track format
-    const playerTracks = album.tracks.map((track) => ({
-      id: track.id,
-      title: track.title,
-      artist: track.artist,
-      album: album.title,
-      duration: track.duration,
-      coverColor: "#8b5cf6", // Purple for library tracks
-      genre: track.metadata?.genre,
-    }));
-
-    setPlaylist(playerTracks);
-    if (playerTracks.length > 0) {
-      setTrack(playerTracks[0]);
-      play();
-    }
+    loadAlbum(album);
     addToRecentlyPlayed(album);
     router.push("/");
   };
@@ -94,7 +77,7 @@ export default function LibraryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950 py-12 px-8">
+    <div className="min-h-screen bg-white dark:bg-neutral-950 pt-20 pb-12 px-4 sm:px-8">
       {/* Theme Toggle - top left */}
       <div className="fixed top-6 left-6 z-50">
         <ThemeToggle />
@@ -130,7 +113,7 @@ export default function LibraryPage() {
                 collection
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
               <Button
                 onClick={() => setShowSearchModal(true)}
                 className="bg-purple-600 hover:bg-purple-700 text-white font-semibold"
@@ -231,16 +214,23 @@ export default function LibraryPage() {
               Your library is empty
             </h3>
             <p className="text-gray-600 dark:text-neutral-400 mb-6 text-center max-w-md">
-              Add an album from SoundCloud to get started with your collection
+              Search Audius, SoundCloud, the Internet Archive and live radio, or pick a
+              station in Browse, and anything you add shows up here.
             </p>
-            <Button
-              onClick={() => setShowSearchModal(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold"
-              size="lg"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Add Your First Album
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button
+                onClick={() => router.push("/browse")}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+                size="lg"
+              >
+                <Compass className="h-5 w-5 mr-2" />
+                Browse stations
+              </Button>
+              <Button onClick={() => setShowSearchModal(true)} variant="outline" size="lg">
+                <Plus className="h-5 w-5 mr-2" />
+                Search and add
+              </Button>
+            </div>
           </motion.div>
         ) : (
           // No results for search

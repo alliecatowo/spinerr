@@ -69,3 +69,23 @@ export async function radioStreamUrl(id: string, signal?: AbortSignal): Promise<
   const url = list[0]?.url_resolved;
   return url?.startsWith('https://') ? url : null;
 }
+
+const LIST = 'hidebroken=true&is_https=true&order=votes&reverse=true';
+
+/** Popular https stations carrying a tag such as "jazz" or "lofi". */
+export async function radioByTag(tag: string, limit = 20, signal?: AbortSignal): Promise<Track[]> {
+  const stations = await get<Station[]>(
+    `/json/stations/bytagexact/${encodeURIComponent(tag)}?${LIST}&limit=${limit * 2}`,
+    signal,
+  );
+  return stations.map(toTrack).filter((t): t is Track => t !== null).slice(0, limit);
+}
+
+/** Popular https stations from one country (ISO 3166-1 alpha-2 code). */
+export async function radioByCountry(code: string, limit = 20, signal?: AbortSignal): Promise<Track[]> {
+  const stations = await get<Station[]>(
+    `/json/stations/bycountrycodeexact/${encodeURIComponent(code)}?${LIST}&limit=${limit * 2}`,
+    signal,
+  );
+  return stations.map(toTrack).filter((t): t is Track => t !== null).slice(0, limit);
+}
