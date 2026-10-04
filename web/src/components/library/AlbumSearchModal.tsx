@@ -140,7 +140,6 @@ export function AlbumSearchModal({ isOpen, onClose, onSelectAlbum }: AlbumSearch
                     >
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-200 dark:bg-neutral-800">
                         {track.artworkUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
                           <img src={track.artworkUrl} alt="" className="h-full w-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                         ) : track.provider === "radio" ? (
                           <Radio className="h-5 w-5 text-gray-400" />
