@@ -96,7 +96,7 @@ export function AlbumSearchModal({ isOpen, onClose, onSelectAlbum }: AlbumSearch
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>Search music</DialogTitle>
           <DialogDescription>
-            One search across Audius, the Internet Archive and live radio. Pick a result to spin it.
+            One search across Audius, SoundCloud, the Internet Archive and live radio. Pick a result to spin it.
           </DialogDescription>
         </DialogHeader>
 

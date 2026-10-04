@@ -26,3 +26,33 @@ exports.stopBilling = onMessagePublished(
     logger.warn('stopBilling: done', { result });
   },
 );
+
+const { onRequest } = require('firebase-functions/v2/https');
+const { fetchCalendar, FetchError } = require('./ssrf');
+
+// SoundCloud proxy: /api/soundcloud/** (rewrite in firebase.json)
+exports.soundcloud = onRequest({ maxInstances: 3, memory: '512MiB', timeoutSeconds: 30 }, async (req, res) => {
+  try {
+    await require('./soundcloud').handle(req, res);
+  } catch (error) {
+    logger.error('soundcloud proxy failed', { message: error && error.message });
+    res.status(502).json({ error: 'SoundCloud is not answering right now' });
+  }
+});
+
+// ICS proxy: /api/ics?url=... (rewrite in firebase.json). The URL is never logged.
+exports.ics = onRequest({ maxInstances: 3, memory: '256MiB', timeoutSeconds: 20 }, async (req, res) => {
+  res.set('Cache-Control', 'private, max-age=60');
+  const url = req.query.url;
+  if (typeof url !== 'string' || url.length > 2000) {
+    res.status(400).json({ error: 'url is required' });
+    return;
+  }
+  try {
+    const body = await fetchCalendar(url);
+    res.type('text/calendar; charset=utf-8').send(body);
+  } catch (error) {
+    const status = error instanceof FetchError ? error.status : 502;
+    res.status(status).json({ error: error instanceof FetchError ? error.message : 'Could not fetch that calendar' });
+  }
+});

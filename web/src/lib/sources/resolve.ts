@@ -32,12 +32,10 @@ export async function resolveTrackSource(id: string): Promise<ResolvedSource> {
     if (!url) throw new Error('This station is no longer available.');
     return { url, cors: false };
   }
-  if (id.startsWith('spotify-') || id.startsWith('soundcloud-') || /^[0-9A-Za-z]{22}$/.test(id)) {
-    // Spotify cannot stream here. Old saved SoundCloud ids are handled by the SoundCloud source.
-    const { resolveSoundCloud } = await import('./soundcloud');
-    return resolveSoundCloud(id);
+  if (id.startsWith('spotify-') || /^[0-9A-Za-z]{22}$/.test(id)) {
+    throw new Error('Spotify tracks can be browsed but not streamed in Spinerr.');
   }
-  if (id.startsWith('sc-')) {
+  if (id.startsWith('sc-') || id.startsWith('soundcloud-')) {
     const { resolveSoundCloud } = await import('./soundcloud');
     return resolveSoundCloud(id);
   }

@@ -8,7 +8,7 @@ Live: [spinerr-app.web.app](https://spinerr-app.web.app)
 
 - **Generative vinyl.** Groove rings are displaced by seeded Perlin noise per album and by live FFT bands (bass moves amplitude, mids shift colour, highs shimmer). The tone arm follows playback and you can seek by dragging the grooves. The idea is written up in [docs/SONIC_GROOVES_PHILOSOPHY.md](docs/SONIC_GROOVES_PHILOSOPHY.md).
 - **Plays your files.** Pick audio files from your computer and they play locally, with ID3 tags and artwork read in the browser. No account or key needed.
-- **SoundCloud search** in the server build (the static build has no server, so it is switched off there). Spotify is optional: each user supplies their own client ID in Settings.
+- **One search across Audius, SoundCloud, the Internet Archive and live radio**, merged, deduplicated and ranked, with silent fallback. SoundCloud and calendar fetching run as Firebase Cloud Functions (`functions/`). Spotify settings remain but Spotify cannot stream.
 - **Dashboard around it.** Clock, upcoming events (sample data for now) and a guided tour. Light and dark themes, a layout that collapses on small screens, theater and fullscreen modes.
 
 ## Run it
@@ -40,8 +40,7 @@ cd web
 pnpm lint         # ESLint (next/core-web-vitals + typescript)
 pnpm typecheck
 pnpm test         # Vitest
-pnpm build        # server build, includes the SoundCloud proxy routes
-pnpm build:static # static export to web/out for Firebase Hosting
+pnpm build        # static export to web/out for Firebase Hosting (build:static is an alias)
 ```
 
 CI runs all of the above on every push and pull request. Dependabot keeps `web/` and the workflows current and auto-merges patch and minor updates once CI is green.
@@ -59,9 +58,9 @@ pnpm dlx firebase-tools deploy --only hosting,firestore:rules --project spinerr-
 
 | Path | What |
 | --- | --- |
-| `web/src/app` | Next.js App Router pages and the SoundCloud proxy routes (`app/api/soundcloud`) |
+| `web/src/app` | Next.js App Router pages (static export). Proxies live in `functions/` |
 | `web/src/components` | `music/` (vinyl, tone arm, controls), `calendar/`, `library/`, `settings/`, `layout/`, shadcn `ui/` |
-| `web/src/lib` | Zustand stores, the p5 vinyl sketch, audio player and analyzer, providers (local, SoundCloud, Spotify) |
+| `web/src/lib` | Zustand stores, the p5 vinyl sketch, audio player and analyzer, music sources (Audius, SoundCloud, Internet Archive, radio, local) |
 | `firestore.rules`, `firebase.json` | Firebase Hosting and security rules |
 
 ## License
