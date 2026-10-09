@@ -31,7 +31,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.4.0",
     "firebase": "^12.19.0",
-    "framer-motion": "^13.5.0",
+    "framer-motion": "^14.0.0",
     "ical.js": "^2.2.1",
     "idb-keyval": "^6.3.0",
     "jsmediatags": "^3.9.7",
